@@ -1,2 +1,8 @@
 # VENV
 venv/
+
+# DOTENV
+.env
+
+# CACHE
+__pycache__/
