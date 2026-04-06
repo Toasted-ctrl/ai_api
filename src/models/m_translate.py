@@ -11,3 +11,11 @@ class ReturnTranslation(BaseModel):
     to_language: str
     text_input: str
     text_output: str
+
+class Model(BaseModel):
+    model_name: str
+    language_codes: list[str]
+
+class ReturnTranslationModels(BaseModel):
+    detail: str
+    models: list[Model]

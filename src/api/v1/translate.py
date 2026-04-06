@@ -1,11 +1,35 @@
 from fastapi import APIRouter, HTTPException, status
 
 from core.config import config
-from models.m_translate import PayloadTranslation, ReturnTranslation
+from models.m_translate import PayloadTranslation, ReturnTranslation, ReturnTranslationModels
+from ollama.models import get_running_translation_models
 from ollama.server_status import is_ollama_server_online
 
 router = APIRouter()
 tags = ["Translation"]
+
+@router.get(
+    "/translate",
+    tags=tags,
+    response_model=ReturnTranslationModels)
+def get_translation_models():
+    if not is_ollama_server_online(base_url=config.OLLAMA_BASE_URL) is True:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ollama server offline"
+        )
+    
+    models = get_running_translation_models(base_url=config.OLLAMA_BASE_URL)
+    if not models:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Translation models offline"
+        )
+    
+    return {
+        "detail": "Success",
+        "models": models
+    }
 
 @router.post(
     "/translate",
@@ -13,7 +37,7 @@ tags = ["Translation"]
     response_model=ReturnTranslation)
 def post_translation_request(payload: PayloadTranslation):
 
-    if is_ollama_server_online(base_url=config.OLLAMA_BASE_URL) is False:
+    if not is_ollama_server_online(base_url=config.OLLAMA_BASE_URL) is True:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="LLM server offline") # TODO: Build test for this part.
