@@ -86,5 +86,5 @@ class TestPostTranslationRequest:
         response = client.post("/api/v1/translate", json=payload)
         assert response.status_code == 500
         assert response.json() == {
-            "detail": "LLM server offline"
+            "detail": "Ollama server offline"
         }

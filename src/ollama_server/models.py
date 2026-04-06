@@ -1,6 +1,6 @@
 import requests
 
-from ollama.translategemma import get_languages as get_languages_translategemma
+from ollama_server.translategemma import get_languages as get_languages_translategemma
 
 def get_running_ollama_models(base_url: str) -> list[dict] | None:
 

@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from ollama.models import get_running_ollama_models, get_running_translation_models
+from ollama_server.models import get_running_ollama_models, get_running_translation_models
 
 class TestGetRunningOllamaModels:
 

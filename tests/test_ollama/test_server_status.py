@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from ollama.server_status import is_ollama_server_online
+from ollama_server.server_status import is_ollama_server_online
 
 class TestIsOllamaServerOnline:
 

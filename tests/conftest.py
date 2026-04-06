@@ -2,7 +2,7 @@ import pytest
 
 from fastapi.testclient import TestClient
 
-from tests.fixtures.ollama import *
+from tests.fixtures.f_ollama import *
 
 @pytest.fixture
 def app():

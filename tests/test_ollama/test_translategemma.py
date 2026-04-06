@@ -1,4 +1,4 @@
-from ollama.translategemma import get_language_settings, get_languages
+from ollama_server.translategemma import get_language_settings, get_languages
 
 def test_get_languages():
     result = get_languages()
