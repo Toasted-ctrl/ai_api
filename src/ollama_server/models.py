@@ -2,11 +2,11 @@ import requests
 
 from ollama_server.translategemma import get_languages as get_languages_translategemma
 
-def get_running_ollama_models(base_url: str) -> list[dict] | None:
+def get_ollama_models(base_url: str) -> list[dict] | None:
 
-    """Retrieves a list of currently available (and online) Ollama models."""
+    """Retrieves a list of supported models on the Ollama server."""
 
-    url = f"{base_url}/api/ps"
+    url = f"{base_url}/api/tags"
     try:
         response = requests.get(url=url)
         if not response.status_code == 200:
@@ -21,15 +21,15 @@ def get_running_ollama_models(base_url: str) -> list[dict] | None:
         print(str(e))
         return None
     
-def get_running_translation_models(base_url: str) -> list[dict] | None:
+def get_translation_models(base_url: str) -> list[dict] | None:
 
-    """Retrieves a list of running translation models, including its supported languages."""
+    """Retrieves a list of translation models available on the Ollama server."""
 
     supported_translation_models = [
         "translategemma:latest"
     ]
 
-    models = get_running_ollama_models(base_url=base_url)
+    models = get_ollama_models(base_url=base_url)
     if models == None:
         print("Cannot connect to Ollama server")
         return None
