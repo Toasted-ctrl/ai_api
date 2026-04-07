@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from ollama_server.models import get_running_ollama_models, get_running_translation_models
+from ollama_server.models import get_ollama_models, get_translation_models
 
 class TestGetRunningOllamaModels:
 
@@ -9,7 +9,7 @@ class TestGetRunningOllamaModels:
             "requests.get",
             return_value=mock_get_running_ollama_models 
         ):
-            result = get_running_ollama_models(base_url="TEST_URL")
+            result = get_ollama_models(base_url="TEST_URL")
             assert isinstance(result, list)
 
     def test_offline(self, mock_get_running_ollama_models_offline):
@@ -17,7 +17,7 @@ class TestGetRunningOllamaModels:
             "requests.get",
             side_effect=mock_get_running_ollama_models_offline
         ):
-            assert get_running_ollama_models(base_url="TEST_URL") is None
+            assert get_ollama_models(base_url="TEST_URL") is None
 
 class TestGetRunningTranslationModels:
 
@@ -26,7 +26,7 @@ class TestGetRunningTranslationModels:
             "requests.get",
             return_value=mock_get_running_ollama_models
         ):
-            result = get_running_translation_models(base_url="TEST_URL")
+            result = get_translation_models(base_url="TEST_URL")
             assert isinstance(result, list)
             assert len(result) == 1
             assert result[0]['model_name'] == "translategemma:latest"
@@ -42,4 +42,4 @@ class TestGetRunningTranslationModels:
             "requests.get",
             side_effect=mock_get_running_ollama_models_offline
         ):
-            assert get_running_translation_models(base_url="TEST_URL") is None
+            assert get_translation_models(base_url="TEST_URL") is None

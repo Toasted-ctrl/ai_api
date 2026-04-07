@@ -9,5 +9,6 @@ class Config(BaseSettings):
     app_version: str = "0.0.1"
 
     OLLAMA_BASE_URL: str = ""
+    OLLAMA_MAC: str = ""
 
 config = Config()

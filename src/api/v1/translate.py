@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from core.config import config
 from models.m_translate import PayloadTranslation, ReturnTranslation, ReturnTranslationModels
-from ollama_server.models import get_running_translation_models
+from ollama_server.models import get_translation_models
 from ollama_server.server_status import is_ollama_server_online
 
 router = APIRouter()
@@ -19,11 +19,11 @@ def get_translation_models():
             detail="Ollama server offline"
         )
     
-    models = get_running_translation_models(base_url=config.OLLAMA_BASE_URL)
+    models = get_translation_models(base_url=config.OLLAMA_BASE_URL)
     if not models:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Translation models offline"
+            detail="Translation model(s) offline"
         )
     
     return {
