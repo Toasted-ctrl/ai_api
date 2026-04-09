@@ -11,7 +11,7 @@ def get_models(base_url: str) -> list[dict]:
     response.raise_for_status()
     return response.json()['models']
     
-def get_translation_models(base_url: str) -> list[dict] | None:
+def get_translators(base_url: str) -> list[dict] | None:
 
     """Retrieves a list of translation models available on the Ollama server.
     Returns None if no translation models are found."""
@@ -22,7 +22,6 @@ def get_translation_models(base_url: str) -> list[dict] | None:
 
     models = get_models(base_url=base_url)
     if models == []:
-        print("Cannot connect to Ollama server")
         return None
 
     t_models = []

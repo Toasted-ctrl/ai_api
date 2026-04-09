@@ -1,3 +1,7 @@
+import pytest
+
+from unittest.mock import patch
+
 class TestGetTranslationModels:
 
     def test_success(self, monkeypatch, client):
@@ -6,7 +10,7 @@ class TestGetTranslationModels:
             lambda base_url: True)
 
         monkeypatch.setattr(
-            "api.v1.translate.get_translation_models",
+            "api.v1.translate.get_translators",
             lambda base_url: [
                 {
                     "model_name": "test_model_name",
@@ -31,30 +35,18 @@ class TestGetTranslationModels:
             ]
         }
 
-    def test_ollama_server_offline(self, monkeypatch, client):
-        monkeypatch.setattr(
-            "api.v1.translate.is_ollama_server_online",
-            lambda base_url: False)
-        
+    def test_ollama_server_offline(self, mock_ollama_server_offline, client):
         response = client.get("/api/v1/translate")
-        assert response.status_code == 500
+        assert response.status_code == 503
         assert response.json() == {
-            "detail": "Ollama server offline"
+            "detail": "Could not connect to Ollama server"
         }
 
-    def test_translation_models_unavailable(self, monkeypatch, client):
-        monkeypatch.setattr(
-            "api.v1.translate.is_ollama_server_online",
-            lambda base_url: True)
-        
-        monkeypatch.setattr(
-            "api.v1.translate.get_translation_models",
-            lambda base_url: None)
-        
+    def test_translation_models_unavailable(self, mock_no_translators, client):
         response = client.get("/api/v1/translate")
         assert response.status_code == 500
         assert response.json() == {
-            "detail": "Translation model(s) offline"
+            "detail": "No translation models"
         }
 
 class TestPostTranslationRequest:

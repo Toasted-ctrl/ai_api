@@ -3,7 +3,7 @@ import requests
 
 from unittest.mock import patch
 
-from ollama_server.models import get_models, get_translation_models
+from ollama_server.models import get_models, get_translators
 
 class TestGetOllamaModels:
 
@@ -30,7 +30,7 @@ class TestGetTranslationModels:
             "requests.get",
             return_value=mock_get_running_ollama_models
         ):
-            result = get_translation_models(base_url="TEST_URL")
+            result = get_translators(base_url="TEST_URL")
             assert isinstance(result, list)
             assert len(result) == 1
             assert result[0]['model_name'] == "translategemma:latest"
@@ -47,4 +47,4 @@ class TestGetTranslationModels:
             side_effect=mock_get_running_ollama_models_offline
         ):
             with pytest.raises(requests.exceptions.ConnectionError):
-                get_translation_models(base_url="TEST_URL")
+                get_translators(base_url="TEST_URL")

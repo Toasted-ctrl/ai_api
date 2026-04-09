@@ -1,8 +1,10 @@
+import requests
+
 from fastapi import APIRouter, HTTPException, status
 
 from core.config import config
 from models.m_translate import PayloadTranslation, ReturnTranslation, ReturnTranslationModels
-from ollama_server.models import get_translation_models
+from ollama_server.models import get_translators
 from ollama_server.server_status import is_ollama_server_online
 
 router = APIRouter()
@@ -13,23 +15,22 @@ tags = ["Translation"]
     tags=tags,
     response_model=ReturnTranslationModels)
 def get_translation_models():
-    if not is_ollama_server_online(base_url=config.OLLAMA_BASE_URL) is True:
+    try:
+        models = get_translators(base_url=config.OLLAMA_BASE_URL)
+        if not models:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="No translation models")
+        
+        return {
+            "detail": "Success",
+            "models": models
+        }
+
+    except requests.exceptions.ConnectionError:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ollama server offline"
-        )
-    
-    models = get_translation_models(base_url=config.OLLAMA_BASE_URL)
-    if not models:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Translation model(s) offline"
-        )
-    
-    return {
-        "detail": "Success",
-        "models": models
-    }
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not connect to Ollama server")
 
 @router.post(
     "/translate",
@@ -37,7 +38,7 @@ def get_translation_models():
     response_model=ReturnTranslation)
 def post_translation_request(payload: PayloadTranslation):
 
-    if not is_ollama_server_online(base_url=config.OLLAMA_BASE_URL) is True:
+    if not is_ollama_server_online(base_url=config.OLLAMA_BASE_URL):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Ollama server offline") # TODO: Build test for this part.

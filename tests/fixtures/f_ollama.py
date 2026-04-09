@@ -16,6 +16,16 @@ def mock_ollama_server_offline(monkeypatch):
     monkeypatch.setattr(
         "api.v1.models.get_models",
         mock_get_models)
+    
+@pytest.fixture
+def mock_no_translators(monkeypatch):
+    def mock_get_translators(*args, **kwargs):
+        return None
+    
+    monkeypatch.setattr(
+        "api.v1.translate.get_translators",
+        mock_get_translators
+    )
 
 @pytest.fixture
 def mock_get_running_ollama_models():
