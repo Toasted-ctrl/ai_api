@@ -10,8 +10,12 @@ def mock_ollama_server_online():
     return mock
 
 @pytest.fixture
-def mock_ollama_server_offline():
-    return requests.exceptions.ConnectionError("Server is offline")
+def mock_ollama_server_offline(monkeypatch):
+    def mock_get_models(*args, **kwargs):
+        raise requests.exceptions.ConnectionError("Ollama server is offline")
+    monkeypatch.setattr(
+        "api.v1.models.get_models",
+        mock_get_models)
 
 @pytest.fixture
 def mock_get_running_ollama_models():

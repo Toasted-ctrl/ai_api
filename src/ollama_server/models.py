@@ -2,49 +2,40 @@ import requests
 
 from ollama_server.translategemma import get_languages as get_languages_translategemma
 
-def get_ollama_models(base_url: str) -> list[dict] | None:
+def get_models(base_url: str) -> list[dict]:
 
     """Retrieves a list of supported models on the Ollama server."""
 
     url = f"{base_url}/api/tags"
-    try:
-        response = requests.get(url=url)
-        if not response.status_code == 200:
-            return None
-        if response.json()['models'] == []:
-            return None
-        return response.json()['models']
-    except requests.exceptions.ConnectionError:
-        print("Cannot connect to Ollama server")
-        return None
-    except requests.exceptions.RequestException as e:
-        print(str(e))
-        return None
+    response = requests.get(url=url)
+    response.raise_for_status()
+    return response.json()['models']
     
 def get_translation_models(base_url: str) -> list[dict] | None:
 
-    """Retrieves a list of translation models available on the Ollama server."""
+    """Retrieves a list of translation models available on the Ollama server.
+    Returns None if no translation models are found."""
 
-    supported_translation_models = [
+    translation_models = [
         "translategemma:latest"
     ]
 
-    models = get_ollama_models(base_url=base_url)
-    if models == None:
+    models = get_models(base_url=base_url)
+    if models == []:
         print("Cannot connect to Ollama server")
         return None
 
-    online_models = []
+    t_models = []
     for m in models:
-        online_model = {}
-        if m.get('name') in supported_translation_models:
-            online_model['model_name'] = m.get('name')
+        t_model = {}
+        if m.get('name') in translation_models:
+            t_model['model_name'] = m.get('name')
             if m.get('name') == "translategemma:latest":
-                online_model['language_codes'] = get_languages_translategemma()
-        if not online_model == {}:
-            online_models.append(online_model)
+                t_model['language_codes'] = get_languages_translategemma()
+        if not t_model == {}:
+            t_models.append(t_model)
 
-    if online_models == []:
+    if t_models == []:
         return None
     
-    return online_models
+    return t_models

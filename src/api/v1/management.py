@@ -26,5 +26,3 @@ def wake_server(server_name: str):
     return {
         "detail": f"Sent magic packet to '{server_name}' server. Please verify the server is online."
     }
-
-# TODO: Create a new endpoint to fetch available models

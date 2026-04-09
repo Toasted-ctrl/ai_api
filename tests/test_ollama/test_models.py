@@ -1,15 +1,18 @@
+import pytest
+import requests
+
 from unittest.mock import patch
 
-from ollama_server.models import get_ollama_models, get_translation_models
+from ollama_server.models import get_models, get_translation_models
 
-class TestGetRunningOllamaModels:
+class TestGetOllamaModels:
 
     def test_success(self, mock_get_running_ollama_models):
         with patch(
             "requests.get",
             return_value=mock_get_running_ollama_models 
         ):
-            result = get_ollama_models(base_url="TEST_URL")
+            result = get_models(base_url="TEST_URL")
             assert isinstance(result, list)
 
     def test_offline(self, mock_get_running_ollama_models_offline):
@@ -17,9 +20,10 @@ class TestGetRunningOllamaModels:
             "requests.get",
             side_effect=mock_get_running_ollama_models_offline
         ):
-            assert get_ollama_models(base_url="TEST_URL") is None
+            with pytest.raises(requests.exceptions.ConnectionError):
+                get_models(base_url="TEST_URL")
 
-class TestGetRunningTranslationModels:
+class TestGetTranslationModels:
 
     def test_success(self, mock_get_running_ollama_models):
         with patch(
@@ -42,4 +46,5 @@ class TestGetRunningTranslationModels:
             "requests.get",
             side_effect=mock_get_running_ollama_models_offline
         ):
-            assert get_translation_models(base_url="TEST_URL") is None
+            with pytest.raises(requests.exceptions.ConnectionError):
+                get_translation_models(base_url="TEST_URL")
