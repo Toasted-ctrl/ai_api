@@ -7,5 +7,5 @@ def test_endpoint_root(client):
         "contact": {
             "maintainer": "Toasted-ctrl"
         },
-        "version": "0.0.1"
+        "version": "0.0.2"
     }

@@ -3,9 +3,8 @@ import requests
 from fastapi import APIRouter, HTTPException, status
 
 from core.config import config
-from models.m_translate import PayloadTranslation, ReturnTranslation, ReturnTranslationModels
-from ollama_server.models import get_translators
-from ollama_server.server_status import is_ollama_server_online
+from models.m_translate import ReturnTranslationModels
+from ollama_server.models import get_translators, get_models
 
 router = APIRouter()
 tags = ["Translation"]
@@ -13,44 +12,32 @@ tags = ["Translation"]
 @router.get(
     "/translate",
     tags=tags,
-    response_model=ReturnTranslationModels)
+    response_model=ReturnTranslationModels
+)
 def get_translation_models():
     try:
-        models = get_translators(base_url=config.OLLAMA_BASE_URL)
+        models = get_models(base_url=config.OLLAMA_BASE_URL)
         if not models:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="No translation models")
+                detail="No models"
+            )
         
+        translation_models = get_translators(models=models)
+        if not translation_models:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="No translation models"
+            )
+
         return {
             "detail": "Success",
-            "models": models
+            "models": translation_models
         }
 
     except requests.exceptions.ConnectionError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Could not connect to Ollama server")
-
-@router.post(
-    "/translate",
-    tags=tags,
-    response_model=ReturnTranslation)
-def post_translation_request(payload: PayloadTranslation):
-
-    if not is_ollama_server_online(base_url=config.OLLAMA_BASE_URL):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ollama server offline") # TODO: Build test for this part.
-
-    # TODO: Langchain and Langchain Ollama required.
-    # TODO: Add it to a new directory in source.
-    # TODO: Create check to verify that the requested model is online.
-
-    return {
-        "detail": "Success",
-        "from_language": "test_from",
-        "to_language": "test_to",
-        "text_input": "test_input",
-        "text_output": "test_output"
-    }
+    
+# TODO: Implement post translation request endpoint

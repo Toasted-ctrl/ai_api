@@ -4,25 +4,22 @@ from ollama_server.translategemma import get_languages as get_languages_translat
 
 def get_models(base_url: str) -> list[dict]:
 
-    """Retrieves a list of supported models on the Ollama server."""
+    """Retrieves a list of supported models on the Ollama server.
+    Returns empty list if no models were found."""
 
     url = f"{base_url}/api/tags"
     response = requests.get(url=url)
     response.raise_for_status()
     return response.json()['models']
     
-def get_translators(base_url: str) -> list[dict] | None:
+def get_translators(models: list[dict]) -> list[dict]:
 
-    """Retrieves a list of translation models available on the Ollama server.
-    Returns None if no translation models are found."""
+    """Retrieves a list of translation supported models on the Ollama server.
+    Returns empty list if no translation models were found."""
 
     translation_models = [
         "translategemma:latest"
     ]
-
-    models = get_models(base_url=base_url)
-    if models == []:
-        return None
 
     t_models = []
     for m in models:
@@ -34,7 +31,4 @@ def get_translators(base_url: str) -> list[dict] | None:
         if not t_model == {}:
             t_models.append(t_model)
 
-    if t_models == []:
-        return None
-    
     return t_models
