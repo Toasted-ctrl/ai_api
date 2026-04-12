@@ -1,10 +1,7 @@
-import requests
-
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 
 from core.config import config
-from models.m_models import ReturnModels
-from ollama_server.models import get_models
+from models.m_models import ReturnAllModels, ReturnTranslationModelsServerLayout, ReturnVecterEmbeddingsServerLayout, ReturnLLMServerLayout
 
 router = APIRouter()
 tags = ["Models"]
@@ -12,25 +9,43 @@ tags = ["Models"]
 @router.get(
     "/models",
     tags=tags,
-    response_model=ReturnModels
+    response_model=ReturnAllModels
 )
 def get_all_models():
-    try:
-        models = get_models(base_url=config.OLLAMA_BASE_URL)
-        if not models:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="No models"
-            )
-        
-        allowed_keys = ["name", "size"]
-        return {
-            "detail": "Success",
-            "models": [{k: v for k, v in model.items() if k in allowed_keys} for model in models]
-        }
+    return {
+        "detail": "Success",
+        "servers": config.get_model_configuration
+    }
 
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not connect to Ollama server"
-        )
+@router.get(
+    "/models/translation-models",
+    tags=["Models", "Translations"],
+    response_model=ReturnTranslationModelsServerLayout
+)
+def get_translation_models():
+    return {
+        "detail": "Success",
+        "servers": config.get_model_configuration
+    }
+
+@router.get(
+    "/models/vector-embeddings",
+    tags=["Models", "Vector Embeddings"],
+    response_model=ReturnVecterEmbeddingsServerLayout
+)
+def get_vector_embedding_models():
+    return {
+        "detail": "Success",
+        "servers": config.get_model_configuration
+    }
+
+@router.get(
+    "/models/llms",
+    tags=["Models", "LLMs"],
+    response_model=ReturnLLMServerLayout
+)
+def get_llms():
+    return {
+        "detail": "Success",
+        "servers": config.get_model_configuration
+    }

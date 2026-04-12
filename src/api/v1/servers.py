@@ -16,7 +16,7 @@ tags = ["Servers"]
     response_model=ReturnServers
 )
 def list_servers():
-    servers: dict = config.get_servers
+    servers: dict = config.get_server_configuration
     return {
         "detail": "Success",
         "servers": [key for key in servers.keys()]
@@ -29,7 +29,7 @@ def list_servers():
 )
 def wake_server(server_name: str):
     try:
-        servers: dict = config.get_servers
+        servers: dict = config.get_server_configuration
         if server_name not in servers.keys():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -55,7 +55,7 @@ def wake_server(server_name: str):
 )
 def get_server_status(server_name: str):
     try:
-        servers: dict = config.get_servers
+        servers: dict = config.get_server_configuration
         if server_name not in servers.keys():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
