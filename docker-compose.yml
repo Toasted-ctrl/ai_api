@@ -1,0 +1,15 @@
+services:
+  api_1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: AIA_1
+    ports:
+      - "9000:80"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/code/app
+    volumes:
+      - ./src:/code/app
+    restart: unless-stopped
