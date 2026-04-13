@@ -50,7 +50,8 @@ class Config(BaseSettings):
                                 "en-GB": "English",
                                 "de-DE": "German",
                                 "pt-PT": "Portuguese",
-                                "nl": "Dutch"
+                                "nl": "Dutch",
+                                "sl": "Slovenian"
                             }
                         }
                     ],

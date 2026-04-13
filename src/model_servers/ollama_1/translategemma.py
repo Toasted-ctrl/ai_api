@@ -1,29 +1,36 @@
 from langchain_ollama import ChatOllama
 
-from core.config import config
+# TODO: Build test for below function
 
-# TODO: Rework into a proper callable chain.
+def get_translation_translategemma(
+    from_language: str,
+    from_lang_code: str,
+    to_language: str,
+    to_lang_code: str,
+    query: str,
+    server_url: str,
+    temperature: float=0.1):
 
-llm = ChatOllama(
-    model="translategemma",
-    temperature=0,
-    base_url=config.OLLAMA_BASE_URL
-)
+    """Invokes a translation from translategemma 8B"""
 
-llm_instruction = f"""You are a professional English (en-GB) to Dutch (nl) translator. Your goal is to accurately convey the meaning and nuances of the original English text while adhering to Dutch grammar, vocabulary, and cultural sensitivities.
-Produce only the Dutch translation, without any additional explanations or commentary. Please translate the following English text into Dutch:\n\n"""
-
-message = [
-    (
-        "system",
-        llm_instruction
-    ),
-    (
-        "human",
-        "How is it going? I will be flying to Amsterdam tomorrow. Would you like to meet for a coffee?"
-
+    llm = ChatOllama(
+        model="translategemma",
+        temperature=temperature,
+        base_url=server_url
     )
-]
 
-response = llm.invoke(message)
-print(response)
+    instruction = f"""
+    You are a professional {from_language} ({from_lang_code}) to {to_language} ({to_lang_code}) translator.
+    Your goal is to accurately convey the meaning and nuances of the original {from_language} text while adhering to {to_language} grammar, vocabulary, and cultural sensitivities.
+    Produce only the {to_language} translation, without any additional explanations or commentary.
+    Please translate the following {from_language} text into {to_language}:\n\n{query}"""
+
+    translation = llm.invoke(instruction)
+
+    return {
+        "input": query,
+        "output": translation.content,
+        "from_lang_code": from_lang_code,
+        "to_lang_code": to_lang_code,
+        "temperature": temperature
+    }
