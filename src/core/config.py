@@ -45,7 +45,13 @@ class Config(BaseSettings):
                     ],
                     "translations": [
                         {
-                            "name": "translategemma:latest"
+                            "name": "translategemma:latest",
+                            "languages": {
+                                "en-GB": "English",
+                                "de-DE": "German",
+                                "pt-PT": "Portuguese",
+                                "nl": "Dutch"
+                            }
                         }
                     ],
                     "llms": [

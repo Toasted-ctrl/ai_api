@@ -6,7 +6,11 @@ class VectorEmbeddingModel(BaseModel):
     name: str
     dimensions: int
 
-class TranslationModel(BaseModel):
+class TranslationModel_withLanguages(BaseModel):
+    name: str
+    languages: dict[str, str]
+
+class TranslationModel_withoutLanguages(BaseModel):
     name: str
 
 class LLM(BaseModel):
@@ -17,7 +21,7 @@ class LLM(BaseModel):
 
 class AllType(BaseModel):
     vector_embeddings: list[VectorEmbeddingModel]
-    translations: list[TranslationModel]
+    translations: list[TranslationModel_withoutLanguages]
     llms: list[LLM]
 
 class AllServer(BaseModel):
@@ -44,7 +48,7 @@ class ReturnVecterEmbeddingsServerLayout(BaseModel):
 # Translation models
 
 class TMType(BaseModel):
-    translations: list[TranslationModel]
+    translations: list[TranslationModel_withLanguages]
 
 class TMServer(BaseModel):
     server: str
