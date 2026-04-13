@@ -11,7 +11,7 @@ def get_translation_translategemma(
     server_url: str,
     temperature: float=0.1):
 
-    """Invokes a translation from translategemma 8B"""
+    """Invokes a translation from translategemma 4B"""
 
     llm = ChatOllama(
         model="translategemma",
