@@ -6,7 +6,7 @@ load_dotenv()
 class Config(BaseSettings):
     app_name: str = "AIA: Artificial Intelligence API"
     app_maintainer: str = "Toasted-ctrl"
-    app_version: str = "0.0.3"
+    app_version: str = "0.0.4"
 
     OLLAMA_BASE_URL: str = ""
     OLLAMA_MAC: str = ""
