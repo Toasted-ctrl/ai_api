@@ -27,7 +27,7 @@ class Config(BaseSettings):
                 "url_ext_list_models": "/api/tags"
             }
         }
-    
+
     @property
     def get_model_configuration(self) -> list[dict]:
 
@@ -39,13 +39,13 @@ class Config(BaseSettings):
                 "model_types": {
                     "vector_embeddings": [
                         {
-                            "name": "mxbai-embed-large:latest",
+                            "name": "mxbai-embed-large",
                             "dimensions": 1024
                         }
                     ],
                     "translations": [
                         {
-                            "name": "translategemma:latest",
+                            "name": "translategemma",
                             "languages": {
                                 "en-GB": "English",
                                 "de-DE": "German",
@@ -57,16 +57,35 @@ class Config(BaseSettings):
                     ],
                     "llms": [
                         {
-                            "name": "llama3.1:latest",
+                            "name": "llama3.1",
                             "stream_enabled": False
                         },
                         {
-                            "name": "llama2:latest",
+                            "name": "llama2",
                             "stream_enabled": False
                         }
                     ]
                 }
             }
         ]
+    
+    def supported_models(self, type: str) -> dict[str, str]:
+
+        """Returns all supported models for the specified type,
+        and consequently which server / service the model is hosted on."""
+
+        if not type in ["translations", "llms", "vector_embeddings"]:
+            raise ValueError("Invalid type")
+
+        servers = self.get_model_configuration
+        supported = {}
+        for server in servers:
+            models: list = server.get('model_types').get(type)
+            if not models:
+                continue
+            for model in models:
+                supported[model.get('name')] = server.get('server')
+
+        return supported
 
 config = Config()

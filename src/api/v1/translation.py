@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from core.config import config
 from models.m_translations import PayloadTranslation, ReturnTranslation
-from model_servers.ollama_1.translategemma import get_translation_translategemma
+from model_servers.ollama.translations import get_translation_translategemma
 
 router = APIRouter()
 tags = ["Translations"]
