@@ -1,0 +1,15 @@
+[project]
+name = "ai-api"
+version = "0.1.0"
+description = "AI API that function as a general gateway for multiple providers (e.g., Ollama, Anthropic)."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.139.0",
+    "langchain-ollama>=1.1.0",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "python-dotenv>=1.2.2",
+    "requests>=2.34.2",
+    "wakeonlan>=4.0.0",
+]
