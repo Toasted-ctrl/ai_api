@@ -6,7 +6,7 @@ load_dotenv()
 class Config(BaseSettings):
     app_name: str = "AIA: Artificial Intelligence API"
     app_maintainer: str = "Toasted-ctrl"
-    app_version: str = "0.0.4"
+    app_version: str = "0.1.0"
 
     OLLAMA_BASE_URL: str = ""
     OLLAMA_MAC: str = ""
@@ -28,7 +28,7 @@ class Config(BaseSettings):
             }
         }
 
-    @property
+    @property # TODO: Remove.
     def get_model_configuration(self) -> list[dict]:
 
         """Returns dictionary of configured servers and models."""
@@ -69,6 +69,14 @@ class Config(BaseSettings):
             }
         ]
     
+    @property
+    def SUPPORTED_PROVIDERS(self) -> list[str]:
+        """Returns a list of supported Providers (e.g., Ollama, Anthropic)."""
+        return [
+            "Ollama"
+        ]
+
+    # TODO: Remove.
     def supported_models(self, type: str) -> dict[str, str]:
 
         """Returns all supported models for the specified type,
