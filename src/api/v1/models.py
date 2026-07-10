@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from core.config import config
-from models.m_models import ReturnAllModels, ReturnTranslationModelsServerLayout, ReturnVecterEmbeddingsServerLayout, ReturnLLMServerLayout
+from models.m_models import ReturnAllModels, ReturnTranslationModelsServerLayout, ReturnVecterEmbeddingsServerLayout
 
 router = APIRouter()
 tags = ["Models"]
@@ -34,17 +34,6 @@ def get_translation_models():
     response_model=ReturnVecterEmbeddingsServerLayout
 )
 def get_vector_embedding_models():
-    return {
-        "detail": "Success",
-        "servers": config.get_model_configuration
-    }
-
-@router.get(
-    "/models/llms",
-    tags=["Models", "LLMs"],
-    response_model=ReturnLLMServerLayout
-)
-def get_llms():
     return {
         "detail": "Success",
         "servers": config.get_model_configuration
