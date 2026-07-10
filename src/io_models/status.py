@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class ReturnStatus(BaseModel):
+class ResponseStatus(BaseModel):
     status: str

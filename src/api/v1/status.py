@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from models.m_status import ReturnStatus
+from io_models.status import ResponseStatus
 
 router = APIRouter()
 tags = ["Status"]
@@ -8,7 +8,7 @@ tags = ["Status"]
 @router.get(
     "/status",
     tags=tags,
-    response_model=ReturnStatus
+    response_model=ResponseStatus
 )
 def get_status():
     return {
