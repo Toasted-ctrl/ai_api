@@ -1,5 +1,4 @@
 import requests
-from fastapi import HTTPException, status
 from langchain_ollama import ChatOllama
 
 from core.config import config
@@ -29,12 +28,12 @@ def ollama_llm_response(
         yield chunk.content
 
 
-def ollama_get_llms() -> list[str]:
+def ollama_get_llms(host_url) -> list[str]:
 
     """Returns a list of currently available models on the Ollama server.
     Translation and vector embedding models are excluded."""
 
-    url = f"{config.OLLAMA_BASE_URL}/api/tags"
+    url = f"{host_url}/api/tags"
     response = requests.get(url=url)
     response.raise_for_status()
     models = response.json()
