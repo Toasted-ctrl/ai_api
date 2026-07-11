@@ -1,0 +1,14 @@
+{
+    "llms": [
+        "llama3.1",
+        "llama2",
+        "gemma4:e4b",
+        "gemma4:e2b"
+    ],
+    "translations": [
+        "translategemma:latest"
+    ],
+    "vector_embeddings": [
+        "mxbai-embed-large:latest"
+    ]
+}

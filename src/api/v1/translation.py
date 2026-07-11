@@ -21,7 +21,7 @@ def post_translation(payload: PostTranslation):
             detail=f"Unsupported Provider: '{payload.provider}'"
         )
     
-    if payload.provider == 'Ollama':
+    if payload.provider == 'Ollama-1':
 
         if payload.model == 'translategemma:latest':
 
