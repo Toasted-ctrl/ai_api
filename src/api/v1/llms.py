@@ -28,7 +28,7 @@ def post_llm(payload: PostLLM):
             detail="Model or Agent must not be None"
         )
     
-    if payload.provider == "Ollama":
+    if payload.provider == "Ollama-1":
 
         if payload.model is None:
             raise HTTPException(
@@ -41,7 +41,7 @@ def post_llm(payload: PostLLM):
                 prompt=payload.prompt,
                 stream=payload.stream,
                 model=payload.model,
-                url=config.OLLAMA_BASE_URL,
+                url=config.LOCAL_SERVER_CONFIGURATION["Ollama-1"]['base_url'],
                 top_k=payload.parameters.top_k,
                 top_p=payload.parameters.top_p,
                 temperature=payload.parameters.temperature
