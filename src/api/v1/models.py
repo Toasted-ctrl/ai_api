@@ -17,6 +17,7 @@ def get_all_models():
         "servers": config.get_model_configuration
     }
 
+
 @router.get(
     "/models/translation-models",
     tags=["Models", "Translations"],
@@ -27,6 +28,7 @@ def get_translation_models():
         "detail": "Success",
         "servers": config.get_model_configuration
     }
+
 
 @router.get(
     "/models/vector-embeddings",
