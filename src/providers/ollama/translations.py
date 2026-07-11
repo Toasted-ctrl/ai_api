@@ -15,7 +15,7 @@ def get_translation_translategemma(
     llm = ChatOllama(
         model="translategemma:latest",
         temperature=temperature,
-        base_url=config.OLLAMA_BASE_URL,
+        base_url=config.OLLAMA_1_BASE_URL,
         disable_streaming=True
     )
 
