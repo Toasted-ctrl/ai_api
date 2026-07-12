@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from core.config import config
 from io_models.servers import ResponseLocalServers, ResponseWakeServer
-from servers.boot_server import wake_server
+from servers.wake import wake_server
 from servers.status import is_llm_available, is_server_online
 
 router = APIRouter()
