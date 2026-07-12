@@ -58,5 +58,29 @@ class Config(BaseSettings):
         (e.g., llms, translations, vector-embeddings)"""
 
         return _model_types()
+    
+
+    @property
+    def TRANSLATION_MODELS(self) -> list:
+
+        """Returns a list of models suitable for translation tasks."""
+
+        return _model_types().get("translation", [])
+    
+    
+    @property
+    def VECTOR_EMBEDDING_MODELS(self) -> list:
+
+        """Returns a list of models suitable for vector embeddings."""
+
+        return _model_types().get("vector_embedding", [])
+    
+
+    @property
+    def CHAT_COMPLETION_MODELS(self) -> list:
+
+        """Returns a list of chat completion models"""
+
+        return _model_types().get("chat_completion", [])
 
 config = Config()
