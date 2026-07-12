@@ -1,0 +1,1 @@
+This application currently does not include any authentication steps. This means that you should NOT expose this API to the public internet, should you attempt to run it. I'll at a later stage implement authentication / authorization by using API keys and email IDs. I recommend running this on a local network / VPN only.
