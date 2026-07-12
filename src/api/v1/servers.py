@@ -8,7 +8,7 @@ from servers.status import is_llm_available, is_server_online
 router = APIRouter()
 
 @router.get(
-    "/servers/on_prem",
+    "/servers",
     tags=["Servers (On Prem)"],
     response_model=ResponseLocalServers
 )
@@ -31,7 +31,7 @@ def get_local_servers():
 
 
 @router.get(
-    "/servers/on_prem/wake/{server_name}",
+    "/servers/wake/{server_name}",
     tags=["Servers (On Prem)"],
     response_model=ResponseWakeServer
 )
