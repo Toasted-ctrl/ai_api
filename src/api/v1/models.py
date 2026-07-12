@@ -1,51 +1,54 @@
 from fastapi import APIRouter
 
-from core.config import config
-from models.m_models import ReturnAllModels, ReturnTranslationModelsServerLayout, ReturnVecterEmbeddingsServerLayout, ReturnLLMServerLayout
+from io_models.models import (
+    ResponseProviderModelsAll,
+    ResponseProviderModelsChatCompletions,
+    ResponseProviderModelsTranslation,
+    ResponseProviderModelsVectorEmbedding
+)
+from providers.general import _get_all_models
 
 router = APIRouter()
-tags = ["Models"]
 
 @router.get(
     "/models",
-    tags=tags,
-    response_model=ReturnAllModels
+    tags=["Models"],
+    response_model=ResponseProviderModelsAll
 )
 def get_all_models():
     return {
-        "detail": "Success",
-        "servers": config.get_model_configuration
+        "provider": _get_all_models()
     }
 
-@router.get(
-    "/models/translation-models",
-    tags=["Models", "Translations"],
-    response_model=ReturnTranslationModelsServerLayout
-)
-def get_translation_models():
-    return {
-        "detail": "Success",
-        "servers": config.get_model_configuration
-    }
 
 @router.get(
-    "/models/vector-embeddings",
-    tags=["Models", "Vector Embeddings"],
-    response_model=ReturnVecterEmbeddingsServerLayout
+    "/models/chat_completion",
+    tags=["Models", "Chat Completion"],
+    response_model=ResponseProviderModelsChatCompletions
 )
-def get_vector_embedding_models():
+def get_all_models_chat_completion():
     return {
-        "detail": "Success",
-        "servers": config.get_model_configuration
+        "provider": _get_all_models()
     }
 
+
 @router.get(
-    "/models/llms",
-    tags=["Models", "LLMs"],
-    response_model=ReturnLLMServerLayout
+    "/models/translation",
+    tags=["Models", "Translation"],
+    response_model=ResponseProviderModelsTranslation
 )
-def get_llms():
+def get_all_models_translation():
     return {
-        "detail": "Success",
-        "servers": config.get_model_configuration
+        "provider": _get_all_models()
+    }
+
+
+@router.get(
+    "/models/vector_embedding",
+    tags=["Models", "Vector Embedding"],
+    response_model=ResponseProviderModelsVectorEmbedding
+)
+def get_all_models_vector_embedding():
+    return {
+        "provider": _get_all_models()
     }

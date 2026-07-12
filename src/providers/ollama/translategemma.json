@@ -1,0 +1,13 @@
+{
+    "short_code_remap": {
+        "nl-NL": "nl",
+        "sl-SI": "sl"
+    },
+    "supported": {
+        "de-DE": "German",
+        "en-GB": "English",
+        "nl-NL": "Dutch",
+        "pt-PT": "Portuguese",
+        "sl-SI": "Slovenian"
+    }
+}

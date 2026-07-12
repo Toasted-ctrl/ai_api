@@ -6,3 +6,6 @@ venv/
 
 # CACHE
 __pycache__/
+
+# UV Lockfile
+uv.lock
