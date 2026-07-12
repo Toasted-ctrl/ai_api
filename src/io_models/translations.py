@@ -3,12 +3,10 @@ from pydantic import BaseModel
 class TranslationParameters(BaseModel):
     temperature: float = 0.1
 
-class PostTranslation(BaseModel):
+class PayloadTranslation(BaseModel):
     from_lang_code: str
     to_lang_code: str
     parameters: TranslationParameters
-    provider: str
-    model: str
     prompt: str
 
 class ResponseTranslation(BaseModel):
@@ -16,3 +14,6 @@ class ResponseTranslation(BaseModel):
     translation: str
     from_lang_code: str
     to_lang_code: str
+
+class ResponseTranslationLanguages(BaseModel):
+    languages: list[str]
