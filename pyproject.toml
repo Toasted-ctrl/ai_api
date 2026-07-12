@@ -1,15 +1,15 @@
 [project]
 name = "ai-api"
 version = "0.1.0"
-description = "AI API that function as a general gateway for multiple providers (e.g., Ollama, Anthropic)."
+description = "AI API that functions as a general gateway for multiple providers (e.g., Ollama, Anthropic)."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.139.0",
+    "httpx2>=2.5.0",
     "langchain-ollama>=1.1.0",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
-    "pytest>=9.1.1",
     "python-dotenv>=1.2.2",
     "requests>=2.34.2",
     "uvicorn>=0.51.0",
@@ -18,3 +18,12 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
