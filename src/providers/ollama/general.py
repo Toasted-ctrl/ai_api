@@ -1,15 +1,18 @@
-import requests
+import httpx
 
 from core.config import config
 
-def get_all_models_ollama(host_url) -> list[str]:
+async def get_all_models_ollama(host_url) -> list[str]:
 
     """Returns a dictionary of all available models on the Ollama server.
     Subdivided by expertise (e.g., chat_completion, translation, vector_embedding)."""
 
     url = f"{host_url}/api/tags"
-    response = requests.get(url=url)
-    response.raise_for_status()
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url=url)
+        response.raise_for_status()
+
     output = response.json()
     models = [model['name'] for model in output['models']]
 
