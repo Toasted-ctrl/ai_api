@@ -5,5 +5,6 @@ Hi! This is a project where I'm attempting to build my own gateway API, which sh
 - LangChain
 - Ollama
 - Docker
+- Redis
 ## Setup
 - Please check the 'SETUP.md' file to get started.
