@@ -26,6 +26,12 @@ class Config(BaseSettings):
     OLLAMA_1_BASE_URL: str = ""
     OLLAMA_1_MAC: str = ""
     OLLAMA_1_HOSTNAME: str = ""
+
+    REDIS_USER: str = ""
+    REDIS_HOSTNAME: str = ""
+    REDIS_PASSWORD: str = ""
+    REDIS_PREFIX: str = ""
+    REDIS_PORT: int
     
     @property
     def LOCAL_SERVER_CONFIGURATION(self) -> dict:
