@@ -1,5 +1,7 @@
 from fastapi import APIRouter
+from fastapi_cache.decorator import cache
 
+from core.logging import get_logger
 from io_models.models import (
     ResponseProviderModelsAll,
     ResponseProviderModelsChatCompletions,
@@ -8,6 +10,8 @@ from io_models.models import (
 )
 from providers.general import _get_all_models
 
+log = get_logger()
+
 router = APIRouter()
 
 @router.get(
@@ -15,9 +19,11 @@ router = APIRouter()
     tags=["Models"],
     response_model=ResponseProviderModelsAll
 )
-def get_all_models():
+@cache(expire=120)
+async def get_all_models():
+    log.debug("Result cached")
     return {
-        "provider": _get_all_models()
+        "provider": await _get_all_models()
     }
 
 
@@ -26,9 +32,11 @@ def get_all_models():
     tags=["Models", "Chat Completion"],
     response_model=ResponseProviderModelsChatCompletions
 )
-def get_all_models_chat_completion():
+@cache(expire=120)
+async def get_all_models_chat_completion():
+    log.debug("Result cached")
     return {
-        "provider": _get_all_models()
+        "provider": await _get_all_models()
     }
 
 
@@ -37,9 +45,11 @@ def get_all_models_chat_completion():
     tags=["Models", "Translation"],
     response_model=ResponseProviderModelsTranslation
 )
-def get_all_models_translation():
+@cache(expire=120)
+async def get_all_models_translation():
+    log.debug("Result cached")
     return {
-        "provider": _get_all_models()
+        "provider": await _get_all_models()
     }
 
 
@@ -48,7 +58,9 @@ def get_all_models_translation():
     tags=["Models", "Vector Embedding"],
     response_model=ResponseProviderModelsVectorEmbedding
 )
-def get_all_models_vector_embedding():
+@cache(expire=120)
+async def get_all_models_vector_embedding():
+    log.debug("Result cached")
     return {
-        "provider": _get_all_models()
+        "provider": await _get_all_models()
     }
