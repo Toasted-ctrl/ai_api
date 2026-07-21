@@ -6,8 +6,8 @@ from middleware.authenticate import require_authentication
 router = APIRouter()
 
 @router.post(
-    "/authenticate",
-    tags=["Authentication"],
+    "/jwt",
+    tags=["JWT"],
     response_model=ResponseAuthenticate,
     dependencies=[Depends(require_authentication)]
 )

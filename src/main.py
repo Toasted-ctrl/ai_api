@@ -5,7 +5,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 import uvicorn
 
-from api.v1 import chat_completion, root, servers, models, status, translation, authenticate
+from api.v1 import chat_completion, jwt, root, servers, models, status, translation
 from core.config import config
 from core.logging import get_logger
 
@@ -30,7 +30,7 @@ app = FastAPI(
 )
 
 app.include_router(
-    router=authenticate.router,
+    router=jwt.router,
     prefix=v1_prefix
 )
 
