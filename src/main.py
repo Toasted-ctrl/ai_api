@@ -5,7 +5,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 import uvicorn
 
-from api.v1 import chat_completion, root, servers, models, status, translation
+from api.v1 import chat_completion, root, servers, models, status, translation, authenticate
 from core.config import config
 from core.logging import get_logger
 
@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
         f"redis://{config.REDIS_USER}:{config.REDIS_PASSWORD}@{config.REDIS_HOSTNAME}:{config.REDIS_PORT}/0",
     )
     FastAPICache.init(RedisBackend(redis=redis), prefix=config.REDIS_PREFIX)
-    log.info("Cache initialized!")
+    log.info("Redis cache initialized")
     yield
     await redis.close()
 
@@ -29,12 +29,40 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.include_router(root.router, prefix=v1_prefix)
-app.include_router(servers.router, prefix=v1_prefix)
-app.include_router(models.router, prefix=v1_prefix)
-app.include_router(status.router, prefix=v1_prefix)
-app.include_router(translation.router, prefix=v1_prefix)
-app.include_router(chat_completion.router, prefix=v1_prefix)
+app.include_router(
+    router=authenticate.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=root.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=servers.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=models.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=status.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=translation.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=chat_completion.router,
+    prefix=v1_prefix
+)
 
 if __name__ == "__main__":
     uvicorn.run(
