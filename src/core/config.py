@@ -1,10 +1,21 @@
-from dotenv import load_dotenv
-from functools import lru_cache
-from pydantic_settings import BaseSettings
+from functools import lru_cache, cached_property
+from pathlib import Path
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 import json
 import os
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+_env_file = BASE_DIR / ".env"
+
+class ApplicationConfig(BaseModel):
+    name: str
+    api_key: str
+    hmac_secret: bytes
+    require_google_id: bool
+    require_jwt: bool
+
 
 @lru_cache(maxsize=1)
 def _model_types() -> dict:
@@ -19,6 +30,12 @@ def _model_types() -> dict:
     
 
 class Config(BaseSettings):
+
+    model_config = SettingsConfigDict(
+        env_file=_env_file if _env_file.exists() else None,
+        extra="ignore"
+    )
+
     app_name: str = "AIA: Artificial Intelligence API"
     app_maintainer: str = "Toasted-ctrl"
     app_version: str = "0.1.0"
@@ -32,8 +49,24 @@ class Config(BaseSettings):
     REDIS_PASSWORD: str = ""
     REDIS_PREFIX: str = ""
     REDIS_PORT: int
+
+    ADMIN_HMAC: str = ""
+    ADMIN_API_KEY: str = ""
+    ADMIN_REQUIRE_GOOGLE_ID: bool = False
+    ADMIN_REQUIRE_JWT: bool = False
+
+    JELAIME_HMAC: str = ""
+    JELAIME_API_KEY: str = ""
+    JELAIME_REQUIRE_GOOGLE_ID: bool = True
+    JELAIME_REQUIRE_JWT: bool = True
+
+    # NOTE: Update _APP_REGISTRY if new applications are added.
+    _CLIENT_REGISTRY = [
+        {"key": "jelaime", "env_prefix": "JELAIME", "name": "LEJAIME App"},
+        {"key": "admin", "env_prefix": "ADMIN", "name": "ADMIN Key"}
+    ]
     
-    @property
+    @cached_property
     def LOCAL_SERVER_CONFIGURATION(self) -> dict:
 
         """Returns a dictionary of local server configurations"""
@@ -47,7 +80,21 @@ class Config(BaseSettings):
         }
     
 
-    @property
+    @cached_property
+    def APPLICATIONS(self) -> dict[str, ApplicationConfig]:
+        return {
+            app["key"]: ApplicationConfig(
+                name=app["name"],
+                api_key=getattr(self, f"{app['env_prefix']}_API_KEY"),
+                hmac_secret=getattr(self, f"{app['env_prefix']}_HMAC").encode(encoding="utf-8"),
+                require_google_id=getattr(self, f"{app['env_prefix']}_REQUIRE_GOOGLE_ID"),
+                require_jwt=getattr(self, f"{app['env_prefix']}_REQUIRE_JWT")
+            )
+            for app in self._CLIENT_REGISTRY
+        }
+
+
+    @cached_property
     def SUPPORTED_PROVIDERS(self) -> list[str]:
 
         """Returns a list of supported Providers (e.g., Ollama, Anthropic)."""
