@@ -2,7 +2,6 @@ from functools import lru_cache, cached_property
 from pathlib import Path
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
 import json
 import os
 
