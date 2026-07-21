@@ -1,19 +1,15 @@
-import platform
 import requests
-import subprocess
+import socket
 
-def is_server_online(host: str) -> bool:
+def is_server_online(host: str, port: int = 11434, timeout: float = 2.0) -> bool:
     
     """Returns True if the returns a response. Requires pinging IP address or hostname."""
 
-    # -n for Windows, -c for Unix
-    param = "-n" if platform.system().lower() == "Windows" else "-c"
-    result = subprocess.run(
-        ["ping", param, "1", host]
-    )
-
-    # Return True if online
-    return result.returncode == 0 
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (socket.timeout, ConnectionRefusedError, OSError):
+        return False
 
 
 def is_llm_available(url) -> bool:
