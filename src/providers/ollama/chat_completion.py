@@ -9,7 +9,7 @@ def complete_chat_ollama(
     top_k: int | None = None,
     top_p: float | None = None
 ):
-    
+
     """Returns a response from an LLM hosted on the Ollama server."""
 
     llm = ChatOllama(
