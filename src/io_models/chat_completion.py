@@ -5,6 +5,7 @@ class ChatCompletionParameters(BaseModel):
     top_k: int | None = None
     top_p: float | None = None
 
+
 class PayloadChatCompletion(BaseModel):
     provider: str
     model: str | None = None
