@@ -22,7 +22,7 @@ def test_applications():
 
 
     # Verify JELAIME settings
-
+    
     assert "jelaime" in apps
 
     jelaime = apps.get("jelaime", None)
