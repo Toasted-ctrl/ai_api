@@ -9,3 +9,6 @@ __pycache__/
 
 # UV Lockfile
 uv.lock
+
+# Test CURL file
+curl_tests.txt
