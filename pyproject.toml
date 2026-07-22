@@ -27,4 +27,5 @@ pythonpath = ["src"]
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-dotenv>=0.5.2",
 ]
