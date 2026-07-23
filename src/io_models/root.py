@@ -5,7 +5,6 @@ class Contact(BaseModel):
 
 
 class ResponseRoot(BaseModel):
-    detail: str
     version: str
     application_name: str
     contact: Contact

@@ -8,10 +8,9 @@ router = APIRouter()
 @router.get("/", response_model=ResponseRoot, tags=["Root"])
 def get_root():
     return {
-        "detail": "Success",
-        "application_name": config.app_name,
-        "version": config.app_version,
+        "application_name": config.APP_NAME,
+        "version": config.APP_VERSION,
         "contact": {
-            "maintainer": config.app_maintainer
+            "maintainer": config.APP_MAINTAINER
         }
     }
