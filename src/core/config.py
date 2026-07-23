@@ -59,11 +59,20 @@ class Config(BaseSettings):
     JELAIME_REQUIRE_GOOGLE_ID: bool = True
     JELAIME_REQUIRE_JWT: bool = True
 
+    PG_HOSTNAME: str = ""
+    PG_DATABASE: str = ""
+    PG_USERNAME: str = ""
+    PG_PASSWORD: str = ""
+    PG_DIALECT: str = ""
+    PG_DRIVER: str = ""
+    PG_PORT: int
+
     # NOTE: Update _APP_REGISTRY if new applications are added.
     _CLIENT_REGISTRY = [
         {"key": "jelaime", "env_prefix": "JELAIME", "name": "LEJAIME App"},
         {"key": "admin", "env_prefix": "ADMIN", "name": "ADMIN Key"}
     ]
+
     
     @cached_property
     def LOCAL_SERVER_CONFIGURATION(self) -> dict:
@@ -77,6 +86,18 @@ class Config(BaseSettings):
                 "hostname": self.OLLAMA_1_HOSTNAME
             }
         }
+
+
+    @cached_property
+    def PG_DB_URL(self) -> str:
+
+        """Returns the database url"""
+
+        return (
+            f"{self.PG_DIALECT}+{self.PG_DRIVER}://"
+            f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
+            f"{self.PG_HOSTNAME}:{self.PG_PORT}/{self.PG_DATABASE}"
+        )
     
 
     @cached_property

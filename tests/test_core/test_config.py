@@ -36,3 +36,8 @@ def test_applications():
     assert jelaime.require_jwt
 
     assert isinstance(jelaime.hmac_secret, bytes)
+
+
+def test_db_url():
+
+    assert isinstance(config.PG_DB_URL, str)
