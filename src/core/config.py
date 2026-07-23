@@ -2,8 +2,14 @@ from functools import lru_cache, cached_property
 from pathlib import Path
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import ClassVar, Set
 import json
 import os
+import sys
+
+from core.logging import get_logger
+
+log = get_logger()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 _env_file = BASE_DIR / ".env"
@@ -35,9 +41,17 @@ class Config(BaseSettings):
         extra="ignore"
     )
 
-    app_name: str = "AIA: Artificial Intelligence API"
-    app_maintainer: str = "Toasted-ctrl"
-    app_version: str = "0.1.0"
+    # NOTE: Fill with fields that don't require checking on initialization.
+    _SKIP_EMPTY_CHECK: ClassVar[Set[str]] = {
+        "_SKIP_EMPTY_CHECK",
+        "APP_NAME",
+        "APP_MAINTAINER",
+        "APP_VERSION"
+    }
+
+    APP_NAME: str = "AIA: Artificial Intelligence API"
+    APP_MAINTAINER: str = "Toasted-ctrl"
+    APP_VERSION: str = "0.1.1"
 
     OLLAMA_1_BASE_URL: str = ""
     OLLAMA_1_MAC: str = ""
@@ -73,7 +87,32 @@ class Config(BaseSettings):
         {"key": "admin", "env_prefix": "ADMIN", "name": "ADMIN Key"}
     ]
 
-    
+
+    def model_post_init(self, context) -> None:
+        all_fields = set(self.__class__.__annotations__.keys())
+        unset = all_fields - self.model_fields_set - self._SKIP_EMPTY_CHECK
+        empty = {
+            name
+            for name in (all_fields - self._SKIP_EMPTY_CHECK)
+            if isinstance(getattr(self, name, None), str)
+            and not getattr(self, name).strip()
+        }
+        problems = unset | empty
+        if problems:
+            msgs = []
+            if unset:
+                msgs.append(f"Missing: {', '.join(sorted(unset))}")
+            if empty:
+                msgs.append(f"Empty: {', '.join(sorted(empty))}")
+            log.warning(
+                "The following fields have problems in the .env:\n"
+                + "\n".join(msgs)
+                + "\nShutting down"
+            )
+            raise SystemExit(1)
+        log.info("Environment variables loaded")
+
+
     @cached_property
     def LOCAL_SERVER_CONFIGURATION(self) -> dict:
 

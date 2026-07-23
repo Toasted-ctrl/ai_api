@@ -24,8 +24,8 @@ async def lifespan(app: FastAPI):
     await redis.close()
 
 app = FastAPI(
-    title=config.app_name,
-    version=config.app_version,
+    title=config.APP_NAME,
+    version=config.APP_VERSION,
     lifespan=lifespan
 )
 
