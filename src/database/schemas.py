@@ -7,7 +7,8 @@ from sqlalchemy import (
     CheckConstraint,
     Boolean,
     ForeignKey,
-    func
+    func,
+    UniqueConstraint
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -23,6 +24,17 @@ class Base(DeclarativeBase):
 
 class ApiKeys(Base):
     __tablename__ = 'api_keys'
+    
+    __table_args__ = (
+        CheckConstraint(
+            "key_type IN ('User', 'Application')",
+            name="check_key_type"
+        ),
+        UniqueConstraint(
+            'client', 'owner_email',
+            name="uq_client_owner_email"
+        )
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID,
@@ -30,7 +42,7 @@ class ApiKeys(Base):
         default=lambda: uuid.uuid4()
     )
 
-    api_key: Mapped[str] = mapped_column(
+    api_key_hash: Mapped[str] = mapped_column(
         String(255),
         unique=True,
         nullable=False
@@ -38,8 +50,12 @@ class ApiKeys(Base):
 
     client: Mapped[str] = mapped_column(
         String(100),
-        nullable=False,
-        unique=True
+        nullable=False
+    )
+
+    key_type: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False
     )
 
     created_date: Mapped[datetime] = mapped_column(
@@ -60,11 +76,16 @@ class ApiKeys(Base):
 
     is_active: Mapped[bool] = mapped_column(
         Boolean,
-        nullable=True,
+        nullable=False,
         server_default=text("true")
     )
 
-    hmac_secret: Mapped[str] = mapped_column(
+    owner_email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    hmac_secret_hash: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
         unique=True
@@ -75,6 +96,48 @@ class ApiKeys(Base):
         nullable=False,
         server_default=text("current_user")
     )
+
+
+class Users(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID,
+        primary_key=True,
+        default=lambda: uuid.uuid4()
+    )
+
+    person_id: Mapped[uuid.UUID] = mapped_column(
+        UUID,
+        ForeignKey("persons.id"),
+        nullable=False
+    )
+
+    api_key_id: Mapped[uuid.UUID] = mapped_column(
+        UUID,
+        ForeignKey("api_keys.id"),
+        nullable=False
+    )
+
+    external_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
+    created_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now()
+    )
+
+    created_by: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        server_default=text("current_user")
+    )
+
+    # Relationships
+    person: Mapped["Persons"] = relationship(back_populates="memberships")
 
 
 class Persons(Base):
@@ -104,7 +167,8 @@ class Persons(Base):
 
     created_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False
+        nullable=False,
+        server_default=func.now()
     )
 
     created_by: Mapped[str] = mapped_column(
@@ -115,62 +179,3 @@ class Persons(Base):
 
     # Relationships
     memberships: Mapped[list["Users"]] = relationship(back_populates="person")
-
-
-class Users(Base):
-    __tablename__ = "users"
-
-    __table_args__ = (
-        CheckConstraint(
-            "user_type IN ('api', 'frontend')",
-            name="check_user_type"
-        ),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID,
-        primary_key=True,
-        default=lambda: uuid.uuid4()
-    )
-
-    person_id: Mapped[uuid.UUID] = mapped_column(
-        UUID,
-        ForeignKey("persons.id"),
-        nullable=False
-    )
-
-    user_type: Mapped[str] = mapped_column(
-        String(10),
-        nullable=False
-    )
-
-    client: Mapped[str] = mapped_column(
-        String(100),
-        ForeignKey("api_keys.client"),
-        nullable=False
-    )
-
-    api_key: Mapped[str] = mapped_column(
-        String(255),
-        nullable=True,
-        unique=True
-    )
-
-    external_id: Mapped[str] = mapped_column(
-        String(255),
-        nullable=True
-    )
-
-    created_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False
-    )
-
-    created_by: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-        server_default=text("current_user")
-    )
-
-    # Relationships
-    person: Mapped["Persons"] = relationship(back_populates="memberships")
