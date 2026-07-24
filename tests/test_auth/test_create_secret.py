@@ -1,8 +1,8 @@
-from auth.create_api_key import create_api_key
+from auth.create_secret import create_secret
 
 def test_valid():
 
-    key = create_api_key()
+    key = create_secret()
 
     assert isinstance(key, str)
     assert len(key) == 86
