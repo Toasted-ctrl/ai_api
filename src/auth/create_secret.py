@@ -1,7 +1,7 @@
 import secrets
 
 
-def create_api_key() -> str:
+def create_secret() -> str:
 
     """Creates a new random API key"""
 
