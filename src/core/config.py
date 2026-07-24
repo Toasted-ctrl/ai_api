@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import ClassVar, Set
 import json
 import os
-import sys
 
 from core.logging import get_logger
 
@@ -63,15 +62,25 @@ class Config(BaseSettings):
     REDIS_PREFIX: str = ""
     REDIS_PORT: int
 
+    ADMIN_CREATE_KEY: bool = True
     ADMIN_HMAC: str = ""
     ADMIN_API_KEY: str = ""
     ADMIN_REQUIRE_GOOGLE_ID: bool = False
     ADMIN_REQUIRE_JWT: bool = False
+    ADMIN_OWNER_EMAIL: str = ""
+    ADMIN_KEY_TYPE: str = ""
+    ADMIN_CLIENT: str = ""
+    ADMIN_FIRST_NAME: str = ""
+    ADMIN_LAST_NAME: str = ""
 
+    JELAIME_CREATE_KEY: bool = True
     JELAIME_HMAC: str = ""
     JELAIME_API_KEY: str = ""
     JELAIME_REQUIRE_GOOGLE_ID: bool = True
     JELAIME_REQUIRE_JWT: bool = True
+    JELAIME_OWNER_EMAIL: str = ""
+    JELAIME_KEY_TYPE: str = ""
+    JELAIME_CLIENT: str = ""
 
     PG_HOSTNAME: str = ""
     PG_DATABASE: str = ""
@@ -80,6 +89,8 @@ class Config(BaseSettings):
     PG_DIALECT: str = ""
     PG_DRIVER: str = ""
     PG_PORT: int
+
+    CREATE_TABLES: bool = True
 
     # NOTE: Update _APP_REGISTRY if new applications are added.
     _CLIENT_REGISTRY = [
