@@ -2,7 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import pytest
 
-from database.api_key import create_api_key
+from auth.hash import get_hash_sha356
+from database.store_secrets import store_secrets
 from database.schemas import ApiKeys, Base
 
 @pytest.fixture
@@ -21,28 +22,39 @@ class TestCreateApiKey:
 
     def test_valid(self, test_db):
         with Session(bind=test_db) as session:
-            key = create_api_key(
+            secrets = store_secrets(
                 db=session,
-                client="test_client"
+                client="test_client",
+                key_type="User",
+                owner_email="test_mail"
             )
             session.commit()
-            assert session.query(ApiKeys).filter(ApiKeys.api_key == key).count() == 1
+
+            assert (
+                session.query(ApiKeys)
+                .filter(ApiKeys.api_key_hash == get_hash_sha356(secrets.get('client_api_key')))
+                .count()
+            ) == 1
 
 
     def test_duplicate_key(self, test_db):
         with Session(bind=test_db) as session:
             test_client = "test_client"
-            key = create_api_key(
+            secrets = store_secrets(
                 db=session,
-                client=test_client
+                client=test_client,
+                key_type="User",
+                owner_email="test_mail"
             )
             session.commit()
             with pytest.raises(
                 ValueError,
-                match=f"Client '{test_client}' already exists"
+                match=f"Client '{test_client}' with owner 'test_mail' already exists"
             ):
-                key2 = create_api_key(
+                secrets2 = store_secrets(
                     db=session,
-                    client=test_client
+                    client=test_client,
+                    key_type="User",
+                    owner_email="test_mail"
                 )
                 session.commit()
