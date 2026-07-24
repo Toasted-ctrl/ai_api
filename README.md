@@ -6,5 +6,6 @@ Hi! This is a project where I'm attempting to build my own gateway API, which sh
 - Ollama
 - Docker
 - Redis
+- PostgreSQL
 ## Setup
 - Please check the 'SETUP.md' file to get started.
