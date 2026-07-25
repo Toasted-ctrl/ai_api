@@ -54,7 +54,7 @@ class ApiKeys(Base):
     )
 
     key_type: Mapped[str] = mapped_column(
-        String(10),
+        String(50),
         nullable=False
     )
 
@@ -156,12 +156,12 @@ class Persons(Base):
     )
 
     first_name: Mapped[str] = mapped_column(
-        String(50),
+        String(255),
         nullable=False
     )
 
     last_name: Mapped[str] = mapped_column(
-        String(50),
+        String(255),
         nullable=False
     )
 

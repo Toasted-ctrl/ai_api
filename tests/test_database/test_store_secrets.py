@@ -21,7 +21,7 @@ class TestCreateApiKey:
 
             assert (
                 session.query(ApiKeys)
-                .filter(ApiKeys.api_key_hash == get_hash_sha356(secrets.get('client_api_key')))
+                .filter(ApiKeys.api_key_hash == get_hash_sha356(secrets.client_api_key))
                 .count()
             ) == 1
 

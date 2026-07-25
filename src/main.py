@@ -8,7 +8,7 @@ import uvicorn
 from api.v1 import chat_completion, jwt, root, servers, models, status, translation
 from core.config import config
 from core.logging import get_logger
-from setup.create_admin import create_admin_user
+from setup.create_frontend_client import create_frontend_client
 from setup.create_tables import create_tables
 
 log = get_logger()
@@ -71,8 +71,16 @@ if __name__ == "__main__":
     if config.CREATE_TABLES:
         create_tables()
 
-    if config.ADMIN_CREATE_KEY:
-        create_admin_user()
+    if config.FRONTEND_APP_CREATE_KEY:
+        create_frontend_client(
+            client=config.FRONTEND_APP_CLIENT,
+            key_type=config.FRONTEND_APP_KEY_TYPE,
+            owner_email=config.FRONTEND_APP_OWNER_EMAIL,
+            require_external_id=config.FRONTEND_APP_REQUIRE_EXTERNAL_ID,
+            require_jwt=config.FRONTEND_APP_REQUIRE_JWT,
+            api_key=config.FRONTEND_APP_API_KEY,
+            hmac_secret=config.FRONTEND_APP_HMAC
+        )
 
     uvicorn.run(
         app=app,
