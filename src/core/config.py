@@ -73,6 +73,17 @@ class Config(BaseSettings):
     ADMIN_FIRST_NAME: str = ""
     ADMIN_LAST_NAME: str = ""
 
+    FRONTEND_APP_CREATE_KEY: bool = True
+    FRONTEND_APP_HMAC: str = ""
+    FRONTEND_APP_API_KEY: str = ""
+    FRONTEND_APP_REQUIRE_GOOGLE_ID: bool = True
+    FRONTEND_APP_REQUIRE_JWT: bool = True
+    FRONTEND_APP_OWNER_EMAIL: str = ""
+    FRONTEND_APP_KEY_TYPE: str = ""
+    FRONTEND_APP_CLIENT: str = ""
+
+    # TODO: Remove JELAIME requirements, replace with FRONTEND_APP_ instead.
+
     JELAIME_CREATE_KEY: bool = True
     JELAIME_HMAC: str = ""
     JELAIME_API_KEY: str = ""
