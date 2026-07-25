@@ -12,8 +12,6 @@ def create_admin_user():
 
     with get_db_session(db_url=config.PG_DB_URL) as session:
 
-        # Creating API key entry
-
         try:
 
             log.info("Creating Admin Secret...")
