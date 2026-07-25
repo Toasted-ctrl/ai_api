@@ -1,10 +1,23 @@
+from dataclasses import dataclass
 from sqlalchemy.orm import Session
+import uuid
 
 from auth.create_secret import create_secret
 from auth.hash import get_hash_sha356
+from core.logging import get_logger
 from database.schemas import ApiKeys
 
-# TODO: Create tests
+log = get_logger()
+
+
+@dataclass(frozen=True)
+class StoredClient:
+    """Represents the generated secrets and metadata returned after storing a new API key."""
+    client_api_key: str
+    client_hmac_secret: str
+    client_id: uuid.UUID
+    client_key_type: str
+
 
 def store_secrets(
     session: Session,
@@ -16,10 +29,12 @@ def store_secrets(
     is_active: bool = True,
     api_key: str | None = None,
     hmac_secret: str | None = None
-) -> dict[str, str]:
+) -> StoredClient:
 
     """Generates and stores a new API key for a client / user.
     Action still needs to be committed."""
+
+    log.debug("Generating new secrets...")
 
     if key_type not in ['User', 'Application']:
         raise ValueError("Key_type must be 'User' or 'Application'")
@@ -37,12 +52,10 @@ def store_secrets(
         db_key = get_hash_sha356(api_key)
 
     if hmac_secret is None:
-        cl_hmac = create_secret()
-        db_hmac = get_hash_sha356(cl_hmac)
+        hmac = create_secret()
 
     else:
-        cl_hmac = hmac_secret
-        db_hmac = get_hash_sha356(cl_hmac)
+        hmac = hmac_secret
 
     if session.query(ApiKeys).filter(ApiKeys.client == client, ApiKeys.owner_email == owner_email).count() == 1:
         raise ValueError(f"Client '{client}' with owner '{owner_email}' already exists, skipping...")
@@ -55,15 +68,17 @@ def store_secrets(
         owner_email=owner_email,
         require_external_id=require_external_id,
         is_active=is_active,
-        hmac_secret_hash=db_hmac
+        hmac_secret_hash=hmac
     )
 
     session.add(key)
     session.flush()
 
-    return {
-        "client_api_key": cl_key,
-        "client_hmac_secret": cl_hmac,
-        "client_id": key.id,
-        "client_key_ype": key_type
-    }
+    log.debug("Secrets generated...")
+
+    return StoredClient(
+        client_api_key=cl_key,
+        client_hmac_secret=hmac,
+        client_id=key.id,
+        client_key_type=key_type
+    )
