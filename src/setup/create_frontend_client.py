@@ -5,6 +5,8 @@ from database.store_secrets import store_secrets, StoredClient
 
 log = get_logger()
 
+# TODO: Build tests.
+
 def create_frontend_client(
     client: str,
     key_type: str,
