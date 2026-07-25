@@ -5,8 +5,6 @@ from database.schemas import Persons
 
 log = get_logger()
 
-# TODO: Create tests
-
 def store_person(
     session: Session,
     first_name: str,
