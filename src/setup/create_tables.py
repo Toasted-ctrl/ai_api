@@ -17,6 +17,8 @@ def create_tables():
         Base.metadata.create_all(bind=engine)
         log.info("Created required tables...")
 
+        return
+
     except Exception as e:
         log.error(f"Unexpected error: {e}. Shutting down...")
         raise SystemExit(1)
