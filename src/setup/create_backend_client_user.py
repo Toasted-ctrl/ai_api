@@ -61,8 +61,8 @@ def create_backend_client_user(
         _user = store_user(
             session=session,
             person_id=_person.id,
-            api_key_id=_client.client_id,
-            key_type=_client.client_key_type
+            api_key_id=_client.id,
+            key_type=_client.key_type
         )
 
         log.info("Created new Backend Client User...")
