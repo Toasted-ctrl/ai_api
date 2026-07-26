@@ -1,11 +1,11 @@
 import pytest
 
-from auth.hash import get_hash_sha356
+from auth.hash import get_hash_sha256
 
 def test_valid():
 
     input = "test_input"
-    output = get_hash_sha356(input=input)
+    output = get_hash_sha256(input=input)
     assert isinstance(output, str)
     assert output == "952822de6a627ea459e1e7a8964191c79fccfb14ea545d93741b5cf3ed71a09a"
 
@@ -17,7 +17,7 @@ def test_invalid_input_type():
         ValueError,
         match="Input must be of type string"
     ):
-        get_hash_sha356(input=input)
+        get_hash_sha256(input=input)
 
 
 def test_empty_string():
@@ -27,4 +27,4 @@ def test_empty_string():
         ValueError,
         match="Input must not be empty string"
     ):
-        get_hash_sha356(input=input)
+        get_hash_sha256(input=input)

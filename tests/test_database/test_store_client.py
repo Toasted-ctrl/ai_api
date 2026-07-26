@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 import pytest
 
-from auth.hash import get_hash_sha356
+from auth.hash import get_hash_sha256
 from database.store_client import store_client
 from database.schemas import ApiKeys
 
@@ -21,7 +21,7 @@ class TestCreateApiKey:
 
             assert (
                 session.query(ApiKeys)
-                .filter(ApiKeys.api_key_hash == get_hash_sha356(_client.api_key))
+                .filter(ApiKeys.api_key_hash == get_hash_sha256(_client.api_key))
                 .count()
             ) == 1
 
