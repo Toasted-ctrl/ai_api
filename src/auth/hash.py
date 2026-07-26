@@ -1,6 +1,6 @@
 import hashlib
 
-def get_hash_sha356(input: str) -> str:
+def get_hash_sha256(input: str) -> str:
 
     """Hashes provided string."""
 

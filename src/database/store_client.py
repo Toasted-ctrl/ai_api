@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import uuid
 
 from auth.create_secret import create_secret
-from auth.hash import get_hash_sha356
+from auth.hash import get_hash_sha256
 from core.logging import get_logger
 from database.schemas import ApiKeys
 
@@ -51,11 +51,11 @@ def store_client(
 
     if api_key is None:
         ext_key = create_secret()
-        hsh_key = get_hash_sha356(ext_key)
+        hsh_key = get_hash_sha256(ext_key)
 
     else:
         ext_key = api_key
-        hsh_key = get_hash_sha356(api_key)
+        hsh_key = get_hash_sha256(api_key)
 
     if hmac_secret is None:
         hmac = create_secret()
