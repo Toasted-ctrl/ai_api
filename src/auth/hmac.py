@@ -2,7 +2,7 @@ from fastapi import Request, HTTPException, status, Depends
 import hashlib
 import hmac
 
-from auth.verify import get_client_from_key
+from auth.client import get_client_from_key, VerifiedClient
 from core.config import config
 from core.logging import get_logger
 
@@ -27,7 +27,7 @@ assert HMAC_ALGORITHM in ALLOWED_ALGORITHMS, \
 
 async def verify_hmac_signature(
     request: Request,
-    client: str = Depends(get_client_from_key)
+    client: VerifiedClient = Depends(get_client_from_key)
 ) -> None:
 
     """Verifies HMAC Signature of an incoming request.
