@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 import pytest
 
-from middleware.get_client import get_jwt_path_client
+from middleware.issue_jwt import get_jwt_path_client
 
 def test_invalid_user():
     with pytest.raises(HTTPException) as exc_info:
