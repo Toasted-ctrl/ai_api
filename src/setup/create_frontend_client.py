@@ -1,7 +1,7 @@
 from core.config import config
 from core.logging import get_logger
 from database.session import get_db_session
-from database.store_secrets import store_secrets, StoredClient
+from database.store_client import store_client, StoredClient
 
 log = get_logger()
 
@@ -17,25 +17,21 @@ def create_frontend_client(
     hmac_secret: str | None = None
 ) -> StoredClient:
 
+    """Creates a new Frontend Application client."""
+
     log.debug("Creating new frontend client")
     with get_db_session(db_url=config.PG_DB_URL) as session:
-
-        try:
             
-            user = store_secrets(
-                session=session,
-                client=client,
-                key_type=key_type,
-                owner_email=owner_email,
-                require_jwt=require_jwt,
-                require_external_id=require_external_id,
-                api_key=api_key,
-                hmac_secret=hmac_secret
-            )
+        client = store_client(
+            session=session,
+            client=client,
+            key_type=key_type,
+            owner_email=owner_email,
+            require_jwt=require_jwt,
+            require_external_id=require_external_id,
+            api_key=api_key,
+            hmac_secret=hmac_secret
+        )
 
-            log.debug("Created new frontend client...")
-            return user
-
-        except ValueError as e:
-            log.warning(e)
-            return
+        log.debug("Created new frontend client...")
+        return client

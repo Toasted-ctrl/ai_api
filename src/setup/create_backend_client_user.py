@@ -1,81 +1,76 @@
+from dataclasses import dataclass
+import uuid
+
 from core.config import config
 from core.logging import get_logger
-from database.schemas import Persons, ApiKeys
 from database.session import get_db_session
-from database.store_secrets import store_secrets
-from database.store_person import store_person
+from database.store_client import store_client
+from database.person import get_or_store_person
 from database.store_user import store_user
 
 log = get_logger()
 
-# TODO: Rework this slightly so we can use it to in general create new backend users.
 # TODO: Build tests.
 
-def create_admin_user() -> None:
+@dataclass(frozen=True)
+class StoredBackendUser:
+    api_key: str
+    hmac_secret: str
+    owner_email: str
+    key_type: str
+    user_id: uuid.UUID
+
+
+def create_backend_client_user(
+    client: str,
+    key_type: str,
+    owner_email: str,
+    first_name: str,
+    last_name: str,
+    require_jwt: bool = False,
+    require_external_id: bool = False,
+    api_key: str | None = None,
+    hmac_secret: str | None = None
+) -> StoredBackendUser:
+
+    """Creates a new Backend Client User. Returns None if the Backend Client User already exists, or runs into an error.
+    If an error occurs, a rollback will be issued."""
+
+    log.info("Starting Creation of new Backend Client User...")
 
     with get_db_session(db_url=config.PG_DB_URL) as session:
 
-        try:
+        _client = store_client(
+            session=session,
+            client=client,
+            key_type=key_type,
+            owner_email=owner_email,
+            require_jwt=require_jwt,
+            require_external_id=require_external_id,
+            api_key=api_key,
+            hmac_secret=hmac_secret
+        )
 
-            log.info("Creating Admin Secret...")
-            key = store_secrets(
-                session=session,
-                client=config.ADMIN_CLIENT,
-                key_type=config.ADMIN_KEY_TYPE,
-                owner_email=config.ADMIN_OWNER_EMAIL,
-                require_jwt=config.ADMIN_REQUIRE_JWT,
-                require_external_id=config.ADMIN_REQUIRE_GOOGLE_ID,
-                api_key=config.ADMIN_API_KEY,
-                hmac_secret=config.ADMIN_HMAC
-            )
+        _person = get_or_store_person(
+            session=session,
+            first_name=first_name,
+            last_name=last_name,
+            email=owner_email
+        )
 
-        except ValueError as e:
-            log.warning(e)
-            result = (
-                session.query(ApiKeys.id, ApiKeys.key_type)
-                .filter(ApiKeys.owner_email == config.ADMIN_OWNER_EMAIL)
-                .first()
-            )
-            if result:
-                key = {
-                    "client_id": result.id,
-                    "client_key_type": result.key_type
-                }
+        _user = store_user(
+            session=session,
+            person_id=_person.id,
+            api_key_id=_client.client_id,
+            key_type=_client.client_key_type
+        )
 
-            else:
-                log.error("Admin API key not found, unable to proceed...")
+        log.info("Created new Backend Client User...")
 
-        try:
-
-            log.info("Creating Admin Person record...")
-            person = store_person(
-                session=session,
-                first_name=config.ADMIN_FIRST_NAME,
-                last_name=config.ADMIN_LAST_NAME,
-                email=config.ADMIN_OWNER_EMAIL
-            )
-
-        except ValueError as e:
-            log.warning(e)
-            person = (
-                session.query(Persons.id)
-                .filter(Persons.email == config.ADMIN_OWNER_EMAIL)
-                .scalar()
-            )
-
-        try:
-
-            log.info("Creating Admin User record...")
-            store_user(
-                session=session,
-                person_id=person,
-                api_key_id=key.client_id,
-                key_type=key.client_key_type
-            )
-
-        except ValueError as e:
-            log.warning(e)
-
-        log.info("Admin User created...")
-
-    return
+        return StoredBackendUser(
+            api_key=_client.api_key,
+            hmac_secret=_client.hmac_secret,
+            owner_email=_client.owner_email,
+            key_type=_client.key_type,
+            user_id=_user.id
+        )
