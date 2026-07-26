@@ -8,7 +8,7 @@ import uvicorn
 from api.v1 import chat_completion, jwt, root, servers, models, status, translation
 from core.config import config
 from core.logging import get_logger
-from database.session import get_db_session
+from database.session import get_db_session_ctx
 from setup.create_backend_client_user import create_backend_client_user
 from setup.create_frontend_client import create_frontend_client
 from setup.create_tables import create_tables
@@ -73,33 +73,41 @@ if __name__ == "__main__":
     if config.CREATE_TABLES:
         create_tables()
 
-    if config.ADMIN_CREATE_KEY:
-        with get_db_session(db_url=config.PG_DB_URL) as session:
-            create_backend_client_user(
-                session=session,
-                client=config.ADMIN_CLIENT,
-                key_type=config.ADMIN_KEY_TYPE,
-                owner_email=config.ADMIN_OWNER_EMAIL,
-                first_name=config.ADMIN_FIRST_NAME,
-                last_name=config.ADMIN_LAST_NAME,
-                require_jwt=config.ADMIN_REQUIRE_JWT,
-                require_external_id=config.ADMIN_REQUIRE_GOOGLE_ID,
-                api_key=config.ADMIN_API_KEY,
-                hmac_secret=config.ADMIN_HMAC
+    try:
+        if config.ADMIN_CREATE_KEY:
+            with get_db_session_ctx() as session:
+                create_backend_client_user(
+                    session=session,
+                    client=config.ADMIN_CLIENT,
+                    key_type=config.ADMIN_KEY_TYPE,
+                    owner_email=config.ADMIN_OWNER_EMAIL,
+                    first_name=config.ADMIN_FIRST_NAME,
+                    last_name=config.ADMIN_LAST_NAME,
+                    require_jwt=config.ADMIN_REQUIRE_JWT,
+                    require_external_id=config.ADMIN_REQUIRE_GOOGLE_ID,
+                    api_key=config.ADMIN_API_KEY,
+                    hmac_secret=config.ADMIN_HMAC
+                )
+
+    except Exception as e:
+        log.info(e)
+
+    try:
+        if config.FRONTEND_APP_CREATE_KEY:
+            with get_db_session_ctx() as session:
+                create_frontend_client(
+                    session=session,
+                    client=config.FRONTEND_APP_CLIENT,
+                    key_type=config.FRONTEND_APP_KEY_TYPE,
+                    owner_email=config.FRONTEND_APP_OWNER_EMAIL,
+                    require_external_id=config.FRONTEND_APP_REQUIRE_EXTERNAL_ID,
+                    require_jwt=config.FRONTEND_APP_REQUIRE_JWT,
+                    api_key=config.FRONTEND_APP_API_KEY,
+                    hmac_secret=config.FRONTEND_APP_HMAC
             )
 
-    if config.FRONTEND_APP_CREATE_KEY:
-        with get_db_session(db_url=config.PG_DB_URL) as session:
-            create_frontend_client(
-                session=session,
-                client=config.FRONTEND_APP_CLIENT,
-                key_type=config.FRONTEND_APP_KEY_TYPE,
-                owner_email=config.FRONTEND_APP_OWNER_EMAIL,
-                require_external_id=config.FRONTEND_APP_REQUIRE_EXTERNAL_ID,
-                require_jwt=config.FRONTEND_APP_REQUIRE_JWT,
-                api_key=config.FRONTEND_APP_API_KEY,
-                hmac_secret=config.FRONTEND_APP_HMAC
-            )
+    except Exception as e:
+        log.info(e)
 
     uvicorn.run(
         app=app,
