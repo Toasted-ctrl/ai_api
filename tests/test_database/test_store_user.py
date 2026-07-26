@@ -16,7 +16,7 @@ class TestStoreUser:
                 api_key_id=uuid.uuid4(),
                 key_type="User"
             )
-            assert isinstance(user, uuid.UUID)
+            assert isinstance(user.id, uuid.UUID)
 
             session.close()
 

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from sqlalchemy.orm import Session
 import uuid
 
@@ -6,14 +7,18 @@ from database.schemas import Users
 
 log = get_logger()
 
+@dataclass(frozen=True)
+class StoredUser:
+    id: uuid.UUID
+
+
 def store_user(
     session: Session,
     person_id: uuid.UUID,
     api_key_id: uuid.UUID,
     key_type: str,
     external_id: str | None = None,
-    
-) -> None:
+) -> StoredUser:
 
     if key_type == 'Application' and external_id == None:
         raise ValueError("Unable to add User, if key_type = 'Application', external_id must not be None")
@@ -35,4 +40,6 @@ def store_user(
 
     log.info(f"Added User with id: {user.id}")
 
-    return user.id
+    return StoredUser(
+        id=user.id
+    )

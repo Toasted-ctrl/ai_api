@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 import pytest
 
 from auth.hash import get_hash_sha356
-from database.store_secrets import store_secrets
+from database.store_client import store_client
 from database.schemas import ApiKeys
 
 class TestCreateApiKey:
@@ -11,7 +11,7 @@ class TestCreateApiKey:
 
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
-            secrets = store_secrets(
+            _client = store_client(
                 session=session,
                 client="test_client",
                 key_type="User",
@@ -21,7 +21,7 @@ class TestCreateApiKey:
 
             assert (
                 session.query(ApiKeys)
-                .filter(ApiKeys.api_key_hash == get_hash_sha356(secrets.client_api_key))
+                .filter(ApiKeys.api_key_hash == get_hash_sha356(_client.api_key))
                 .count()
             ) == 1
 
@@ -31,7 +31,7 @@ class TestCreateApiKey:
     def test_duplicate_key(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
             test_client = "test_client"
-            secrets = store_secrets(
+            secrets = store_client(
                 session=session,
                 client=test_client,
                 key_type="User",
@@ -42,7 +42,7 @@ class TestCreateApiKey:
                 ValueError,
                 match=f"Client '{test_client}' with owner 'test_mail' already exists"
             ):
-                secrets2 = store_secrets(
+                secrets2 = store_client(
                     session=session,
                     client=test_client,
                     key_type="User",
