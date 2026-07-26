@@ -1,34 +1,51 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from sqlalchemy import create_engine
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
+from core.config import config
 from core.logging import get_logger
 
 log = get_logger()
 
-@contextmanager
-def get_db_session(db_url: str) -> Generator[Session]:
-    log.debug("Opening database session")
-    engine = create_engine(url=db_url, echo=False)
-    SessionLocal = sessionmaker(
-        bind=engine,
-        autocommit=False,
-        autoflush=False
-    )
+engine = create_engine(
+    url=config.PG_DB_URL,
+    echo=False,
+    pool_pre_ping=True
+)
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False
+)
+
+def get_db_session() -> Generator[Session]:
+    """FastAPI dependency that yields a database session."""
+    log.info("Opening database session")
     session = SessionLocal()
     try:
         yield session
         session.commit()
-    except ValueError or SQLAlchemyError as e:
+    except Exception:
         session.rollback()
-        log.warning(f"Error while executing database operations: {e} No updates made.")
-    except Exception as e:
+        raise
+    finally:
+        session.close()
+        log.info("Closed database session")
+
+
+@contextmanager
+def get_db_session_ctx() -> Generator[Session]:
+    """For use outside of FastAPI (scripts, workers, etc.)."""
+    log.debug("Opening database session")
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
         session.rollback()
-        log.warning(f"Unexpected error occured while performing database operations: {e}, Rolling back updates.")
+        raise
     finally:
         session.close()
         log.debug("Closed database session")
-        engine.dispose()
-        log.debug("Disposed database engine")

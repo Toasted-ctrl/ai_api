@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 
-from auth.hmac import verify_hmac_signature
+from auth.user import verify_user, VerifiedUser
 from core.config import config
 from core.logging import get_logger
 from io_models.chat_completion import PayloadChatCompletion
@@ -15,9 +15,12 @@ log = get_logger()
 @router.post(
     "/chat_completion",
     tags=["Chat Completion"],
-    dependencies=[Depends(verify_hmac_signature)]
+    response_class=StreamingResponse
 )
-async def post_chat_completion(payload: PayloadChatCompletion):
+async def post_chat_completion(
+    payload: PayloadChatCompletion,
+    user: VerifiedUser = Depends(verify_user)
+) -> StreamingResponse:
 
     # TODO: This whole path currently works, but we'll probably want to rework it. Messy.
 
