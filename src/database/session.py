@@ -1,6 +1,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from core.logging import get_logger
@@ -20,9 +21,12 @@ def get_db_session(db_url: str) -> Generator[Session]:
     try:
         yield session
         session.commit()
-    except Exception:
+    except ValueError or SQLAlchemyError as e:
         session.rollback()
-        raise
+        log.warning(f"Error while executing database operations: {e} No updates made.")
+    except Exception as e:
+        session.rollback()
+        log.warning(f"Unexpected error occured while performing database operations: {e}, Rolling back updates.")
     finally:
         session.close()
         log.debug("Closed database session")
