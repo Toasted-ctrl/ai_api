@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from sqlalchemy.orm import Session
 import uuid
 
 from core.config import config
@@ -22,6 +23,7 @@ class StoredBackendUser:
 
 
 def create_backend_client_user(
+    session: Session,
     client: str,
     key_type: str,
     owner_email: str,
@@ -38,39 +40,37 @@ def create_backend_client_user(
 
     log.info("Starting Creation of new Backend Client User...")
 
-    with get_db_session(db_url=config.PG_DB_URL) as session:
+    _client = store_client(
+        session=session,
+        client=client,
+        key_type=key_type,
+        owner_email=owner_email,
+        require_jwt=require_jwt,
+        require_external_id=require_external_id,
+        api_key=api_key,
+        hmac_secret=hmac_secret
+    )
 
-        _client = store_client(
-            session=session,
-            client=client,
-            key_type=key_type,
-            owner_email=owner_email,
-            require_jwt=require_jwt,
-            require_external_id=require_external_id,
-            api_key=api_key,
-            hmac_secret=hmac_secret
-        )
+    _person = get_or_store_person(
+        session=session,
+        first_name=first_name,
+        last_name=last_name,
+        email=owner_email
+    )
 
-        _person = get_or_store_person(
-            session=session,
-            first_name=first_name,
-            last_name=last_name,
-            email=owner_email
-        )
+    _user = store_user(
+        session=session,
+        person_id=_person.id,
+        api_key_id=_client.id,
+        key_type=_client.key_type
+    )
 
-        _user = store_user(
-            session=session,
-            person_id=_person.id,
-            api_key_id=_client.id,
-            key_type=_client.key_type
-        )
+    log.info("Created new Backend Client User...")
 
-        log.info("Created new Backend Client User...")
-
-        return StoredBackendUser(
-            api_key=_client.api_key,
-            hmac_secret=_client.hmac_secret,
-            owner_email=_client.owner_email,
-            key_type=_client.key_type,
-            user_id=_user.id
-        )
+    return StoredBackendUser(
+        api_key=_client.api_key,
+        hmac_secret=_client.hmac_secret,
+        owner_email=_client.owner_email,
+        key_type=_client.key_type,
+        user_id=_user.id
+    )
