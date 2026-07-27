@@ -103,6 +103,9 @@ class Config(BaseSettings):
 
     CREATE_TABLES: bool = True
 
+    ENABLE_ECRYPTION: bool = True
+    ENCRYPTION_KEY: str = ""
+
     # NOTE: Update _APP_REGISTRY if new applications are added.
     _CLIENT_REGISTRY = [
         {"key": "jelaime", "env_prefix": "JELAIME", "name": "LEJAIME App"},
