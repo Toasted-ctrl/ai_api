@@ -4,13 +4,13 @@ from core.config import config
 
 def encrypt(content: str) -> str:
 
+    """Returns an encrypted string"""
+
     if not isinstance(content, str):
         raise TypeError("Content must be a string")
 
     if content == "":
         raise ValueError("Empty string")
-
-    """Returns an encrypted string"""
 
     key = config.ENCRYPTION_KEY
     f = Fernet(key)
@@ -19,13 +19,13 @@ def encrypt(content: str) -> str:
 
 def decrypt(content: str) -> str:
 
+    """Returns a decrypted string"""
+
     if not isinstance(content, str):
         raise TypeError("Content must be a string")
 
     if content == "":
         raise ValueError("Empty string")
-
-    """Returns a decrypted string"""
 
     key = config.ENCRYPTION_KEY
     f = Fernet(key)
