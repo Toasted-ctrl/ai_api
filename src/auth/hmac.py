@@ -18,6 +18,9 @@ def get_client_hmac_secret(client: str) -> bytes:
     return secret
 
 
+
+
+
 ALLOWED_ALGORITHMS = {"sha256"}
 HMAC_SIGNATURE_HEADER = "X-Signature"
 HMAC_ALGORITHM = "sha256"
