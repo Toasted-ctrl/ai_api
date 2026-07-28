@@ -78,7 +78,7 @@ if __name__ == "__main__":
             with get_db_session_ctx() as session:
                 create_backend_client_user(
                     session=session,
-                    client=config.ADMIN_CLIENT,
+                    client_name=config.ADMIN_CLIENT,
                     key_type=config.ADMIN_KEY_TYPE,
                     owner_email=config.ADMIN_OWNER_EMAIL,
                     first_name=config.ADMIN_FIRST_NAME,
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             with get_db_session_ctx() as session:
                 create_frontend_client(
                     session=session,
-                    client=config.FRONTEND_APP_CLIENT,
+                    client_name=config.FRONTEND_APP_CLIENT,
                     key_type=config.FRONTEND_APP_KEY_TYPE,
                     owner_email=config.FRONTEND_APP_OWNER_EMAIL,
                     require_external_id=config.FRONTEND_APP_REQUIRE_EXTERNAL_ID,
