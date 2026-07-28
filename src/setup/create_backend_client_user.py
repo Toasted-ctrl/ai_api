@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 import uuid
 
-from core.config import config
 from core.logging import get_logger
-from database.session import get_db_session
 from database.store_client import store_client
 from database.person import get_or_store_person
 from database.store_user import store_user
@@ -24,7 +22,7 @@ class StoredBackendUser:
 
 def create_backend_client_user(
     session: Session,
-    client: str,
+    client_name: str,
     key_type: str,
     owner_email: str,
     first_name: str,
@@ -42,7 +40,7 @@ def create_backend_client_user(
 
     _client = store_client(
         session=session,
-        client=client,
+        client_name=client_name,
         key_type=key_type,
         owner_email=owner_email,
         require_jwt=require_jwt,

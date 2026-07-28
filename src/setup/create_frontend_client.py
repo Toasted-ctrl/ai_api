@@ -1,8 +1,6 @@
 from sqlalchemy.orm import Session
 
-from core.config import config
 from core.logging import get_logger
-from database.session import get_db_session
 from database.store_client import store_client, StoredClient
 
 log = get_logger()
@@ -11,7 +9,7 @@ log = get_logger()
 
 def create_frontend_client(
     session: Session,
-    client: str,
+    client_name: str,
     key_type: str,
     owner_email: str,
     require_jwt: bool,
@@ -26,7 +24,7 @@ def create_frontend_client(
             
     _client = store_client(
         session=session,
-        client=client,
+        client_name=client_name,
         key_type=key_type,
         owner_email=owner_email,
         require_jwt=require_jwt,

@@ -2,8 +2,11 @@ from sqlalchemy.orm import Session
 import pytest
 
 from auth.hash import get_hash_sha256
-from database.store_client import store_client
+from core.config import config
+from database.store_client import store_client, StoredClient
 from database.schemas import ApiKeys
+from security.encryption import decrypt
+from security.hmac import hash_hmac
 
 class TestCreateApiKey:
 
@@ -11,11 +14,15 @@ class TestCreateApiKey:
 
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
+
+            hmac = "test_hmac"
+
             _client = store_client(
                 session=session,
-                client="test_client",
+                client_name="test_client",
                 key_type="User",
-                owner_email="test_mail"
+                owner_email="test_mail",
+                hmac_secret=hmac
             )
             session.commit()
 
@@ -25,6 +32,33 @@ class TestCreateApiKey:
                 .count()
             ) == 1
 
+            assert (
+                session.query(ApiKeys.encrypted_hmac_secret)
+                .filter(
+                    ApiKeys.blind_index_owner_email == hash_hmac(
+                        content="test_mail",
+                        key=config.BLIND_INDEX_HMAC_KEY
+                    )
+                )
+                .scalar()
+            ) != hmac
+
+            assert decrypt(
+                (
+                    session.query(ApiKeys.encrypted_hmac_secret)
+                    .filter(
+                        ApiKeys.blind_index_owner_email == hash_hmac(
+                        content="test_mail",
+                        key=config.BLIND_INDEX_HMAC_KEY
+                        )
+                    )
+                    .scalar()
+                )
+            ) == hmac
+
+            assert isinstance(_client, StoredClient)
+            assert _client.hmac_secret == hmac
+
             session.close()
 
 
@@ -33,7 +67,7 @@ class TestCreateApiKey:
             test_client = "test_client"
             secrets = store_client(
                 session=session,
-                client=test_client,
+                client_name=test_client,
                 key_type="User",
                 owner_email="test_mail"
             )
@@ -44,7 +78,7 @@ class TestCreateApiKey:
             ):
                 secrets2 = store_client(
                     session=session,
-                    client=test_client,
+                    client_name=test_client,
                     key_type="User",
                     owner_email="test_mail"
                 )

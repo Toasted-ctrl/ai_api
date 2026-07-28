@@ -31,7 +31,7 @@ class ApiKeys(Base):
             name="check_key_type"
         ),
         UniqueConstraint(
-            'client', 'owner_email',
+            'blind_index_client_name', 'blind_index_owner_email',
             name="uq_client_owner_email"
         )
     )
@@ -45,11 +45,6 @@ class ApiKeys(Base):
     api_key_hash: Mapped[str] = mapped_column(
         String(255),
         unique=True,
-        nullable=False
-    )
-
-    client: Mapped[str] = mapped_column(
-        String(100),
         nullable=False
     )
 
@@ -80,15 +75,30 @@ class ApiKeys(Base):
         server_default=text("true")
     )
 
-    owner_email: Mapped[str] = mapped_column(
+    encrypted_owner_email: Mapped[str] = mapped_column(
         String(255),
         nullable=False
     )
 
-    hmac_secret_hash: Mapped[str] = mapped_column(
+    encrypted_hmac_secret: Mapped[str] = mapped_column(
         String(255),
-        nullable=False,
-        unique=True
+        unique=True,
+        nullable=False
+    )
+
+    encrypted_client_name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+
+    blind_index_client_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    blind_index_owner_email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
     )
 
     created_by: Mapped[str] = mapped_column(
@@ -149,18 +159,22 @@ class Persons(Base):
         default=lambda: uuid.uuid4()
     )
 
-    email: Mapped[str] = mapped_column(
-        String(255),
-        unique=True,
-        nullable=False
-    )
-
-    first_name: Mapped[str] = mapped_column(
+    encrypted_email: Mapped[str] = mapped_column(
         String(255),
         nullable=False
     )
 
-    last_name: Mapped[str] = mapped_column(
+    encrypted_first_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+    
+    encrypted_last_name: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    blind_index_email: Mapped[str] = mapped_column(
         String(255),
         nullable=False
     )
