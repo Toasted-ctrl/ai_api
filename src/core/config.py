@@ -106,6 +106,10 @@ class Config(BaseSettings):
     ENABLE_ECRYPTION: bool = True
     ENCRYPTION_KEY: str = ""
 
+    BLIND_INDEX_KEY: str = ""
+
+    LOG_LEVEL: str = ""
+
     # NOTE: Update _APP_REGISTRY if new applications are added.
     _CLIENT_REGISTRY = [
         {"key": "jelaime", "env_prefix": "JELAIME", "name": "LEJAIME App"},
@@ -136,6 +140,14 @@ class Config(BaseSettings):
             )
             raise SystemExit(1)
         log.info("Environment variables loaded")
+
+
+    @cached_property
+    def BLIND_INDEX_HMAC_KEY(self) -> bytes:
+
+        """Returns blind index key."""
+
+        return self.BLIND_INDEX_KEY.encode('utf-8')
 
 
     @cached_property
