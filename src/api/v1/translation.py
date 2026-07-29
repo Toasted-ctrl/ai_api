@@ -1,5 +1,15 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import (
+    HTTPException,
+    status,
+    APIRouter,
+    Depends,
+    Request,
+    Response
+)
+from fastapi_cache.decorator import cache
 
+from auth.user import verify_user, VerifiedUser
+from core.cache import cache_key_builder
 from io_models.translations import (
     ResponseTranslation,
     PayloadTranslation,
@@ -12,6 +22,7 @@ from providers.ollama.translategemma import (
 )
 
 router = APIRouter()
+
 tags = ["Translation"]
 
 @router.post(
@@ -19,7 +30,10 @@ tags = ["Translation"]
     tags=tags,
     response_model=ResponseTranslation
 )
-def post_translation_translategemma(payload: PayloadTranslation):
+def post_translation_translategemma(
+    payload: PayloadTranslation,
+    user: VerifiedUser = Depends(verify_user)
+) -> ResponseTranslation:
 
     if payload.from_lang_code not in translategemma_languages():
         raise HTTPException(
@@ -60,7 +74,16 @@ def post_translation_translategemma(payload: PayloadTranslation):
     tags=["Translation"],
     response_model=ResponseTranslationLanguages
 )
-def get_languages_translategemma():
+@cache(
+    expire=300,
+    key_builder=cache_key_builder
+)
+def get_languages_translategemma(
+    request: Request,
+    response: Response,
+    user: VerifiedUser = Depends(verify_user)
+) -> ResponseTranslationLanguages:
+    
     return {
         "languages": translategemma_languages()
     }

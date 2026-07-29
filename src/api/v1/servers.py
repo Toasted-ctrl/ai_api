@@ -1,5 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    status,
+    Depends
+)
 
+from auth.user import verify_user, VerifiedUser
 from core.config import config
 from io_models.servers import ResponseLocalServers, ResponseWakeServer
 from servers.wake import wake_server
@@ -12,7 +18,10 @@ router = APIRouter()
     tags=["Servers (On Prem)"],
     response_model=ResponseLocalServers
 )
-def get_local_servers():
+def get_local_servers(
+    user: VerifiedUser = Depends(verify_user)
+) -> ResponseLocalServers:
+    
     servers = []
     for server_name in config.LOCAL_SERVER_CONFIGURATION.keys():
         server = {}
@@ -35,7 +44,11 @@ def get_local_servers():
     tags=["Servers (On Prem)"],
     response_model=ResponseWakeServer
 )
-def wake_local_server(server_name: str):
+def wake_local_server(
+    server_name: str,
+    user: VerifiedUser = Depends(verify_user)
+) -> ResponseWakeServer:
+    
     try:
         servers: dict = config.LOCAL_SERVER_CONFIGURATION
         if server_name not in servers.keys():
