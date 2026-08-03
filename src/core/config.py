@@ -112,6 +112,11 @@ class Config(BaseSettings):
 
     LOG_LEVEL: str = ""
 
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_REDIRECT_URI: str = ""
+    GOOGLE_AUTH_URL: str = ""
+    GOOGLE_HMAC: str = ""
+
     # NOTE: Update _APP_REGISTRY if new applications are added.
     _CLIENT_REGISTRY = [
         {"key": "jelaime", "env_prefix": "JELAIME", "name": "LEJAIME App"},
@@ -142,6 +147,14 @@ class Config(BaseSettings):
             )
             raise SystemExit(1)
         log.info("Environment variables loaded")
+
+
+    @cached_property
+    def GOOGLE_HMAC_SECRET(self) -> bytes:
+
+        """Returns Google HMAC secret"""
+
+        return self.GOOGLE_HMAC.encode('utf-8')
 
 
     @cached_property
