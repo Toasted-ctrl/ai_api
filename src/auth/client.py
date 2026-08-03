@@ -56,3 +56,19 @@ def get_client_from_key(
         id=client.id,
         key_type=client.key_type
     )
+
+
+def get_verified_frontend_client( # TODO: Build test for this function.
+    client: VerifiedClient = Depends(get_client_from_key)
+) -> VerifiedClient:
+
+    """Verifying if the client is a frontend application client.
+    Returns VerifiedClient dataclass, otherwise raises HTTPException."""
+
+    if client.key_type != "Application":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Client must be a frontend application, with a login requirement."
+        )
+
+    return client
