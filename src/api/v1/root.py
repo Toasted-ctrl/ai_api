@@ -12,9 +12,9 @@ from core.config import config
 router = APIRouter()
 
 @router.get(
-    "/",
+    "",
     response_model=ResponseRoot,
-    tags=["Root"]
+    tags=["Default"]
 )
 @cache(expire=300, key_builder=cache_key_builder)
 def get_root(
