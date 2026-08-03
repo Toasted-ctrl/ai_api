@@ -13,7 +13,8 @@ log = get_logger()
 def create_jwt(
     client_id: uuid.UUID,
     user_id: uuid.UUID,
-    exp_seconds: int = 86_400
+    exp_seconds: int = 86_400,
+    iss: str = "AIA"
 ) -> str:
 
     """Creates a JWT string that may be added to a cookie stored client-side."""
@@ -23,7 +24,7 @@ def create_jwt(
     key = OctKey.import_key(config.JWT_SECRET)
     header = {"alg": "HS256"}
     claims = {
-        "iss": "AIA",                           # Issuer
+        "iss": iss,                             # Issuer
         "sub": str(user_id),                    # User ID
         "iat": int(time.time()),                # Issue time in unix format
         "exp": int(time.time()) + exp_seconds,  # Expiration time in unix format
@@ -58,7 +59,7 @@ def decode_jwt(
 
     key = OctKey.import_key(config.JWT_SECRET)
     token = jwt.decode(value=token, key=key)
-    
+
     claims_registry = JWTClaimsRegistry(
         iss={"essential": True, "value": "AIA"},
         aud={"essential": True},
