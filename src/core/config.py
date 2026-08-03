@@ -45,7 +45,8 @@ class Config(BaseSettings):
         "_SKIP_EMPTY_CHECK",
         "APP_NAME",
         "APP_MAINTAINER",
-        "APP_VERSION"
+        "APP_VERSION",
+        "_GOOGLE_ENV_VARS"
     }
 
     APP_NAME: str = "AIA: Artificial Intelligence API"
@@ -112,10 +113,19 @@ class Config(BaseSettings):
 
     LOG_LEVEL: str = ""
 
+    ENABLE_GOOGLE_LOGIN: bool = False
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_REDIRECT_URI: str = ""
     GOOGLE_AUTH_URL: str = ""
     GOOGLE_HMAC: str = ""
+
+    # Required to remove from startup check if ENABLE_GOOGLE_LOGIN is set to False.
+    _GOOGLE_ENV_VARS: ClassVar[set[str]] = {
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_REDIRECT_URI",
+        "GOOGLE_AUTH_URL",
+        "GOOGLE_HMAC"
+    }
 
     # NOTE: Update _APP_REGISTRY if new applications are added.
     _CLIENT_REGISTRY = [
@@ -126,10 +136,18 @@ class Config(BaseSettings):
 
     def model_post_init(self, context) -> None:
         all_fields = set(self.__class__.__annotations__.keys())
+
+        unpopulated = all_fields - self._SKIP_EMPTY_CHECK
         unset = all_fields - self.model_fields_set - self._SKIP_EMPTY_CHECK
+
+        if self.ENABLE_GOOGLE_LOGIN == False:
+            log.debug(f"Google Login disabled. Skipping environment variables: {' ,'.join(sorted(self._GOOGLE_ENV_VARS))}...")
+            unset - self._GOOGLE_ENV_VARS
+            unpopulated - self._GOOGLE_ENV_VARS
+        
         empty = {
             name
-            for name in (all_fields - self._SKIP_EMPTY_CHECK)
+            for name in (unpopulated)
             if isinstance(getattr(self, name, None), str)
             and not getattr(self, name).strip()
         }
