@@ -108,6 +108,8 @@ class Config(BaseSettings):
 
     BLIND_INDEX_KEY: str = ""
 
+    JWT_SECRET: str = ""
+
     LOG_LEVEL: str = ""
 
     # NOTE: Update _APP_REGISTRY if new applications are added.
