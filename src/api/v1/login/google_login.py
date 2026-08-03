@@ -20,8 +20,7 @@ tags = ["Login"]
     description=(
         "Warning!!!: This method will not work when called through the documentation. "
         "Please call this path through a browser directly.\n"
-        "\nRedirect the user to Google's 0Auth2 consent screen. "
-        
+        "\nRedirect the user to Google's 0Auth2 consent screen."
     ),
     response_class=RedirectResponse,
     tags=tags
