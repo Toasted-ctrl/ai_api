@@ -5,7 +5,8 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 import uvicorn
 
-from api.v1 import chat_completion, login, root, servers, models, status, translation
+from api.v1 import chat_completion, root, servers, models, status, translation
+from api.v1.login import google_login
 from core.config import config
 from core.logging import get_logger
 from database.session import get_db_session_ctx
@@ -33,10 +34,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.include_router(
-    router=login.router,
-    prefix=v1_prefix
-)
+if config.ENABLE_GOOGLE_LOGIN:
+    log.debug("Starting with Google Login enabled...")
+    app.include_router(
+        router=google_login.router,
+        prefix=v1_prefix
+    )
 
 app.include_router(
     router=root.router,
