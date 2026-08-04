@@ -9,6 +9,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > A unified API gateway for multiple LLM providers
+
 This project intends to build an "Artificial Intelligence API" (AIA), which whill serve as an API gateway to multiple LLM providers. Currently only Ollama is supported, but the intention is to add support for more providers later on (Anthropic, OpenAI, MeliousAI, etc.).
 
 ## Features
