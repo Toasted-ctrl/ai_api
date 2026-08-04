@@ -118,13 +118,18 @@ class Config(BaseSettings):
     GOOGLE_REDIRECT_URI: str = ""
     GOOGLE_AUTH_URL: str = ""
     GOOGLE_HMAC: str = ""
+    GOOGLE_TOKEN_URL: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
 
-    # Required to remove from startup check if ENABLE_GOOGLE_LOGIN is set to False.
+    # Required to exclude Google variables from startup check,
+    # if Google Login is disabled. 
     _GOOGLE_ENV_VARS: ClassVar[set[str]] = {
         "GOOGLE_CLIENT_ID",
-        "GOOGLE_REDIRECT_URI",
+        "GOOGLE_REDIRECT_URI",    # Required to remove from startup check if ENABLE_GOOGLE_LOGIN is set to False.
         "GOOGLE_AUTH_URL",
-        "GOOGLE_HMAC"
+        "GOOGLE_HMAC",
+        "GOOGLE_TOKEN_URL",
+        "GOOGLE_CLIENT_SECRET"
     }
 
     # NOTE: Update _APP_REGISTRY if new applications are added.
