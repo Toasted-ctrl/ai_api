@@ -1,14 +1,33 @@
-# Authentication
-This API currently requires authentication in the form of an API key. At a later stage authentication using a JWT will also be added.
+# Security
 
-# Hashing
+> [!NOTE]
+> This document was last reviewed on 2026-08-04.
+
+## Authentication
+This API supports authentication via:
+- **API keys**
+- **Google OAuth**
+
+JWT-based authentication is planned for a future release.
+
+## Hashing
 API keys are stored hashed in the database.
 
-# Encryption
-Sensitive details (i.e., email, first name, last name, HMAC) are currently encrypted, the encryption key is only known to the API. This will later on also extend to stored messages, as well as external API keys provided. Shared messages are linked to a personal User ID and will not be shared with others.
+## Encryption
+The following fields are encrypted at rest (the encryption key is only known to the API):
+- Email
+- First name
+- Last name
+- HMAC
 
-# VPN / Local Network
-I recommend running this on a local network / VPN only (i.e., TailScale).
+### Planned
+- Stored messages
+- External API keys provided by users
 
-# Processing
-All information is processed locally and not shared with third parties, with the exception of message completion requests and model queries regarding external AI providers. I.e., your requests for which you may be using an API key (such as with Anthropic), may be sent to Anthropic's API, and those details may be logged with said Provider.
+## Data Sharing
+All information is processed locally and is **not** shared with third parties, with one exception: message completion requests and model queries are sent to the relevant external AI provider (e.g., Anthropic). Those requests may be logged by said provider per their own policies.
+
+Shared messages are linked to a personal User ID and are not shared with other users.
+
+## Network
+It is recommended to run this behind a VPN or on a local network (e.g., Tailscale).
