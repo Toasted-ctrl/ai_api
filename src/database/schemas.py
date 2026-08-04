@@ -130,6 +130,7 @@ class Users(Base):
     )
 
     external_id: Mapped[str] = mapped_column(
+        # This is where we will map the external id (openid sub) to.
         String(255),
         nullable=True
     )
@@ -138,6 +139,12 @@ class Users(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now()
+    )
+
+    login_provider: Mapped[str] = mapped_column(
+        # Required for frontend applications that support external login providers.
+        String(50),
+        nullable=True
     )
 
     created_by: Mapped[str] = mapped_column(
