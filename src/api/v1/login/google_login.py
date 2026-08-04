@@ -136,12 +136,14 @@ async def google_callback(
         user_id=s_user.user_id
     )
 
-    redirect_uri = "http://localhost:8501"
+    redirect_uri = "http://localhost:8501" # TODO: Remove hardcoded redirect.
 
     response = RedirectResponse(
         url=redirect_uri,
         status_code=status.HTTP_302_FOUND
     )
+
+    log.debug(f"Created cookie for Client '{s_user.client_id}' for User '{s_user.user_id}'...")
 
     response.set_cookie(
         key="session_token",
@@ -153,6 +155,6 @@ async def google_callback(
         path="/"
     )
 
-    log.info(f"User '{s_user.user_id}' authenticated via Google, redirecting to '{redirect_uri}'...")
+    log.debug(f"User '{s_user.user_id}' authenticated for Client '{s_user.client_id}' via Google, redirecting >> '{redirect_uri}'...")
 
     return response

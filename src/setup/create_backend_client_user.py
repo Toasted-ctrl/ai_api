@@ -63,7 +63,7 @@ def create_backend_client_user(
         key_type=_client.key_type
     )
 
-    log.info("Created new Backend Client User...")
+    log.info(f"Created new Backend Client User: '{_user.id}'...")
 
     return StoredBackendUser(
         api_key=_client.api_key,

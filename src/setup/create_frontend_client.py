@@ -20,7 +20,7 @@ def create_frontend_client(
 
     """Creates a new Frontend Application client."""
 
-    log.debug("Creating new frontend client")
+    log.debug("Creating new frontend client...")
             
     _client = store_client(
         session=session,
@@ -33,5 +33,5 @@ def create_frontend_client(
         hmac_secret=hmac_secret
     )
 
-    log.debug("Created new frontend client...")
+    log.debug(f"Created new frontend client: '{_client.id}'...")
     return _client
