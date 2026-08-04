@@ -1,3 +1,5 @@
+> ⚠️ **Warning:** This document is outdated and may contain inaccurate or incomplete instructions. A refresh is in progress.
+
 # Environment
 First, rename the .env.example file:
 ```bash
