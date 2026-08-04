@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
@@ -71,6 +71,26 @@ app.include_router(
     prefix=v1_prefix
 )
 
+@app.middleware("http")
+async def secure_logging(request: Request, call_next):
+    response = await call_next(request)
+
+    path = request.url.path
+    if "/auth/" in path or "/callback" in path:
+        log.info(
+            f"{request.client.host} - "
+            f"\"{request.method} {path}\" "
+            f"{response.status_code}"
+        )
+    else:
+        log.info(
+            f"{request.client.host} - "
+            f"\"{request.method} {request.url}\" "
+            f"{response.status_code}"
+        )
+
+    return response
+
 if __name__ == "__main__":
 
     if config.CREATE_TABLES:
@@ -115,5 +135,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app=app,
         host="0.0.0.0",
-        port=8000
+        port=8000,
+        access_log=False
     )
