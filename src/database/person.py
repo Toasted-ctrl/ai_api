@@ -34,7 +34,7 @@ def get_or_store_person(
     )
 
     if existing:
-        log.info("Person already exists, returning existing record...")
+        log.info(f"Person already exists, returning existing record: '{existing.id}'...")
         return StoredPerson(id=existing.id)
 
     person = Persons(
