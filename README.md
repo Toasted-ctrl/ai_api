@@ -10,7 +10,7 @@
 
 > A unified API gateway for multiple LLM providers.
 
-This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. Currently only Ollama is supported, but the intention is to add support for more providers later on (Anthropic, OpenAI, MeliousAI, etc.).
+This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. Currently only Ollama is supported, but the intention is to add support for more providers later on (Anthropic, OpenAI, Melious, etc.).
 
 ## Features
 - Login support (Google OAuth2) for Applications intended to serve multiple users.
@@ -40,8 +40,9 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - GET /models/chat_completion
 - GET /models/translation
 - GET /models/vector_embedding
+- GET /providers
 - GET /servers
-- POST /servers/wake/{server_name}
+- POST /servers/wake/{provider_name}
 - GET /status
 - GET /translation/translategemma
 - POST /translation/translategemma
@@ -49,12 +50,10 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ## Roadmap
 ### Short Term
 - Tests for all base functionalities (i.e., Google Login)
-- Adding support for storing LLM provider settings (base_url, etc.) in a database table.
 - Making Redis caching optional.
-- Removing Frontend Client and Backend User settings from environment variables.
 
 ### Long Term
-- Implement support for various LLM providers (OpenAI, Anthropic, MeliousAI, etc.), expanding beyond Ollama.
+- Implement support for various LLM providers (OpenAI, Anthropic, Melious, etc.), expanding beyond Ollama.
 - Add support for more Login providers.
 - Add agent building functionalities.
 - Add support for storing API Keys for external providers in the database.
