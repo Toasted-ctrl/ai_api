@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 import uuid
 
 from core.config import config
-from database.person import get_or_store_person, StoredPerson
-from database.schemas import Persons
+from database.person import get_or_store_person, Person
+from database.schemas.persons_users import PersonsT
 from security.hmac import hash_hmac
 
 class TestGetOrStorePerson:
@@ -21,7 +21,7 @@ class TestGetOrStorePerson:
                 email="test_email")
 
             assert person is not None
-            assert isinstance(person, StoredPerson)
+            assert isinstance(person, Person)
             assert isinstance(person.id, uuid.UUID)
 
 
@@ -48,10 +48,10 @@ class TestGetOrStorePerson:
             )
 
             assert (
-                session.query(Persons)
-                .filter(Persons.blind_index_email == hash_hmac(content=email, key=config.BLIND_INDEX_HMAC_KEY))
+                session.query(PersonsT)
+                .filter(PersonsT.blind_index_email == hash_hmac(content=email, key=config.BLIND_INDEX_HMAC_KEY))
                 .count()
             ) == 1
 
-            assert isinstance(_person, StoredPerson)
+            assert isinstance(_person, Person)
             assert isinstance(_person.id, uuid.UUID)
