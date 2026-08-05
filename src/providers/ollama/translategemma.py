@@ -4,7 +4,7 @@ import json
 import os
 
 from core.config import config
-from providers.ollama.general import get_all_models_ollama
+from providers.general import get_all_models
 
 @lru_cache(maxsize=1)
 def _load_translategemma_data() -> dict:
@@ -44,22 +44,12 @@ def get_language(lang_code: str) -> str:
     return data['supported'][lang_code]
 
 
-def translategemma_locate() -> str:
-
-    """Returns the server on which translategemma is currently hosted."""
-
-    for provider in config.LOCAL_SERVER_CONFIGURATION.keys():
-        if 'translategemma:latest' in get_all_models_ollama(host_url=config.LOCAL_SERVER_CONFIGURATION[provider]['base_url'])['translation']:
-            return provider
-    return None
-
-
 def get_translation_translategemma(
     from_lang: str,
     to_lang: str,
     prompt: str,
     temperature: float,
-    host: str
+    base_url: str
 ) -> dict:
 
     """Invokes a translation from translategemma 4B"""
@@ -67,7 +57,7 @@ def get_translation_translategemma(
     llm = ChatOllama(
         model="translategemma:latest",
         temperature=temperature,
-        base_url=config.LOCAL_SERVER_CONFIGURATION[host]['base_url'],
+        base_url=base_url,
         disable_streaming=True
     )
 
