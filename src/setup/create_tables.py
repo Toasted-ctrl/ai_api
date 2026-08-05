@@ -4,9 +4,13 @@ from core.config import config
 from core.logging import get_logger
 
 # Imported so their tables are registered with Base.metadata
-from database.schemas import Base, ApiKeys, Users, Persons
+from database.schemas.base import Base
+from database.schemas.clients import ClientsT
+from database.schemas.persons_users import PersonsT, UsersT
+from database.schemas.providers import ProvidersT
 
 log = get_logger()
+
 
 def create_tables():
 
