@@ -1,6 +1,5 @@
 from functools import lru_cache, cached_property
 from pathlib import Path
-from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import ClassVar, Set
 import json
@@ -12,13 +11,6 @@ log = get_logger()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 _env_file = BASE_DIR / ".env"
-
-class ApplicationConfig(BaseModel):
-    name: str
-    api_key: str
-    hmac_secret: bytes
-    require_google_id: bool
-    require_jwt: bool
 
 
 @lru_cache(maxsize=1)
@@ -98,12 +90,6 @@ class Config(BaseSettings):
         "GOOGLE_CLIENT_SECRET"
     }
 
-    # NOTE: Update _APP_REGISTRY if new applications are added.
-    _CLIENT_REGISTRY = [
-        {"key": "jelaime", "env_prefix": "JELAIME", "name": "LEJAIME App"},
-        {"key": "admin", "env_prefix": "ADMIN", "name": "ADMIN Key"}
-    ]
-
 
     def model_post_init(self, context) -> None:
         all_fields = set(self.__class__.__annotations__.keys())
@@ -155,20 +141,6 @@ class Config(BaseSettings):
 
 
     @cached_property
-    def LOCAL_SERVER_CONFIGURATION(self) -> dict:
-
-        """Returns a dictionary of local server configurations"""
-
-        return {
-            "Ollama-1": {
-                "mac_address": self.OLLAMA_1_MAC,
-                "base_url": self.OLLAMA_1_BASE_URL,
-                "hostname": self.OLLAMA_1_HOSTNAME
-            }
-        }
-
-
-    @cached_property
     def PG_DB_URL(self) -> str:
 
         """Returns the database url"""
@@ -178,30 +150,6 @@ class Config(BaseSettings):
             f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
             f"{self.PG_HOSTNAME}:{self.PG_PORT}/{self.PG_DATABASE}"
         )
-    
-
-    @cached_property
-    def APPLICATIONS(self) -> dict[str, ApplicationConfig]:
-        return {
-            app["key"]: ApplicationConfig(
-                name=app["name"],
-                api_key=getattr(self, f"{app['env_prefix']}_API_KEY"),
-                hmac_secret=getattr(self, f"{app['env_prefix']}_HMAC").encode(encoding="utf-8"),
-                require_google_id=getattr(self, f"{app['env_prefix']}_REQUIRE_GOOGLE_ID"),
-                require_jwt=getattr(self, f"{app['env_prefix']}_REQUIRE_JWT")
-            )
-            for app in self._CLIENT_REGISTRY
-        }
-
-
-    @cached_property
-    def SUPPORTED_PROVIDERS(self) -> list[str]:
-
-        """Returns a list of supported Providers (e.g., Ollama, Anthropic)."""
-
-        return [
-            "Ollama-1"
-        ]
     
 
     @property
