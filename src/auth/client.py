@@ -7,7 +7,7 @@ import uuid
 
 from auth.hash import get_hash_sha256
 from core.logging import get_logger
-from database.schemas import ApiKeys
+from database.schemas.clients import ClientsT
 from database.session import get_db_session
 
 log = get_logger()
@@ -36,7 +36,7 @@ def get_client_from_key(
         )
 
     try:
-        client = session.query(ApiKeys).filter(ApiKeys.api_key_hash == get_hash_sha256(api_key)).one_or_none()
+        client = session.query(ClientsT).filter(ClientsT.api_key_hash == get_hash_sha256(api_key)).one_or_none()
     except MultipleResultsFound:
         log.critical(f"Multiple Clients matched with single API key hash: {get_hash_sha256(api_key)}")
         raise HTTPException(

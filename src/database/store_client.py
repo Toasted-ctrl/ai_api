@@ -6,7 +6,7 @@ from auth.create_secret import create_secret
 from auth.hash import get_hash_sha256
 from core.config import config
 from core.logging import get_logger
-from database.schemas import ApiKeys
+from database.schemas.clients import ClientsT
 from security.encryption import encrypt, decrypt
 from security.hmac import hash_hmac
 
@@ -59,10 +59,10 @@ def store_client(
     )
 
     if (
-        session.query(ApiKeys)
+        session.query(ClientsT)
         .filter(
-            ApiKeys.blind_index_client_name == blind_index_client_name_value,
-            ApiKeys.blind_index_owner_email == blind_index_owner_email_value)
+            ClientsT.blind_index_client_name == blind_index_client_name_value,
+            ClientsT.blind_index_owner_email == blind_index_owner_email_value)
         .count()
     ) > 0:
         raise ValueError(f"Client '{client_name}' with owner '{owner_email}' already exists, skipping...")
@@ -81,7 +81,7 @@ def store_client(
     else:
         hmac = hmac_secret
 
-    key = ApiKeys(
+    key = ClientsT(
         api_key_hash=hsh_key,
         require_jwt=require_jwt,
         key_type=key_type,

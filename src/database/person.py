@@ -5,14 +5,15 @@ import uuid
 
 from core.config import config
 from core.logging import get_logger
-from database.schemas import Persons
+from database.schemas.persons_users import PersonsT
 from security.encryption import encrypt
 from security.hmac import hash_hmac
 
 log = get_logger()
 
+
 @dataclass(frozen=True)
-class StoredPerson:
+class Person:
     id: uuid.UUID
 
 
@@ -21,23 +22,23 @@ def get_or_store_person(
     first_name: str,
     last_name: str,
     email: str
-) -> StoredPerson:
+) -> Person:
 
     """Stores a new or retrieves an existing person from the database."""
 
     blind_index_email_value = hash_hmac(content=email, key=config.BLIND_INDEX_HMAC_KEY)
 
     existing = (
-        session.query(Persons)
-        .filter(Persons.blind_index_email == blind_index_email_value)
+        session.query(PersonsT)
+        .filter(PersonsT.blind_index_email == blind_index_email_value)
         .first()
     )
 
     if existing:
         log.info(f"Person already exists, returning existing record: '{existing.id}'...")
-        return StoredPerson(id=existing.id)
+        return Person(id=existing.id)
 
-    person = Persons(
+    person = PersonsT(
         encrypted_email=encrypt(content=email),
         encrypted_first_name=encrypt(content=first_name),
         encrypted_last_name=encrypt(last_name),
@@ -55,14 +56,14 @@ def get_or_store_person(
         log.info("Concurrent insert detected, fetching existing Person record...")
 
         existing = (
-            session.query(Persons)
-            .filter(Persons.blind_index_email == blind_index_email_value)
+            session.query(PersonsT)
+            .filter(PersonsT.blind_index_email == blind_index_email_value)
             .first()
         )
 
         if existing is None:
             raise ValueError(f"Failed to create or retrieve person with email: {email}")
-        return StoredPerson(id=existing.id)
+        return Person(id=existing.id)
 
     log.debug(f"Created new Person with id: '{person.id}...'")
-    return StoredPerson(id=person.id)
+    return Person(id=person.id)

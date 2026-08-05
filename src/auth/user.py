@@ -6,7 +6,7 @@ import uuid
 
 from auth.client import VerifiedClient, get_client_from_key
 from core.logging import get_logger
-from database.schemas import Users
+from database.schemas.persons_users import UsersT
 from database.session import get_db_session
 
 log = get_logger()
@@ -48,7 +48,7 @@ def verify_user(
         )
 
     try:
-        user = session.query(Users).filter(Users.api_key_id == client.id).one_or_none()
+        user = session.query(UsersT).filter(UsersT.api_key_id == client.id).one_or_none()
     except MultipleResultsFound:
         log.critical(f"Multiple Users found for api_key_id: {client.id}")
         raise HTTPException(
