@@ -1,3 +1,4 @@
+from httpx import ConnectError, ConnectTimeout
 from sqlalchemy.orm import Session
 
 from database.providers import get_providers_by_location
@@ -21,10 +22,13 @@ async def get_all_models(
     )
 
     for ip in internal_providers:
-        models = await get_all_models_ollama(
-            host_url=ip.base_url
-        )
-        all_models_by_provider[ip.name] = models
+        try:
+            models = await get_all_models_ollama(
+                host_url=ip.base_url
+            )
+            all_models_by_provider[ip.name] = models
+        except (ConnectTimeout, ConnectError):
+            continue
 
     return all_models_by_provider
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response, Depends
+from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
@@ -31,9 +31,16 @@ async def get_all(
     user: VerifiedUser = Depends(verify_user),
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsAll:
+
+    provider_models = await get_all_models(session=session)
+    if provider_models == {}:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No models available"
+        )
     
     return {
-        "provider": await get_all_models(session=session)
+        "providers": provider_models
     }
 
 
@@ -50,8 +57,15 @@ async def get_all_chat_completion(
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsChatCompletions:
     
+    provider_models = await get_all_models(session=session)
+    if provider_models == {}:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No models available"
+        )
+        
     return {
-        "provider": await get_all_models(session=session)
+        "providers": provider_models
     }
 
 
@@ -68,10 +82,16 @@ async def get_all_translation(
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsTranslation:
 
+    provider_models = await get_all_models(session=session)
+    if provider_models == {}:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No models available"
+        )
+        
     return {
-        "provider": await get_all_models(session=session)
+        "providers": provider_models
     }
-
 
 @router.get(
     "/models/vector_embedding",
@@ -86,6 +106,13 @@ async def get_all_vector_embedding(
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsVectorEmbedding:
 
+    provider_models = await get_all_models(session=session)
+    if provider_models == {}:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No models available"
+        )
+        
     return {
-        "provider": await get_all_models(session=session)
+        "providers": provider_models
     }

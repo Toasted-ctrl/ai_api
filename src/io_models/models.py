@@ -7,7 +7,7 @@ class ProviderModelsAll(BaseModel):
 
 
 class ResponseProviderModelsAll(BaseModel):
-    provider: dict[str, ProviderModelsAll]
+    providers: dict[str, ProviderModelsAll]
 
 
 class ProviderModelsChatCompletions(BaseModel):
@@ -15,7 +15,7 @@ class ProviderModelsChatCompletions(BaseModel):
 
 
 class ResponseProviderModelsChatCompletions(BaseModel):
-    provider: dict[str, ProviderModelsChatCompletions]
+    providers: dict[str, ProviderModelsChatCompletions]
 
 
 class ProviderModelsTranslations(BaseModel):
@@ -23,7 +23,7 @@ class ProviderModelsTranslations(BaseModel):
 
 
 class ResponseProviderModelsTranslation(BaseModel):
-    provider: dict[str, ProviderModelsTranslations]
+    providers: dict[str, ProviderModelsTranslations]
 
 
 class ProviderModelsVectorEmbedding(BaseModel):
@@ -31,4 +31,4 @@ class ProviderModelsVectorEmbedding(BaseModel):
 
 
 class ResponseProviderModelsVectorEmbedding(BaseModel):
-    provider: dict[str, ProviderModelsVectorEmbedding]
+    providers: dict[str, ProviderModelsVectorEmbedding]
