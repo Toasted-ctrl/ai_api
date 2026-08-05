@@ -1,20 +1,23 @@
 from fastapi import APIRouter, Request, Response, Depends
 from fastapi_cache.decorator import cache
+from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
 from core.cache import cache_key_builder
 from core.logging import get_logger
+from database.session import get_db_session
 from io_models.models import (
     ResponseProviderModelsAll,
     ResponseProviderModelsChatCompletions,
     ResponseProviderModelsTranslation,
     ResponseProviderModelsVectorEmbedding
 )
-from providers.general import _get_all_models
+from providers.general import get_all_models
 
 log = get_logger()
 
 router = APIRouter()
+
 
 @router.get(
     "/models",
@@ -22,15 +25,15 @@ router = APIRouter()
     response_model=ResponseProviderModelsAll
 )
 @cache(expire=300, key_builder=cache_key_builder)
-async def get_all_models(
+async def get_all(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user)
+    user: VerifiedUser = Depends(verify_user),
+    session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsAll:
     
-    log.debug("Result cached")
     return {
-        "provider": await _get_all_models()
+        "provider": await get_all_models(session=session)
     }
 
 
@@ -40,15 +43,15 @@ async def get_all_models(
     response_model=ResponseProviderModelsChatCompletions
 )
 @cache(expire=300, key_builder=cache_key_builder)
-async def get_all_models_chat_completion(
+async def get_all_chat_completion(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user)
+    user: VerifiedUser = Depends(verify_user),
+    session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsChatCompletions:
     
-    log.debug("Result cached")
     return {
-        "provider": await _get_all_models()
+        "provider": await get_all_models(session=session)
     }
 
 
@@ -58,15 +61,15 @@ async def get_all_models_chat_completion(
     response_model=ResponseProviderModelsTranslation
 )
 @cache(expire=300, key_builder=cache_key_builder)
-async def get_all_models_translation(
+async def get_all_translation(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user)
+    user: VerifiedUser = Depends(verify_user),
+    session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsTranslation:
 
-    log.debug("Result cached")
     return {
-        "provider": await _get_all_models()
+        "provider": await get_all_models(session=session)
     }
 
 
@@ -76,13 +79,13 @@ async def get_all_models_translation(
     response_model=ResponseProviderModelsVectorEmbedding
 )
 @cache(expire=300, key_builder=cache_key_builder)
-async def get_all_models_vector_embedding(
+async def get_all_vector_embedding(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user)
+    user: VerifiedUser = Depends(verify_user),
+    session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsVectorEmbedding:
 
-    log.debug("Result cached")
     return {
-        "provider": await _get_all_models()
+        "provider": await get_all_models(session=session)
     }

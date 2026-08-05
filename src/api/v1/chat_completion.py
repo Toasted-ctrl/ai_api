@@ -1,16 +1,20 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
+from httpx import ConnectTimeout, ConnectError
+from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
-from core.config import config
 from core.logging import get_logger
+from database.providers import get_all_providers_support_user, Provider
+from database.session import get_db_session
 from io_models.chat_completion import PayloadChatCompletion
+from providers.general import get_all_models
 from providers.ollama.chat_completion import complete_chat_ollama
-from providers.ollama.general import is_ollama_model_supported
 
 router = APIRouter()
 
 log = get_logger()
+
 
 @router.post(
     "/chat_completion",
@@ -19,44 +23,54 @@ log = get_logger()
 )
 async def post_chat_completion(
     payload: PayloadChatCompletion,
-    user: VerifiedUser = Depends(verify_user)
+    user: VerifiedUser = Depends(verify_user),
+    session: Session = Depends(get_db_session)
 ) -> StreamingResponse:
 
-    # TODO: This whole path currently works, but we'll probably want to rework it. Messy.
+    try:
 
-    if payload.provider not in config.SUPPORTED_PROVIDERS:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail=f"Unsupported Provider: '{payload.provider}'"
-        )
-    
-    if payload.model is None and payload.agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Model or Agent must not be None"
-        )
-    
-    if payload.provider == "Ollama-1":
+        # TODO: Add API Key check to based on user.
 
-        if payload.model is None:
+        providers = get_all_providers_support_user(
+            session=session
+        )
+
+        provider_list = [
+            p.name for p in providers if p.internal or p.api_key_configured
+        ]
+
+        provider: Provider = [p for p in providers if p.name == payload.provider][0]
+
+        if payload.provider not in provider_list:
             raise HTTPException(
-                status=status.HTTP_406_NOT_ACCEPTABLE,
-                detail="Model must not be None for Provider Ollama."
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unsupported or unconfigured Provider"
             )
 
-        host = config.LOCAL_SERVER_CONFIGURATION["Ollama-1"]['base_url']
+        models = await get_all_models(
+            session=session
+        )
 
-        await is_ollama_model_supported(model=payload.model, host=host)
+        if payload.model not in models.get(payload.provider).get("chat_completion"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Model not supported by Provider"
+            )
 
         return StreamingResponse(
             complete_chat_ollama(
                 prompt=payload.prompt,
-                stream=payload.stream,
+                url=provider.base_url,
                 model=payload.model,
-                url=host,
+                stream=payload.stream,
+                temperature=payload.parameters.temperature,
                 top_k=payload.parameters.top_k,
-                top_p=payload.parameters.top_p,
-                temperature=payload.parameters.temperature
-            ),
-            media_type="text/plain"
+                top_p=payload.parameters.top_p
+            )
+        )
+
+    except (ConnectTimeout, ConnectError):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to connect to Provider"
         )

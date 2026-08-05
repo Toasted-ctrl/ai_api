@@ -7,72 +7,101 @@ from fastapi import (
     Response
 )
 from fastapi_cache.decorator import cache
+from httpx import ConnectError, ConnectTimeout
+from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
 from core.cache import cache_key_builder
+from database.providers import get_provider, Provider
+from database.session import get_db_session
 from io_models.translations import (
     ResponseTranslation,
     PayloadTranslation,
     ResponseTranslationLanguages
 )
 from providers.ollama.translategemma import (
-    translategemma_locate,
     translategemma_languages,
     get_translation_translategemma
 )
+from providers.general import find_provider, get_all_models
 
 router = APIRouter()
 
 tags = ["Translation"]
 
+
 @router.post(
     "/translation/translategemma",
     tags=tags,
+    description="Invokes a translation from translategemma",
     response_model=ResponseTranslation
 )
-def post_translation_translategemma(
+async def post_translation_translategemma(
     payload: PayloadTranslation,
-    user: VerifiedUser = Depends(verify_user)
+    user: VerifiedUser = Depends(verify_user),
+    session: Session = Depends(get_db_session)
 ) -> ResponseTranslation:
 
-    if payload.from_lang_code not in translategemma_languages():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported language: {payload.from_lang_code}"
+    try:
+
+        if payload.from_lang_code not in translategemma_languages():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported language: {payload.from_lang_code}"
+            )
+        
+        if payload.to_lang_code not in translategemma_languages():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported language: {payload.to_lang_code}"
+            )
+        
+        if payload.prompt == "":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Prompt must not be None"
+            )
+
+        provider_name = find_provider(
+            data=await get_all_models(session=session),
+            model_name="translategemma:latest"
         )
-    
-    if payload.to_lang_code not in translategemma_languages():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported language: {payload.to_lang_code}"
+        if provider_name is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Translategemma is unavailable"
+            )
+
+        provider: Provider = get_provider(
+            session=session,
+            provider_name=provider_name
         )
-    
-    if payload.prompt == "":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Prompt must not be None"
+        if provider is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Unexpected Error: Could not locate Provider"
+            )
+        
+        return get_translation_translategemma(
+            from_lang=payload.from_lang_code,
+            to_lang=payload.to_lang_code,
+            prompt=payload.prompt,
+            temperature=payload.parameters.temperature,
+            base_url=provider.base_url
         )
 
-    host = translategemma_locate()
-    if host is None:
+    except (ConnectTimeout, ConnectError):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Translategemma is unavailable"
+            detail="Unable to connect to Provider"
         )
     
-    return get_translation_translategemma(
-        from_lang=payload.from_lang_code,
-        to_lang=payload.to_lang_code,
-        prompt=payload.prompt,
-        temperature=payload.parameters.temperature,
-        host=host
-    )
-
 
 @router.get(
     "/translation/translategemma",
     tags=["Translation"],
-    response_model=ResponseTranslationLanguages
+    response_model=ResponseTranslationLanguages,
+    description="Returns languages supported by translategemma."
 )
 @cache(
     expire=300,
