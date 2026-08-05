@@ -4,7 +4,7 @@ import pytest
 from auth.hash import get_hash_sha256
 from core.config import config
 from database.store_client import store_client, StoredClient
-from database.schemas import ApiKeys
+from database.schemas.clients import ClientsT
 from security.encryption import decrypt
 from security.hmac import hash_hmac
 
@@ -27,15 +27,15 @@ class TestCreateApiKey:
             session.commit()
 
             assert (
-                session.query(ApiKeys)
-                .filter(ApiKeys.api_key_hash == get_hash_sha256(_client.api_key))
+                session.query(ClientsT)
+                .filter(ClientsT.api_key_hash == get_hash_sha256(_client.api_key))
                 .count()
             ) == 1
 
             assert (
-                session.query(ApiKeys.encrypted_hmac_secret)
+                session.query(ClientsT.encrypted_hmac_secret)
                 .filter(
-                    ApiKeys.blind_index_owner_email == hash_hmac(
+                    ClientsT.blind_index_owner_email == hash_hmac(
                         content="test_mail",
                         key=config.BLIND_INDEX_HMAC_KEY
                     )
@@ -45,9 +45,9 @@ class TestCreateApiKey:
 
             assert decrypt(
                 (
-                    session.query(ApiKeys.encrypted_hmac_secret)
+                    session.query(ClientsT.encrypted_hmac_secret)
                     .filter(
-                        ApiKeys.blind_index_owner_email == hash_hmac(
+                        ClientsT.blind_index_owner_email == hash_hmac(
                         content="test_mail",
                         key=config.BLIND_INDEX_HMAC_KEY
                         )
