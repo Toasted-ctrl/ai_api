@@ -15,4 +15,4 @@ curl_tests.txt
 
 # Config files
 configure_init_providers.json
-configure_init_users.json
+configure_init_clients.json
