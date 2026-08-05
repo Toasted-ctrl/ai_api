@@ -11,15 +11,6 @@ from database.session import get_db_session
 
 log = get_logger()
 
-class InvalidKeyTypeError(Exception):
-    """Raised when an invalid key type is found."""
-    pass
-
-
-class UserNotFoundError(Exception):
-    """Raised when no user found."""
-    pass
-
 
 @dataclass(frozen=True)
 class VerifiedUser:
