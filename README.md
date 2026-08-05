@@ -1,4 +1,4 @@
-# AI Api (AIA)
+# Artificial Intelligence API (AIA)
 
 ![Python](https://img.shields.io/badge/python-3.14-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
