@@ -3,8 +3,6 @@ from langchain_ollama import ChatOllama
 import json
 import os
 
-from core.config import config
-from providers.general import get_all_models
 
 @lru_cache(maxsize=1)
 def _load_translategemma_data() -> dict:
