@@ -40,7 +40,6 @@ class Config(BaseSettings):
         extra="ignore"
     )
 
-    # NOTE: Fill with fields that don't require checking on initialization.
     _SKIP_EMPTY_CHECK: ClassVar[Set[str]] = {
         "_SKIP_EMPTY_CHECK",
         "APP_NAME",
@@ -53,46 +52,11 @@ class Config(BaseSettings):
     APP_MAINTAINER: str = "Toasted-ctrl"
     APP_VERSION: str = "0.1.1"
 
-    OLLAMA_1_BASE_URL: str = ""
-    OLLAMA_1_MAC: str = ""
-    OLLAMA_1_HOSTNAME: str = ""
-
     REDIS_USER: str = ""
     REDIS_HOSTNAME: str = ""
     REDIS_PASSWORD: str = ""
     REDIS_PREFIX: str = ""
     REDIS_PORT: int
-
-    ADMIN_CREATE_KEY: bool = True
-    ADMIN_HMAC: str = ""
-    ADMIN_API_KEY: str = ""
-    ADMIN_REQUIRE_GOOGLE_ID: bool = False
-    ADMIN_REQUIRE_JWT: bool = False
-    ADMIN_OWNER_EMAIL: str = ""
-    ADMIN_KEY_TYPE: str = ""
-    ADMIN_CLIENT: str = ""
-    ADMIN_FIRST_NAME: str = ""
-    ADMIN_LAST_NAME: str = ""
-
-    FRONTEND_APP_CREATE_KEY: bool = True
-    FRONTEND_APP_HMAC: str = ""
-    FRONTEND_APP_API_KEY: str = ""
-    FRONTEND_APP_REQUIRE_EXTERNAL_ID: bool = True
-    FRONTEND_APP_REQUIRE_JWT: bool = True
-    FRONTEND_APP_OWNER_EMAIL: str = ""
-    FRONTEND_APP_KEY_TYPE: str = ""
-    FRONTEND_APP_CLIENT: str = ""
-
-    # TODO: Remove JELAIME requirements, replace with FRONTEND_APP_ instead.
-
-    JELAIME_CREATE_KEY: bool = True
-    JELAIME_HMAC: str = ""
-    JELAIME_API_KEY: str = ""
-    JELAIME_REQUIRE_GOOGLE_ID: bool = True
-    JELAIME_REQUIRE_JWT: bool = True
-    JELAIME_OWNER_EMAIL: str = ""
-    JELAIME_KEY_TYPE: str = ""
-    JELAIME_CLIENT: str = ""
 
     PG_HOSTNAME: str = ""
     PG_DATABASE: str = ""
@@ -102,6 +66,8 @@ class Config(BaseSettings):
     PG_DRIVER: str = ""
     PG_PORT: int
 
+    CREATE_PRECONFIGURED_CLIENTS: bool = False
+    CREATE_PRECONFIGURED_PROVIDERS: bool = False
     CREATE_TABLES: bool = True
 
     ENABLE_ECRYPTION: bool = True
@@ -125,7 +91,7 @@ class Config(BaseSettings):
     # if Google Login is disabled. 
     _GOOGLE_ENV_VARS: ClassVar[set[str]] = {
         "GOOGLE_CLIENT_ID",
-        "GOOGLE_REDIRECT_URI",    # Required to remove from startup check if ENABLE_GOOGLE_LOGIN is set to False.
+        "GOOGLE_REDIRECT_URI",
         "GOOGLE_AUTH_URL",
         "GOOGLE_HMAC",
         "GOOGLE_TOKEN_URL",
