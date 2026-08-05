@@ -1,0 +1,26 @@
+{
+    "version": "0.1",
+    "configured": false,
+    "providers": [
+        {
+            "id": "ollama",
+            "name": "Ollama",
+            "langchain_con": "ChatOllama",
+            "base_url": "http://some-ip-address:11434",
+            "host": "hostname",
+            "mac_address": "MAC Address of the device (for magic packet).",
+            "internal": true,
+            "requires_api_key": false
+        },
+        {
+            "id": "melious",
+            "name": "Melious",
+            "langchain_con": "ChatOpenAI",
+            "base_url": "https://api.melious.ai/v1",
+            "host": null,
+            "mac_address": null,
+            "internal": false,
+            "requires_api_key": true
+        }
+    ]
+}

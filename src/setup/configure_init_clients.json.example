@@ -1,0 +1,28 @@
+{
+    "version": "0.1",
+    "configured": false,
+    "users": [
+        {
+            "first_name": "user first name",
+            "last_name": "user last name",
+            "hmac": "user hmac",
+            "api_key": "user api key",
+            "require_external_id": false,
+            "require_jwt": false,
+            "owner_email": "user email",
+            "key_type": "User",
+            "client_name": "user client name"
+        }
+    ],
+    "applications": [
+        {
+            "hmac": "application hmac",
+            "api_key": "application api key",
+            "require_external_id": true,
+            "require_jwt": true,
+            "owner_email": "application owner email",
+            "key_type": "Application",
+            "client_name": "application name"
+        }
+    ]
+}
