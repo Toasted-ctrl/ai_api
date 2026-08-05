@@ -11,4 +11,4 @@ class LocalServer(BaseModel):
 
 
 class ResponseLocalServers(BaseModel):
-    on_prem: list[LocalServer]
+    on_prem_servers: list[LocalServer]
