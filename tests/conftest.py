@@ -5,6 +5,7 @@ from database.schemas.base import Base
 from database.schemas.clients import ClientsT
 from database.schemas.persons_users import PersonsT, UsersT
 from database.schemas.providers import ProvidersT
+from database.schemas.user_keys import UserKeysT
 from fastapi.testclient import TestClient
 
 @pytest.fixture
