@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
 from core.cache import cache_key_builder
-from database.providers import get_all_providers_support_user
+from database.providers import get_all_provider_configurations
 from database.session import get_db_session
 from io_models.providers import ProvidersResponse
 
@@ -34,8 +34,9 @@ async def get_all_providers(
 
     # TODO: In the future, add which api_key_ids the user has access to.
 
-    providers = get_all_providers_support_user(
-        session=session
+    providers = get_all_provider_configurations(
+        session=session,
+        user_id=user.id
     )
 
     return {

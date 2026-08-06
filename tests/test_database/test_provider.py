@@ -1,9 +1,10 @@
-
 from sqlalchemy.orm import Session
+import uuid
+
 from database.providers import (
     get_or_create_provider,
     Provider,
-    get_all_providers_support_user,
+    get_all_provider_configurations,
     get_providers_by_location
 )
 from database.schemas.providers import ProvidersT
@@ -18,7 +19,6 @@ class TestGetOrCreateProvider:
 
             provider = get_or_create_provider(
                 session=session,
-                id="test_id",
                 name="test_name",
                 langchain_con="test_con",
                 base_url="test_url",
@@ -29,7 +29,7 @@ class TestGetOrCreateProvider:
 
             assert provider is not None
             assert isinstance(provider, Provider)
-            assert isinstance(provider.id, str)
+            assert isinstance(provider.id, uuid.UUID)
             assert isinstance(provider.name, str)
             assert isinstance(provider.base_url, str)
             assert isinstance(provider.langchain_con, str)
@@ -42,7 +42,6 @@ class TestGetOrCreateProvider:
 
             provider1 = get_or_create_provider(
                 session=session,
-                id="test_id",
                 name="test_name",
                 langchain_con="test_con",
                 base_url="test_url",
@@ -53,7 +52,6 @@ class TestGetOrCreateProvider:
 
             provider2 = get_or_create_provider(
                 session=session,
-                id="test_id",
                 name="test_name",
                 langchain_con="test_con",
                 base_url="test_url",
@@ -81,7 +79,6 @@ class TestGetAllProvidersSupportUser:
             
             provider1 = get_or_create_provider(
                 session=session,
-                id="test_id",
                 name="test_name",
                 langchain_con="test_con",
                 base_url="test_url",
@@ -92,7 +89,6 @@ class TestGetAllProvidersSupportUser:
 
             provider2 = get_or_create_provider(
                 session=session,
-                id="test_id_2",
                 name="test_name_2",
                 langchain_con="test_con_2",
                 base_url="test_url_2",
@@ -107,8 +103,9 @@ class TestGetAllProvidersSupportUser:
 
             assert p_count == 2
 
-            providers = get_all_providers_support_user(
-                session=session
+            providers = get_all_provider_configurations(
+                session=session,
+                user_id=uuid.uuid4()
             )
 
             assert isinstance(providers, list)
@@ -118,7 +115,7 @@ class TestGetAllProvidersSupportUser:
             assert isinstance(p1.internal, bool)
             assert isinstance(p1.requires_api_key, bool)
             assert isinstance(p1.name, str)
-            assert isinstance(p1.id, str)
+            assert isinstance(p1.id, uuid.UUID)
             assert isinstance(p1.langchain_con, str)
             assert isinstance(p1.base_url, str)
 
@@ -127,7 +124,7 @@ class TestGetAllProvidersSupportUser:
             assert isinstance(p2.internal, bool)
             assert isinstance(p2.requires_api_key, bool)
             assert isinstance(p2.name, str)
-            assert isinstance(p2.id, str)
+            assert isinstance(p2.id, uuid.UUID)
             assert isinstance(p2.langchain_con, str)
             assert isinstance(p2.base_url, str)
 
@@ -143,7 +140,6 @@ class TestGetProvidersByLocation:
                 
             provider1 = get_or_create_provider(
                 session=session,
-                id="test_id",
                 name="test_name",
                 langchain_con="test_con",
                 base_url="test_url",
@@ -154,7 +150,6 @@ class TestGetProvidersByLocation:
     
             provider2 = get_or_create_provider(
                 session=session,
-                id="test_id_2",
                 name="test_name_2",
                 langchain_con="test_con_2",
                 base_url="test_url_2",

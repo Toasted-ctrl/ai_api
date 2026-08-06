@@ -1,11 +1,13 @@
 from sqlalchemy import (
     String,
-    Boolean
+    Boolean,
+    UUID
 )
 from sqlalchemy.orm import (
     Mapped,
     mapped_column
 )
+import uuid
 
 from database.schemas.base import Base
 
@@ -13,9 +15,10 @@ from database.schemas.base import Base
 class ProvidersT(Base):
     __tablename__ = "providers"
 
-    id: Mapped[str] = mapped_column(
-        String(50),
-        primary_key=True
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID,
+        primary_key=True,
+        default=lambda: uuid.uuid4()
     )
 
     name: Mapped[str] = mapped_column(

@@ -1,15 +1,17 @@
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
+import uuid
 
 from core.logging import get_logger
 from database.schemas.providers import ProvidersT
+from database.user_keys import get_user_active_keys
 
 log = get_logger()
 
 
 @dataclass(frozen=True)
 class Provider:
-    id: str
+    id: uuid.UUID
     name: str
     base_url: str
     internal: bool
@@ -21,7 +23,6 @@ class Provider:
 
 def get_or_create_provider(
     session: Session,
-    id: str,
     name: str,
     langchain_con: str,
     base_url: str,
@@ -55,7 +56,6 @@ def get_or_create_provider(
     log.info("Creating new Provider...")
 
     new_provider = ProvidersT(
-        id=id,
         name=name,
         langchain_con=langchain_con,
         base_url=base_url,
@@ -76,7 +76,8 @@ def get_or_create_provider(
         base_url=new_provider.base_url,
         internal=new_provider.internal,
         requires_api_key=new_provider.requires_api_key,
-        langchain_con=new_provider.langchain_con
+        langchain_con=new_provider.langchain_con,
+        mac_address=new_provider.mac_address
     )
 
 
@@ -108,16 +109,13 @@ def get_provider(
     )
 
 
-def get_all_providers_support_user(
+def get_all_provider_configurations(
     session: Session,
-    user_provider_api_key_ids: list[str] | None = None
+    user_id: uuid.UUID
 ) -> list[Provider]:
 
     """Fetches a list of available configured AI providers,
-    including whether API keys are configured for external providers."""
-
-    if user_provider_api_key_ids is None:
-        user_provider_api_key_ids = []
+    including whether API keys are configured for external providers for the user."""
 
     providers = (
         session.query(
@@ -131,6 +129,16 @@ def get_all_providers_support_user(
         .all()
     )
 
+    _keys = get_user_active_keys(
+        session=session,
+        user_id=user_id
+    )
+
+    if len(_keys) > 0:
+        keys = [k.id for k in _keys]
+    else:
+        keys = []
+
     return [
         Provider(
             id=p.id,
@@ -139,7 +147,7 @@ def get_all_providers_support_user(
             langchain_con=p.langchain_con,
             internal=p.internal,
             requires_api_key=p.requires_api_key,
-            api_key_configured=p.id in user_provider_api_key_ids
+            api_key_configured=p.id in keys
         )
     for p in providers
     ]
@@ -178,4 +186,36 @@ def get_providers_by_location(
             requires_api_key=p.requires_api_key,
         )
     for p in providers
+    ]
+
+
+# TODO: Build test
+def get_providers_by_id(
+    session: Session,
+    ids: list[uuid.UUID]
+) -> list[Provider]:
+
+    """Returns a list of Provider objects based on the provided Provider IDs."""
+
+    providers = (
+        session.query(ProvidersT)
+        .filter(
+            ProvidersT.id.in_(ids)
+        )
+        .all()
+    )
+
+    if not providers:
+        return []
+
+    return [
+        Provider(
+            id=p.id,
+            base_url=p.base_url,
+            name=p.name,
+            langchain_con=p.langchain_con,
+            internal=p.internal,
+            requires_api_key=p.requires_api_key,
+        )
+        for p in providers
     ]
