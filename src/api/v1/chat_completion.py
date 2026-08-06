@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
 from core.logging import get_logger
-from database.providers import get_all_providers_support_user, Provider
+from database.providers import (
+    get_all_provider_configurations,
+    Provider,
+    get_provider
+)
 from database.session import get_db_session
 from io_models.chat_completion import PayloadChatCompletion
 from providers.general import get_all_models
@@ -31,7 +35,7 @@ async def post_chat_completion(
 
         # TODO: Add API Key check to based on user.
 
-        providers = get_all_providers_support_user(
+        providers = get_all_provider_configurations(
             session=session
         )
 
@@ -39,13 +43,16 @@ async def post_chat_completion(
             p.name for p in providers if p.internal or p.api_key_configured
         ]
 
-        provider: Provider = [p for p in providers if p.name == payload.provider][0]
-
         if payload.provider not in provider_list:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Unsupported or unconfigured Provider"
             )
+
+        provider: Provider = get_provider(
+            session=session,
+            provider_name=payload.provider
+        )
 
         models = await get_all_models(
             session=session
@@ -56,6 +63,8 @@ async def post_chat_completion(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
+
+        # TODO: Currently this works, but only for Ollama. Needs a fix to also include Anthropic.
 
         return StreamingResponse(
             complete_chat_ollama(
