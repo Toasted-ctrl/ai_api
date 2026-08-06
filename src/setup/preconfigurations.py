@@ -8,7 +8,6 @@ from database.schemas.clients import ClientsT
 from database.schemas.persons_users import UsersT
 from database.session import get_db_session_ctx
 from database.user_keys import get_or_store_key
-from security.encryption import encrypt
 from security.hmac import hash_hmac
 from setup.application_client import create_application_client
 from setup.user_client_user import create_user_client_user
@@ -89,14 +88,14 @@ def create_preconfigured_clients() -> None:
                         log.info("Attempting to add User Client preconfigured keys...")
                         for provider, key in client.get("keys").items():
                             log.info(f"Add key: Adding Provider '{provider}' with key {key[:10]}...")
-                            provider = get_provider(
+                            prov = get_provider(
                                 session=session,
                                 provider_name=provider
                             )
                             get_or_store_key(
                                 session=session,
                                 api_key=key,
-                                provider_id=provider.id,
+                                provider_id=prov.id,
                                 user_id=user_id
                             )
                         log.info("Add keys: All keys were added.")
