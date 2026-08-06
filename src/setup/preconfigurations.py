@@ -1,9 +1,15 @@
 import json
 import os
 
+from core.config import config
 from core.logging import get_logger
-from database.providers import get_or_create_provider
+from database.providers import get_or_create_provider, get_provider
+from database.schemas.clients import ClientsT
+from database.schemas.persons_users import UsersT
 from database.session import get_db_session_ctx
+from database.user_keys import get_or_store_key
+from security.encryption import encrypt
+from security.hmac import hash_hmac
 from setup.application_client import create_application_client
 from setup.user_client_user import create_user_client_user
 
@@ -50,6 +56,50 @@ def create_preconfigured_clients() -> None:
                         first_name=client.get("first_name"),
                         last_name=client.get("last_name")
                     )
+
+                    # TODO: Key creation will skip if user already created.
+                    # Fix that it won't skip, also probably should fix the below. Works but janky.
+
+                    if 'keys' in client.keys():
+
+                        client_id = (
+                            session.query(ClientsT.id)
+                            .filter(
+                                ClientsT.key_type == "User",
+                                ClientsT.blind_index_owner_email == hash_hmac(
+                                    content=client.get("owner_email"),
+                                    key=config.BLIND_INDEX_HMAC_KEY
+                                ),
+                                ClientsT.blind_index_client_name == hash_hmac(
+                                    content=client.get("client_name"),
+                                    key=config.BLIND_INDEX_HMAC_KEY
+                                )
+                            )
+                            .scalar()
+                        )
+                        log.info(f"Add keys: located User Client: '{client_id}'")
+
+                        user_id = (
+                            session.query(UsersT.id)
+                            .filter(UsersT.api_key_id == client_id)
+                            .scalar()
+                        )
+                        log.info(f"Add keys: located User ID: '{user_id}'")
+
+                        log.info("Attempting to add User Client preconfigured keys...")
+                        for provider, key in client.get("keys").items():
+                            log.info(f"Add key: Adding Provider '{provider}' with key {key[:10]}...")
+                            provider = get_provider(
+                                session=session,
+                                provider_name=provider
+                            )
+                            get_or_store_key(
+                                session=session,
+                                api_key=key,
+                                provider_id=provider.id,
+                                user_id=user_id
+                            )
+                        log.info("Add keys: All keys were added.")
 
     except ValueError as e:
         log.info(e)
@@ -107,7 +157,6 @@ def create_preconfigured_providers() -> None:
         with get_db_session_ctx() as session:
             get_or_create_provider(
                 session=session,
-                id=provider.get("id"),
                 name=provider.get("name"),
                 langchain_con=provider.get("langchain_con"),
                 base_url=provider.get("base_url"),
