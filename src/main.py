@@ -102,14 +102,14 @@ if __name__ == "__main__":
     if config.CREATE_TABLES:
         create_tables()
 
+    if config.CREATE_PRECONFIGURED_PROVIDERS:
+        create_preconfigured_providers()
+
     if config.CREATE_PRECONFIGURED_CLIENTS:
         try:
             create_preconfigured_clients()
         except ValueError as e:
             log.info(e)
-
-    if config.CREATE_PRECONFIGURED_PROVIDERS:
-        create_preconfigured_providers()
 
     uvicorn.run(
         app=app,
