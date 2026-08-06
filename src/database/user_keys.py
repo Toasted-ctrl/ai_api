@@ -1,0 +1,119 @@
+from dataclasses import dataclass
+from datetime import datetime
+from sqlalchemy.orm import Session
+import uuid
+
+from core.logging import get_logger
+from database.schemas.providers import ProvidersT
+from database.schemas.user_keys import UserKeysT
+from security.encryption import decrypt, encrypt
+
+log = get_logger()
+
+
+@dataclass(frozen=True)
+class ProviderAPIKey:
+    user_id: uuid.UUID
+    api_key: str
+    api_key_short: str
+    provider_id: uuid.UUID
+    expiration_date: datetime
+
+
+def get_user_active_keys(
+    session: Session,
+    user_id: uuid.UUID
+) -> list[ProviderAPIKey]:
+
+    """Fetches all active Provider API keys for the user, 
+    and returns them as a list containing ProviderAPIKey objects. If no keys are active,
+    an empty list will be returned."""
+
+    keys = (
+        session.query(UserKeysT)
+        .filter(
+            UserKeysT.user_id == user_id,
+            UserKeysT.expiration_date > datetime.now()
+        )
+        .all()
+    )
+
+    if not keys:
+        log.debug(f"No active keys configured for User '{user_id}'. Returning empty list...")
+        return []
+
+    log.debug(f"Found {len(keys)} active key(s) for User '{user_id}'. Returning all keys...")
+    return [
+        ProviderAPIKey(
+            user_id=k.user_id,
+            provider_id=k.provider_id,
+            api_key=decrypt(content=k.encrypted_api_key),
+            api_key_short=k.api_key_short,
+            expiration_date=k.expiration_date
+        )
+        for k in keys
+    ]
+
+
+def get_or_store_key(
+    session: Session,
+    api_key: str,
+    user_id: uuid.UUID,
+    provider_id: uuid.UUID
+) -> ProviderAPIKey:
+
+    """Adds a new API key to the database for the user.
+    Returns the existing key if the user already has a key configured for the 
+    indicated provider_id which is not yet expired. In this case, the key which was attempted to 
+    be added, will not be added. Will raise ValueError if
+    the key is now allowed to be added (unknown or unsupported provider_id)."""
+
+    existing = (
+        session.query(UserKeysT)
+        .filter(
+            UserKeysT.user_id == user_id,
+            UserKeysT.expiration_date > datetime.now(),
+            UserKeysT.provider_id == provider_id
+        )
+        .first()
+    )
+
+    if existing:
+        log.info(f"Key with Provider '{existing.provider_id}' already exists for User '{existing.user_id}', returning existing key...")
+        return ProviderAPIKey(
+            user_id=existing.user_id,
+            api_key=decrypt(existing.encrypted_api_key),
+            api_key_short=existing.api_key_short,
+            provider_id=existing.provider_id,
+            expiration_date=existing.expiration_date
+        )
+
+    if (
+        session.query(ProvidersT).
+        filter(
+            ProvidersT.id == provider_id,
+            ProvidersT.requires_api_key == True
+        )
+        .count()
+    ) != 1:
+        raise ValueError(f"Provider '{provider_id}' does not require an API Key, or Provider with id '{provider_id}' does not exist...")
+
+    new_key = UserKeysT(
+        user_id=user_id,
+        encrypted_api_key=encrypt(api_key),
+        api_key_short=api_key[:10],
+        provider_id=provider_id
+    )
+
+    session.add(new_key)
+    session.flush()
+
+    log.debug(f"New key added for User '{new_key.user_id}' for Provider '{new_key.provider_id}'...")
+
+    return ProviderAPIKey(
+        user_id=new_key.user_id,
+        api_key=decrypt(new_key.encrypted_api_key),
+        api_key_short=new_key.api_key_short,
+        provider_id=new_key.provider_id,
+        expiration_date=new_key.expiration_date
+    )
