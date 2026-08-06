@@ -1,13 +1,11 @@
 from pydantic import BaseModel
-
+import uuid
 
 class ProviderResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     name: str
-    base_url: str
     internal: bool
     requires_api_key: bool
-    langchain_con: str
     api_key_configured: bool | None = None
 
 
