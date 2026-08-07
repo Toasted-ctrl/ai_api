@@ -12,6 +12,7 @@ from database.providers import (
 from database.user_keys import get_user_active_keys
 from providers.anthropic.models import get_models as get_models_anthropic
 from providers.ollama.general import get_all_models_ollama
+from providers.openai.models import get_models as get_models_openai
 
 log = get_logger()
 
@@ -59,7 +60,6 @@ async def get_all_models(
     # TODO: Maybe this is a bit too complicated for a simple check. Simplify somehow?
     keys = [ProviderKey(provider_id=k.provider_id, api_key=k.api_key) for k in _keys]
 
-    # TODO: Add step to retrieve all providers based on the UUIDs from the step above.
     providers = get_providers_by_id(
         session=session,
         ids=[p.provider_id for p in keys]
@@ -67,6 +67,7 @@ async def get_all_models(
 
     for p in providers:
         api_key = [k.api_key for k in keys if k.provider_id == p.id][0]
+        base_url = p.base_url
 
         # Anthropic
         if p.name == "Anthropic":
@@ -74,9 +75,14 @@ async def get_all_models(
                 api_key=api_key
             )
 
-            all_models_by_provider[p.name] = mds
+        # Melious
+        if p.name == "Melious":
+            mds = get_models_openai(
+                api_key=api_key,
+                base_url=base_url
+            )
 
-        # TODO: Add OpenAI next, will work with Melious.
+        all_models_by_provider[p.name] = mds
 
     return all_models_by_provider
 
