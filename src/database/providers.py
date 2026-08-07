@@ -135,7 +135,7 @@ def get_all_provider_configurations(
     )
 
     if len(_keys) > 0:
-        keys = [k.id for k in _keys]
+        keys = [k.provider_id for k in _keys]
     else:
         keys = []
 
