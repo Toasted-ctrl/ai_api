@@ -37,7 +37,7 @@ class UserKeysT(Base):
     )
 
     encrypted_api_key: Mapped[str] = mapped_column(
-        String(255),
+        String(500),
         nullable=False,
         unique=True
     )
