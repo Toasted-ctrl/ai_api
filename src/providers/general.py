@@ -11,7 +11,7 @@ from database.providers import (
 )
 from database.user_keys import get_user_active_keys
 from providers.anthropic.models import get_models as get_models_anthropic
-from providers.ollama.general import get_all_models_ollama
+from providers.ollama.models import get_models as get_models_ollama
 from providers.openai.models import get_models as get_models_openai
 
 log = get_logger()
@@ -36,8 +36,8 @@ async def get_all_models(
 
     for ip in internal_providers:
         try:
-            models = await get_all_models_ollama(
-                host_url=ip.base_url
+            models = await get_models_ollama(
+                base_url=ip.base_url
             )
             all_models_by_provider[ip.name] = models
         except (ConnectTimeout, ConnectError):
