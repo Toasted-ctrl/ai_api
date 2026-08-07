@@ -71,13 +71,13 @@ async def get_all_models(
 
         # Anthropic
         if p.name == "Anthropic":
-            mds = get_models_anthropic(
+            mds = await get_models_anthropic(
                 api_key=api_key
             )
 
         # Melious
         if p.name == "Melious":
-            mds = get_models_openai(
+            mds = await get_models_openai(
                 api_key=api_key,
                 base_url=base_url
             )
