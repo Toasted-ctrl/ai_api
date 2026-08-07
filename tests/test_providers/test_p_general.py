@@ -8,6 +8,10 @@ class TestGetProvidersConfiguredUser:
 
     """Test suite for the get_providers_configured_user() function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self):
 
         p_list = []

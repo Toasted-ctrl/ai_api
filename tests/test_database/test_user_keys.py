@@ -13,6 +13,10 @@ class TestGetOrStoreKey:
 
     """Test suite for the get_or_store_function()."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
 
@@ -93,6 +97,10 @@ class TestGetOrStoreKey:
             assert session.query(UserKeysT).count() == 1
 
 
+    # -------------------------------------------------------------------
+    # Error propagation
+    # -------------------------------------------------------------------
+
     def test_invalid_provider(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
             with pytest.raises(
@@ -109,6 +117,10 @@ class TestGetOrStoreKey:
 class TestGetUserActiveKeys:
 
     """Test suite for the get_user_active_keys() function."""
+
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
 
     def test_valid_nonconfigured(self, test_db_engine):
         with Session(bind=test_db_engine) as session:

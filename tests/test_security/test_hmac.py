@@ -5,6 +5,10 @@ class TestHashHmac:
 
     """Test battery for the hash_hmac function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self):
 
         key = config.BLIND_INDEX_HMAC_KEY
@@ -18,6 +22,10 @@ class TestHashHmac:
 class TestIsValidHMAC:
 
     """Test battery for the is_valid_hmac() function."""
+
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
 
     def test_invalid(self):
 

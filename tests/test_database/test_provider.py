@@ -14,6 +14,10 @@ class TestGetOrCreateProvider:
 
     """Test suite for the get_or_create_provider() function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
 
@@ -73,6 +77,10 @@ class TestGetOrCreateProvider:
 class TestGetAllProvidersSupportUser:
 
     """Test suite for the get_all_providers_support_user() function."""
+
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
 
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
@@ -134,6 +142,10 @@ class TestGetAllProvidersSupportUser:
 class TestGetProvidersByLocation:
 
     """Test suite for the get_providers_by_location() function."""
+
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
 
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:

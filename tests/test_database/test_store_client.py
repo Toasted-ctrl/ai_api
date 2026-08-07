@@ -12,6 +12,10 @@ class TestCreateApiKey:
 
     """Test battery for the create_api_key function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
 
@@ -60,7 +64,11 @@ class TestCreateApiKey:
             assert _client.hmac_secret == hmac
 
             session.close()
+            
 
+    # -------------------------------------------------------------------
+    # Error propagation
+    # -------------------------------------------------------------------
 
     def test_duplicate_key(self, test_db_engine):
         with Session(bind=test_db_engine) as session:

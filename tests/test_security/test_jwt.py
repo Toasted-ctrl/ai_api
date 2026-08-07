@@ -8,6 +8,10 @@ class TestCreateJWT:
 
     """Test suite for the 'create_jwt()' function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self):
 
         test_client_id = uuid.uuid5(uuid.NAMESPACE_DNS, "test_client_id")
@@ -25,6 +29,10 @@ class TestCreateJWT:
 class TestDecodeJWT:
 
     """Test suite for the 'decode_jwt()' function."""
+
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
 
     def test_valid(self):
 
@@ -51,6 +59,10 @@ class TestDecodeJWT:
         assert decoded.sub == test_user_id
         assert decoded.aud == test_client_id
 
+
+    # -------------------------------------------------------------------
+    # Error propagation
+    # -------------------------------------------------------------------
 
     def test_expired(self):
 

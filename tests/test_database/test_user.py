@@ -9,6 +9,10 @@ class TestStoreUser:
 
     """Test suite for store_user() function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+
     def test_valid(self, test_db_engine):
         with Session(bind=test_db_engine) as session:
             user = get_or_store_user(
@@ -50,6 +54,10 @@ class TestStoreUser:
 
             session.close()
 
+
+    # -------------------------------------------------------------------
+    # Error propagation
+    # -------------------------------------------------------------------
 
     def test_missing_external_id(self, test_db_engine):
         with Session(bind=test_db_engine) as session:

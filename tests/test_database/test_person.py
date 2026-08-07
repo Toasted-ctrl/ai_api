@@ -10,6 +10,11 @@ class TestGetOrStorePerson:
 
     """Test battery for the get_or_store_person() function."""
 
+    # -------------------------------------------------------------------
+    # Happy-path tests
+    # -------------------------------------------------------------------
+    
+
     def test_valid(self, test_db_engine):
 
         with Session(bind=test_db_engine) as session:
