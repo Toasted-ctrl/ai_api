@@ -15,12 +15,9 @@ _env_file = BASE_DIR / ".env"
 
 @lru_cache(maxsize=1)
 def _model_types() -> dict:
-
     """Loads and caches the model_types json data."""
-    
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'model_types.json')
-
     with open(file_path, 'r', encoding='utf-8') as file:
         return json.load(file)
     
@@ -126,17 +123,13 @@ class Config(BaseSettings):
 
     @cached_property
     def GOOGLE_HMAC_SECRET(self) -> bytes:
-
         """Returns Google HMAC secret"""
-
         return self.GOOGLE_HMAC.encode('utf-8')
 
 
     @cached_property
     def BLIND_INDEX_HMAC_KEY(self) -> bytes:
-
         """Returns blind index key."""
-
         return self.BLIND_INDEX_KEY.encode('utf-8')
 
 
@@ -152,36 +145,28 @@ class Config(BaseSettings):
         )
     
 
-    @property
+    @cached_property
     def MODEL_TYPES(self) -> dict:
-        
         """Returns a dictionary of model types, categorized by their expertise
         (e.g., llms, translations, vector-embeddings)"""
-
         return _model_types()
     
 
-    @property
+    @cached_property
     def TRANSLATION_MODELS(self) -> list:
-
         """Returns a list of models suitable for translation tasks."""
-
         return _model_types().get("translation", [])
     
     
-    @property
+    @cached_property
     def VECTOR_EMBEDDING_MODELS(self) -> list:
-
         """Returns a list of models suitable for vector embeddings."""
-
         return _model_types().get("vector_embedding", [])
     
 
-    @property
+    @cached_property
     def CHAT_COMPLETION_MODELS(self) -> list:
-
         """Returns a list of chat completion models"""
-
         return _model_types().get("chat_completion", [])
 
 config = Config()
