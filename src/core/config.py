@@ -59,7 +59,6 @@ class Config(BaseSettings):
     CREATE_PRECONFIGURED_PROVIDERS: bool = False
     CREATE_TABLES: bool = True
 
-    ENABLE_ECRYPTION: bool = True
     ENCRYPTION_KEY: str = ""
 
     BLIND_INDEX_KEY: str = ""
