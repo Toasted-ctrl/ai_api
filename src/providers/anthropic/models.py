@@ -13,11 +13,12 @@ async def get_models(
 
     log.debug(f"Fetching Anthropic models with key '{api_key[:10]}'...")
 
-    client = AsyncAnthropic(api_key=api_key)
-    models = await client.models.list()
+    async with AsyncAnthropic(api_key=api_key) as client:
 
-    return {
-        "chat_completion": [model.display_name for model in models.data],
-        "translation": [],
-        "vector_embedding": []
-    }
+        models = await client.models.list()
+
+        return {
+            "chat_completion": [model.display_name for model in models.data],
+            "translation": [],
+            "vector_embedding": []
+        }

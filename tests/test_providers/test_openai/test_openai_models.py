@@ -20,11 +20,12 @@ def _make_models_response(model_ids: list[str]) -> MagicMock:
 
 @pytest.fixture
 def mock_client():
-    """Patches AsyncOpenAI and exposes the mock client instance."""
+    """Patches AsyncOpenAI as an async context manager and exposes the mock client instance."""
     with patch("providers.openai.models.AsyncOpenAI") as MockAsyncOpenAI:
         client_instance = AsyncMock()
-        MockAsyncOpenAI.return_value = client_instance
-        yield client_instance
+        MockAsyncOpenAI.return_value.__aenter__ = AsyncMock(return_value=client_instance)
+        MockAsyncOpenAI.return_value.__aexit__ = AsyncMock(return_value=False)
+        yield client_instance, MockAsyncOpenAI
 
 
 # -------------------------------------------------------------------
@@ -33,7 +34,8 @@ def mock_client():
 
 @pytest.mark.asyncio
 async def test_get_models_returns_expected_structure(mock_client):
-    mock_client.models.list.return_value = _make_models_response(
+    client_instance, _ = mock_client
+    client_instance.models.list.return_value = _make_models_response(
         ["gpt-4", "gpt-3.5-turbo"]
     )
 
@@ -48,7 +50,8 @@ async def test_get_models_returns_expected_structure(mock_client):
 
 @pytest.mark.asyncio
 async def test_get_models_empty_list(mock_client):
-    mock_client.models.list.return_value = _make_models_response([])
+    client_instance, _ = mock_client
+    client_instance.models.list.return_value = _make_models_response([])
 
     result = await get_models(api_key="sk-test-key-123", base_url="https://api.openai.com/v1")
 
@@ -61,7 +64,8 @@ async def test_get_models_empty_list(mock_client):
 
 @pytest.mark.asyncio
 async def test_get_models_single_model(mock_client):
-    mock_client.models.list.return_value = _make_models_response(["gpt-4o"])
+    client_instance, _ = mock_client
+    client_instance.models.list.return_value = _make_models_response(["gpt-4o"])
 
     result = await get_models(api_key="sk-test-key-123", base_url="https://api.openai.com/v1")
 
@@ -73,18 +77,16 @@ async def test_get_models_single_model(mock_client):
 # -------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_client_receives_correct_credentials():
-    with patch("providers.openai.models.AsyncOpenAI") as MockAsyncOpenAI:
-        client_instance = AsyncMock()
-        client_instance.models.list.return_value = _make_models_response([])
-        MockAsyncOpenAI.return_value = client_instance
+async def test_client_receives_correct_credentials(mock_client):
+    client_instance, MockAsyncOpenAI = mock_client
+    client_instance.models.list.return_value = _make_models_response([])
 
-        await get_models(api_key="sk-my-key", base_url="https://custom.api/v1")
+    await get_models(api_key="sk-my-key", base_url="https://custom.api/v1")
 
-        MockAsyncOpenAI.assert_called_once_with(
-            api_key="sk-my-key",
-            base_url="https://custom.api/v1",
-        )
+    MockAsyncOpenAI.assert_called_once_with(
+        api_key="sk-my-key",
+        base_url="https://custom.api/v1",
+    )
 
 
 # -------------------------------------------------------------------
@@ -93,7 +95,8 @@ async def test_client_receives_correct_credentials():
 
 @pytest.mark.asyncio
 async def test_get_models_propagates_api_error(mock_client):
-    mock_client.models.list.side_effect = Exception("Unauthorized")
+    client_instance, _ = mock_client
+    client_instance.models.list.side_effect = Exception("Unauthorized")
 
     with pytest.raises(Exception, match="Unauthorized"):
         await get_models(api_key="sk-bad-key", base_url="https://api.openai.com/v1")

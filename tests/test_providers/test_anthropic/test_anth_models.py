@@ -20,11 +20,12 @@ def _make_models_response(display_names: list[str]) -> MagicMock:
 
 @pytest.fixture
 def mock_client():
-    """Patches AsyncAnthropic and exposes the mock client instance."""
+    """Patches AsyncAnthropic as an async context manager and exposes the mock client instance."""
     with patch("providers.anthropic.models.AsyncAnthropic") as MockAsyncAnthropic:
         client_instance = AsyncMock()
-        MockAsyncAnthropic.return_value = client_instance
-        yield client_instance
+        MockAsyncAnthropic.return_value.__aenter__ = AsyncMock(return_value=client_instance)
+        MockAsyncAnthropic.return_value.__aexit__ = AsyncMock(return_value=False)
+        yield client_instance, MockAsyncAnthropic
 
 
 # -------------------------------------------------------------------
@@ -33,7 +34,8 @@ def mock_client():
 
 @pytest.mark.asyncio
 async def test_get_models_returns_expected_structure(mock_client):
-    mock_client.models.list.return_value = _make_models_response(
+    client_instance, _ = mock_client
+    client_instance.models.list.return_value = _make_models_response(
         ["Claude 3.5 Sonnet", "Claude 3 Opus"]
     )
 
@@ -48,7 +50,8 @@ async def test_get_models_returns_expected_structure(mock_client):
 
 @pytest.mark.asyncio
 async def test_get_models_empty_list(mock_client):
-    mock_client.models.list.return_value = _make_models_response([])
+    client_instance, _ = mock_client
+    client_instance.models.list.return_value = _make_models_response([])
 
     result = await get_models(api_key="sk-ant-test-key-123")
 
@@ -61,7 +64,8 @@ async def test_get_models_empty_list(mock_client):
 
 @pytest.mark.asyncio
 async def test_get_models_single_model(mock_client):
-    mock_client.models.list.return_value = _make_models_response(["Claude 3.5 Haiku"])
+    client_instance, _ = mock_client
+    client_instance.models.list.return_value = _make_models_response(["Claude 3.5 Haiku"])
 
     result = await get_models(api_key="sk-ant-test-key-123")
 
@@ -73,15 +77,13 @@ async def test_get_models_single_model(mock_client):
 # -------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_client_receives_correct_api_key():
-    with patch("providers.anthropic.models.AsyncAnthropic") as MockAsyncAnthropic:
-        client_instance = AsyncMock()
-        client_instance.models.list.return_value = _make_models_response([])
-        MockAsyncAnthropic.return_value = client_instance
+async def test_client_receives_correct_api_key(mock_client):
+    client_instance, MockAsyncAnthropic = mock_client
+    client_instance.models.list.return_value = _make_models_response([])
 
-        await get_models(api_key="sk-ant-my-key")
+    await get_models(api_key="sk-ant-my-key")
 
-        MockAsyncAnthropic.assert_called_once_with(api_key="sk-ant-my-key")
+    MockAsyncAnthropic.assert_called_once_with(api_key="sk-ant-my-key")
 
 
 # -------------------------------------------------------------------
@@ -90,7 +92,8 @@ async def test_client_receives_correct_api_key():
 
 @pytest.mark.asyncio
 async def test_get_models_propagates_api_error(mock_client):
-    mock_client.models.list.side_effect = Exception("Authentication error")
+    client_instance, _ = mock_client
+    client_instance.models.list.side_effect = Exception("Authentication error")
 
     with pytest.raises(Exception, match="Authentication error"):
         await get_models(api_key="sk-ant-bad-key")
