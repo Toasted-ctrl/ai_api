@@ -1,4 +1,11 @@
-from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Request,
+    Response,
+    Depends,
+    HTTPException,
+    status
+)
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
@@ -12,7 +19,7 @@ from io_models.models import (
     ResponseProviderModelsTranslation,
     ResponseProviderModelsVectorEmbedding
 )
-from providers.general import get_all_models
+from providers.models import get_all_models
 
 log = get_logger()
 
