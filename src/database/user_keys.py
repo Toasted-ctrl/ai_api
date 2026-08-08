@@ -47,7 +47,7 @@ def get_user_active_keys(
         ProviderAPIKey(
             user_id=k.user_id,
             provider_id=k.provider_id,
-            api_key=decrypt(content=k.encrypted_api_key),
+            api_key=k.encrypted_api_key,
             api_key_short=k.api_key_short,
             expiration_date=k.expiration_date
         )
