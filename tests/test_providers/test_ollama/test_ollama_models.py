@@ -112,7 +112,7 @@ async def test_client_receives_correct_base_url(mock_config):
 
         await get_models(base_url="http://my-ollama:11434")
 
-        MockAsyncClient.assert_called_once_with(base_url="http://my-ollama:11434")
+        MockAsyncClient.assert_called_once_with(host="http://my-ollama:11434")
 
 
 # -------------------------------------------------------------------

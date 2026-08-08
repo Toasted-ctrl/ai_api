@@ -10,7 +10,7 @@ async def get_models(
     """Fetches and returns a dictionary of available models for the Ollama instance,
     subdivided by model 'Expertise'."""
 
-    async with AsyncClient(base_url=base_url) as client:
+    async with AsyncClient(host=base_url) as client:
 
         response = await client.list()
 
