@@ -21,6 +21,21 @@ class Provider:
     mac_address: str | None = None
 
 
+# TODO: Implement this for all Providers the User has access to.
+# Then we can run the output through the Provider Registry.
+# Should probably make the main function a dependency instead, and inject on call?
+# import session, use the user_id to fetch all models. Inject on auth as well?
+# TODO: Make a new dependency directory in /src.
+
+@dataclass(frozen=True)
+class ConfiguredProvider:
+    id: uuid.UUID
+    name: str
+    base_url: str
+    langchain_con: str
+    api_key: str
+
+
 def get_or_create_provider(
     session: Session,
     name: str,
