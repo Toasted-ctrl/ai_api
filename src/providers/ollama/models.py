@@ -6,7 +6,6 @@ from core.config import config
 async def get_models(
     base_url: str
 ) -> dict[str, list[str]]:
-
     """Fetches and returns a dictionary of available models for the Ollama instance,
     subdivided by model 'Expertise'."""
 
@@ -14,7 +13,7 @@ async def get_models(
 
         response = await client.list()
 
-        mds = [model["name"] for model in response["models"]]
+        mds = [model.model for model in response.models]
 
         # Chat Completion models
         ccm = [
