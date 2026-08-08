@@ -32,13 +32,11 @@ async def get_all_providers(
     session: Session = Depends(get_db_session)
 ) -> ProvidersResponse:
 
-    # TODO: In the future, add which api_key_ids the user has access to.
-
-    providers = get_all_provider_configurations(
+    p_reg = get_all_provider_configurations(
         session=session,
         user_id=user.id
     )
 
     return {
-        "providers": providers
+        "providers": [p for p in p_reg]
     }
