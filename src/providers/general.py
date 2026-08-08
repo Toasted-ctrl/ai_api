@@ -40,7 +40,7 @@ async def get_all_models(
                 base_url=ip.base_url
             )
             all_models_by_provider[ip.name] = models
-        except (ConnectTimeout, ConnectError):
+        except (ConnectTimeout, ConnectError, ConnectionError):
             continue
 
     # Retrieve all active user keys.
