@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
+from warnings import deprecated
 import uuid
 
 from core.logging import get_logger
@@ -21,19 +22,64 @@ class Provider:
     mac_address: str | None = None
 
 
-# TODO: Implement this for all Providers the User has access to.
-# Then we can run the output through the Provider Registry.
-# Should probably make the main function a dependency instead, and inject on call?
-# import session, use the user_id to fetch all models. Inject on auth as well?
-# TODO: Make a new dependency directory in /src.
-
 @dataclass(frozen=True)
-class ConfiguredProvider:
+class ProviderConfiguration:
     id: uuid.UUID
     name: str
     base_url: str
     langchain_con: str
-    api_key: str
+    api_key_configured: bool
+    internal: bool
+    requires_api_key: bool = True
+    encrypted_api_key: str | None = None
+    api_key_short: str | None = None
+
+
+class UserProviderRegistry:
+    """Allows attribute-style access to providers by name."""
+
+    def __init__(self, providers: list[ProviderConfiguration]):
+        self._providers: dict[str, ProviderConfiguration] = {
+            p.name: p for p in providers
+        }
+
+
+    def __getattr__(self, name: str) -> ProviderConfiguration:
+        try:
+            return self._providers[name]
+        except KeyError:
+            raise AttributeError(f"No provider names '{name}'...")
+
+
+    def __getitem__(self, name: str) -> ProviderConfiguration:
+        return self._providers[name]
+
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._providers
+
+
+    def __iter__(self):
+        return iter(self._providers.values())
+
+
+    @property
+    def names(self) -> list[str]:
+        """Returns a list of all Provider names."""
+        return list(self._providers.keys())
+
+
+    @property
+    def not_configured(self) -> list[str]:
+        """Returns a list of Provider names that require an API key, but don't have one configured."""
+        return [
+            name for name, provider in self._providers.items()
+            if provider.requires_api_key and not provider.api_key_configured
+        ]
+
+
+    def __repr__(self):
+        return f"ProviderRegistry({list(self._providers.keys())})"
 
 
 def get_or_create_provider(
@@ -96,6 +142,7 @@ def get_or_create_provider(
     )
 
 
+@deprecated("This function is deprecated")
 def get_provider(
     session: Session,
     provider_name: str
@@ -127,10 +174,11 @@ def get_provider(
 def get_all_provider_configurations(
     session: Session,
     user_id: uuid.UUID
-) -> list[Provider]:
+) -> UserProviderRegistry:
 
-    """Fetches a list of available configured AI providers,
-    including whether API keys are configured for external providers for the user."""
+    """Fetches and returns a UserProviderRegistry object for a specified User.
+    The registry will include for every Provider the API Key (encrypted) if available, as well as
+    whether the Provider is internal or external, what connection it should use, etc."""
 
     providers = (
         session.query(
@@ -138,34 +186,34 @@ def get_all_provider_configurations(
             ProvidersT.base_url,
             ProvidersT.name,
             ProvidersT.langchain_con,
-            ProvidersT.internal,
-            ProvidersT.requires_api_key
+            ProvidersT.internal
         )
         .all()
     )
 
-    _keys = get_user_active_keys(
+    keys = get_user_active_keys(
         session=session,
         user_id=user_id
     )
 
-    if len(_keys) > 0:
-        keys = [k.provider_id for k in _keys]
-    else:
-        keys = []
-
-    return [
-        Provider(
+    conf = [
+        ProviderConfiguration(
             id=p.id,
             base_url=p.base_url,
             name=p.name,
             langchain_con=p.langchain_con,
-            internal=p.internal,
-            requires_api_key=p.requires_api_key,
-            api_key_configured=p.id in keys
+            encrypted_api_key=next((k.api_key for k in keys if k.provider_id == p.id), None),
+            api_key_short=next((k.api_key_short for k in keys if k.provider_id == p.id), None),
+            api_key_configured=not p.internal and any(k.provider_id == p.id for k in keys),
+            requires_api_key=not p.internal,
+            internal=p.internal
         )
-    for p in providers
+        for p in providers
     ]
+
+    return UserProviderRegistry(
+        providers=conf
+    )
 
 
 def get_providers_by_location(
