@@ -4,15 +4,11 @@ from httpx import ConnectTimeout, ConnectError
 from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
+from core.config import config
 from core.logging import get_logger
-from database.providers import (
-    get_all_provider_configurations,
-    Provider,
-    get_provider
-)
+from database.providers import get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
 from io_models.chat_completion import PayloadChatCompletion
-from providers.general import get_all_models
 from providers.ollama.chat_completion import complete_chat_ollama
 
 router = APIRouter()
@@ -33,50 +29,51 @@ async def post_chat_completion(
 
     try:
 
-        # TODO: Add API Key check to based on user.
-
-        providers = get_all_provider_configurations(
-            session=session
-        )
-
-        provider_list = [
-            p.name for p in providers if p.internal or p.api_key_configured
-        ]
-
-        if payload.provider not in provider_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unsupported or unconfigured Provider"
-            )
-
-        provider: Provider = get_provider(
-            session=session,
-            provider_name=payload.provider
-        )
-
-        models = await get_all_models(
-            session=session
-        )
-
-        if payload.model not in models.get(payload.provider).get("chat_completion"):
+        if payload.model not in config.CHAT_COMPLETION_MODELS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
 
-        # TODO: Currently this works, but only for Ollama. Needs a fix to also include Anthropic.
+        # TODO: Do we perhaps want to confirm that the model is supported by the provider?
 
-        return StreamingResponse(
-            complete_chat_ollama(
-                prompt=payload.prompt,
-                url=provider.base_url,
-                model=payload.model,
-                stream=payload.stream,
-                temperature=payload.parameters.temperature,
-                top_k=payload.parameters.top_k,
-                top_p=payload.parameters.top_p
-            )
+        p_reg = get_all_provider_configurations(
+            session=session,
+            user_id=user.id
         )
+
+        if payload.provider not in p_reg.names or payload.provider in p_reg.not_configured:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Provider '{payload.provider}' is not supported or not configured"
+            )
+
+        prov: ProviderConfiguration = getattr(p_reg, payload.provider)
+
+        # TODO: Currently this works, but we'll need to add support for Melious (OpenAI) and Anthropic as well.
+        # Build more general streaming response class and use langchain_con from the provider to determine 
+        # which connector to use.
+        # Raising error for now if a provider is selected that chat_completion is not supported for currently.
+
+        if prov.langchain_con == "ChatOllama":
+
+            return StreamingResponse(
+                complete_chat_ollama(
+                    prompt=payload.prompt,
+                    url=prov.base_url,
+                    model=payload.model,
+                    stream=payload.stream,
+                    temperature=payload.parameters.temperature,
+                    top_k=payload.parameters.top_k,
+                    top_p=payload.parameters.top_p
+                )
+            )
+
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail=f"Chat Completion not yet implemented for Provider '{prov.name}'"
+            )
 
     except (ConnectTimeout, ConnectError):
         raise HTTPException(
