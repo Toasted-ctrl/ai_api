@@ -1,15 +1,35 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
+from dataclasses import dataclass
+
 import pytest
 
 from providers.ollama.models import get_models
 
 
-def _make_list_response(model_names: list[str]) -> dict:
-    """Helper to create a mock response from `client.list()`."""
-    return {
-        "models": [{"name": name} for name in model_names]
-    }
+# -------------------------------------------------------------------
+# Helpers
+# -------------------------------------------------------------------
 
+@dataclass
+class _FakeModel:
+    """Mimics the object returned per-model by the Ollama SDK."""
+    model: str
+
+
+class _FakeListResponse:
+    """Mimics the response object returned by `client.list()`."""
+    def __init__(self, model_names: list[str]):
+        self.models = [_FakeModel(model=name) for name in model_names]
+
+
+def _make_list_response(model_names: list[str]) -> _FakeListResponse:
+    """Helper to create a mock response from `client.list()`."""
+    return _FakeListResponse(model_names)
+
+
+# -------------------------------------------------------------------
+# Fixtures
+# -------------------------------------------------------------------
 
 @pytest.fixture
 def mock_config():

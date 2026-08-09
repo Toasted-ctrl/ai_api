@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import pytest
 
 from providers.openai.models import get_models
+from security.encryption import encrypt
 
 
 def _make_model(model_id: str) -> MagicMock:
@@ -39,7 +40,10 @@ async def test_get_models_returns_expected_structure(mock_client):
         ["gpt-4", "gpt-3.5-turbo"]
     )
 
-    result = await get_models(api_key="sk-test-key-123", base_url="https://api.openai.com/v1")
+    result = await get_models(
+        encrypted_api_key=encrypt("sk-test-key-123"),
+        base_url="https://api.openai.com/v1"
+    )
 
     assert result == {
         "chat_completion": ["gpt-4", "gpt-3.5-turbo"],
@@ -53,7 +57,10 @@ async def test_get_models_empty_list(mock_client):
     client_instance, _ = mock_client
     client_instance.models.list.return_value = _make_models_response([])
 
-    result = await get_models(api_key="sk-test-key-123", base_url="https://api.openai.com/v1")
+    result = await get_models(
+        encrypted_api_key=encrypt("sk-test-key-123"),
+        base_url="https://api.openai.com/v1"
+    )
 
     assert result == {
         "chat_completion": [],
@@ -67,7 +74,10 @@ async def test_get_models_single_model(mock_client):
     client_instance, _ = mock_client
     client_instance.models.list.return_value = _make_models_response(["gpt-4o"])
 
-    result = await get_models(api_key="sk-test-key-123", base_url="https://api.openai.com/v1")
+    result = await get_models(
+        encrypted_api_key=encrypt("sk-test-key-123"),
+        base_url="https://api.openai.com/v1"
+    )
 
     assert result["chat_completion"] == ["gpt-4o"]
 
@@ -81,7 +91,12 @@ async def test_client_receives_correct_credentials(mock_client):
     client_instance, MockAsyncOpenAI = mock_client
     client_instance.models.list.return_value = _make_models_response([])
 
-    await get_models(api_key="sk-my-key", base_url="https://custom.api/v1")
+    key=encrypt("sk-my-key")
+
+    await get_models(
+        encrypted_api_key=key,
+        base_url="https://custom.api/v1"
+    )
 
     MockAsyncOpenAI.assert_called_once_with(
         api_key="sk-my-key",
@@ -99,4 +114,7 @@ async def test_get_models_propagates_api_error(mock_client):
     client_instance.models.list.side_effect = Exception("Unauthorized")
 
     with pytest.raises(Exception, match="Unauthorized"):
-        await get_models(api_key="sk-bad-key", base_url="https://api.openai.com/v1")
+        await get_models(
+            encrypted_api_key=encrypt("sk-bad-key"),
+            base_url="https://api.openai.com/v1"
+        )

@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import pytest
 
 from providers.anthropic.models import get_models
+from security.encryption import encrypt
 
 
 def _make_model(display_name: str) -> MagicMock:
@@ -39,7 +40,7 @@ async def test_get_models_returns_expected_structure(mock_client):
         ["Claude 3.5 Sonnet", "Claude 3 Opus"]
     )
 
-    result = await get_models(api_key="sk-ant-test-key-123")
+    result = await get_models(encrypted_api_key=encrypt("sk-ant-test-key-123"))
 
     assert result == {
         "chat_completion": ["Claude 3.5 Sonnet", "Claude 3 Opus"],
@@ -53,7 +54,7 @@ async def test_get_models_empty_list(mock_client):
     client_instance, _ = mock_client
     client_instance.models.list.return_value = _make_models_response([])
 
-    result = await get_models(api_key="sk-ant-test-key-123")
+    result = await get_models(encrypted_api_key=encrypt("sk-ant-test-key-123"))
 
     assert result == {
         "chat_completion": [],
@@ -67,7 +68,7 @@ async def test_get_models_single_model(mock_client):
     client_instance, _ = mock_client
     client_instance.models.list.return_value = _make_models_response(["Claude 3.5 Haiku"])
 
-    result = await get_models(api_key="sk-ant-test-key-123")
+    result = await get_models(encrypted_api_key=encrypt("sk-ant-test-key-123"))
 
     assert result["chat_completion"] == ["Claude 3.5 Haiku"]
 
@@ -81,7 +82,9 @@ async def test_client_receives_correct_api_key(mock_client):
     client_instance, MockAsyncAnthropic = mock_client
     client_instance.models.list.return_value = _make_models_response([])
 
-    await get_models(api_key="sk-ant-my-key")
+    key = encrypt("sk-ant-my-key")
+
+    await get_models(encrypted_api_key=key)
 
     MockAsyncAnthropic.assert_called_once_with(api_key="sk-ant-my-key")
 
@@ -96,4 +99,4 @@ async def test_get_models_propagates_api_error(mock_client):
     client_instance.models.list.side_effect = Exception("Authentication error")
 
     with pytest.raises(Exception, match="Authentication error"):
-        await get_models(api_key="sk-ant-bad-key")
+        await get_models(encrypted_api_key=encrypt("sk-ant-bad-key"))

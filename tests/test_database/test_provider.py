@@ -5,7 +5,9 @@ from database.providers import (
     get_or_create_provider,
     Provider,
     get_all_provider_configurations,
-    get_providers_by_location
+    get_providers_by_location,
+    UserProviderRegistry,
+    ProviderConfiguration
 )
 from database.schemas.providers import ProvidersT
 
@@ -76,7 +78,7 @@ class TestGetOrCreateProvider:
 
 class TestGetAllProvidersSupportUser:
 
-    """Test suite for the get_all_providers_support_user() function."""
+    """Test suite for the get_all_provider_configurations() function."""
 
     # -------------------------------------------------------------------
     # Happy-path tests
@@ -116,27 +118,25 @@ class TestGetAllProvidersSupportUser:
                 user_id=uuid.uuid4()
             )
 
-            assert isinstance(providers, list)
+            assert isinstance(providers, UserProviderRegistry)
 
-            p1 = providers[0]
-            assert isinstance(p1, Provider)
-            assert isinstance(p1.internal, bool)
-            assert isinstance(p1.requires_api_key, bool)
-            assert isinstance(p1.name, str)
-            assert isinstance(p1.id, uuid.UUID)
-            assert isinstance(p1.langchain_con, str)
+            p1: ProviderConfiguration = getattr(providers, "test_name")
+            assert isinstance(p1, ProviderConfiguration)
             assert isinstance(p1.base_url, str)
+            assert isinstance(p1.api_key_configured, bool)
+            assert isinstance(p1.id, uuid.UUID)
+            assert isinstance(p1.internal, bool)
 
-            p2 = providers[1]
-            assert isinstance(p2, Provider)
-            assert isinstance(p2.internal, bool)
-            assert isinstance(p2.requires_api_key, bool)
-            assert isinstance(p2.name, str)
-            assert isinstance(p2.id, uuid.UUID)
-            assert isinstance(p2.langchain_con, str)
+            assert p1.name == "test_name"
+
+            p2: ProviderConfiguration = getattr(providers, "test_name_2")
+            assert isinstance(p2, ProviderConfiguration)
             assert isinstance(p2.base_url, str)
+            assert isinstance(p2.api_key_configured, bool)
+            assert isinstance(p2.id, uuid.UUID)
+            assert isinstance(p2.internal, bool)
 
-            assert p1 != p2
+            assert p2.name == "test_name_2"
 
 
 class TestGetProvidersByLocation:
