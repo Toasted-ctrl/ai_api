@@ -4,7 +4,7 @@ from warnings import deprecated
 import uuid
 
 from core.logging import get_logger
-from database.providers import get_all_provider_configurations, Provider
+from database.providers import get_all_provider_configurations
 from providers.anthropic.models import get_models as get_models_anthropic
 from providers.ollama.models import get_models as get_models_ollama
 from providers.openai.models import get_models as get_models_openai
@@ -78,24 +78,3 @@ def find_provider(data: dict, model_name):
             if model_name in models:
                 return provider
     return None
-
-
-@deprecated("This function is deprecated, please replace.")
-def get_providers_configured_user(
-    providers: list[Provider]
-) -> list[Provider]:
-
-    """Iterates through a list of Provider objects and returns only the Provider objects
-    to which the user has access."""
-
-    log.info("Verifying configured Providers...")
-
-    return [
-        p for p in providers
-        if p.internal
-        or (p.requires_api_key and p.api_key_configured)
-    ]
-
-
-# TODO: Build a function that checks if a user has access to a particular provider.
-# Return the provider object.
