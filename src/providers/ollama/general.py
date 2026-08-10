@@ -1,9 +1,9 @@
-from fastapi import HTTPException, status
-from ollama import AsyncClient
+from warnings import deprecated
 import httpx
 
 from core.config import config
 
+@deprecated("Replaced with 'get_models' from the providers.ollama.models module.")
 async def get_all_models_ollama(host_url) -> list[str]:
 
     # TODO: Rework this function to use Ollama's AsyncClient instead.
