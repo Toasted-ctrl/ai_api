@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from auth.user import verify_user, VerifiedUser
 from core.cache import cache_key_builder
-from database.providers import get_provider, Provider
+from database.providers import ProviderConfiguration
 from database.session import get_db_session
 from io_models.translations import (
     ResponseTranslation,
@@ -23,8 +23,7 @@ from providers.ollama.translategemma import (
     translategemma_languages,
     get_translation_translategemma
 )
-from providers.general import find_provider, get_all_models
-
+from providers.models import get_all_provider_configurations
 router = APIRouter()
 
 tags = ["Translation"]
@@ -33,7 +32,7 @@ tags = ["Translation"]
 @router.post(
     "/translation/translategemma",
     tags=tags,
-    description="Invokes a translation from translategemma",
+    description="Invokes a translation from translategemma.",
     response_model=ResponseTranslation
 )
 async def post_translation_translategemma(
@@ -44,16 +43,10 @@ async def post_translation_translategemma(
 
     try:
 
-        if payload.from_lang_code not in translategemma_languages():
+        if not {payload.to_lang_code, payload.from_lang_code} <= translategemma_languages():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Unsupported language: {payload.from_lang_code}"
-            )
-        
-        if payload.to_lang_code not in translategemma_languages():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported language: {payload.to_lang_code}"
             )
         
         if payload.prompt == "":
@@ -62,25 +55,18 @@ async def post_translation_translategemma(
                 detail="Prompt must not be None"
             )
 
-        provider_name = find_provider(
-            data=await get_all_models(session=session),
-            model_name="translategemma:latest"
-        )
-        if provider_name is None:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Translategemma is unavailable"
-            )
+        p = "Ollama-1"
 
-        provider: Provider = get_provider(
+        # Default provider for now? Perhaps we can fetch all providers by 
+        # Langchain con instead? Cache the result?
+        # TODO: Find a way to pinpoint the correct provider.
+
+        providers = get_all_provider_configurations(
             session=session,
-            provider_name=provider_name
+            user_id=user.id
         )
-        if provider is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Unexpected Error: Could not locate Provider"
-            )
+
+        provider: ProviderConfiguration = providers.get(p)
         
         return get_translation_translategemma(
             from_lang=payload.from_lang_code,
