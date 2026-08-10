@@ -18,8 +18,7 @@ async def get_models(
         # Chat Completion models
         ccm = [
             m for m in mds
-            if m not in config.TRANSLATION_MODELS
-            and m not in config.VECTOR_EMBEDDING_MODELS
+            if m in config.CHAT_COMPLETION_MODELS
         ]
 
         # Vector Embedding models

@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from dataclasses import dataclass
 
 import pytest
@@ -34,6 +34,7 @@ def _make_list_response(model_names: list[str]) -> _FakeListResponse:
 @pytest.fixture
 def mock_config():
     with patch("providers.ollama.models.config") as cfg:
+        cfg.CHAT_COMPLETION_MODELS = ["llama3", "mistral", "codellama"]
         cfg.TRANSLATION_MODELS = ["argos-translate"]
         cfg.VECTOR_EMBEDDING_MODELS = ["nomic-embed-text", "all-minilm"]
         yield cfg
