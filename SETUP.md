@@ -45,10 +45,9 @@ PG_PORT=5432
 
 ### Encryption
 
-When encryption is enabled, all sensitive data is encrypted at rest. You must provide a strong encryption key.
+All sensitive data is encrypted at rest. You must provide a strong encryption key.
 
 ```env
-ENABLE_ENCRYPTION=true
 ENCRYPTION_KEY=your_encryption_key
 ```
 
