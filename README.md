@@ -54,6 +54,8 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Add HMAC hashing and verification for each path.
 - Add Chat Completion support for all supported Providers.
 - Add OpenAI support.
+- Build a function to locate which server is currently supporting translategemma: Check internal
+servers first, follow by external ones. Return internal as this one is free of charge.
 
 ### Long Term
 - Add support for more Login providers.
