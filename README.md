@@ -17,6 +17,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - API Key verification for users that should be allowed to poll the API directly, no Login required.
 - Chat completion through LLM providers.
 - Local Ollama configurations may be added.
+- Users may add their own API keys for interaction with third party LLM Providers.
 
 ## Tech Stack
 - FastAPI
@@ -42,26 +43,30 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - GET /models/vector_embedding
 - GET /providers
 - GET /servers
-- POST /servers/wake/{provider_name}
 - GET /status
 - GET /translation/translategemma
 - POST /translation/translategemma
 
 ## Roadmap
 ### Short Term
-- Tests for all base functionalities (i.e., Google Login)
+- Tests for all base functionalities (i.e., Google Login).
 - Making Redis caching optional.
+- Add HMAC hashing and verification for each path.
+- Add Chat Completion support for all supported Providers.
+- Add OpenAI support.
 
 ### Long Term
-- Implement support for various LLM providers (OpenAI, Anthropic, Melious, etc.), expanding beyond Ollama.
 - Add support for more Login providers.
 - Add agent building functionalities.
-- Add support for storing API Keys for external providers in the database.
 - Log conversation ids and history in a conversation table.
 - Enable possibility to share agents with other users.
 - Build 'testing' endpoints, which is intended to build tests for agents you created.
 - Add MCP calling support.
 - Add upload of documents endpoint, including vector embedding said documents.
+
+## Recently Implemented
+- Add support for storing API Keys for external providers in the database.
+- Implement support for various LLM providers (OpenAI, Anthropic, Melious, etc.), expanding beyond Ollama.
 
 ## Contributing
 PRs welcome!
