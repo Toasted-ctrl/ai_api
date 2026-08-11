@@ -3,11 +3,11 @@ from fastapi.responses import StreamingResponse
 from httpx import ConnectTimeout, ConnectError
 from sqlalchemy.orm import Session
 
-from auth.user import verify_user, VerifiedUser
 from core.config import config
 from core.logging import get_logger
 from database.providers import get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
+from dependencies.d_v_user import dep_ver_usr, VerifiedUser
 from io_models.chat_completion import PayloadChatCompletion
 from providers.ollama.chat_completion import complete_chat_ollama
 
@@ -23,7 +23,7 @@ log = get_logger()
 )
 async def post_chat_completion(
     payload: PayloadChatCompletion,
-    user: VerifiedUser = Depends(verify_user),
+    user: VerifiedUser = Depends(dep_ver_usr),
     session: Session = Depends(get_db_session)
 ) -> StreamingResponse:
 

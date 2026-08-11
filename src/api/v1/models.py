@@ -9,10 +9,10 @@ from fastapi import (
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
-from auth.user import verify_user, VerifiedUser
 from core.cache import cache_key_builder
 from core.logging import get_logger
 from database.session import get_db_session
+from dependencies.d_v_user import dep_ver_usr, VerifiedUser
 from io_models.models import (
     ResponseProviderModelsAll,
     ResponseProviderModelsChatCompletions,
@@ -35,7 +35,7 @@ router = APIRouter()
 async def get_all(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user),
+    user: VerifiedUser = Depends(dep_ver_usr),
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsAll:
 
@@ -64,7 +64,7 @@ async def get_all(
 async def get_all_chat_completion(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user),
+    user: VerifiedUser = Depends(dep_ver_usr),
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsChatCompletions:
     
@@ -93,7 +93,7 @@ async def get_all_chat_completion(
 async def get_all_translation(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user),
+    user: VerifiedUser = Depends(dep_ver_usr),
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsTranslation:
 
@@ -122,7 +122,7 @@ async def get_all_translation(
 async def get_all_vector_embedding(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(verify_user),
+    user: VerifiedUser = Depends(dep_ver_usr),
     session: Session = Depends(get_db_session)
 ) -> ResponseProviderModelsVectorEmbedding:
 

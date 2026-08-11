@@ -17,7 +17,7 @@ class VerifiedUser:
     id: uuid.UUID
 
 
-def verify_user(
+def dep_ver_usr(
     client: VerifiedClient = Depends(get_client_from_key),
     session: Session = Depends(get_db_session)
 ) -> VerifiedUser:

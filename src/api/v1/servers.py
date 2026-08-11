@@ -4,10 +4,10 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from auth.user import verify_user, VerifiedUser
 from core.logging import get_logger
 from database.providers import get_providers_by_location
 from database.session import get_db_session
+from dependencies.d_v_user import dep_ver_usr, VerifiedUser
 from io_models.servers import ResponseLocalServers
 from servers.status import is_llm_available, is_server_online
 
@@ -22,7 +22,7 @@ router = APIRouter()
     response_model=ResponseLocalServers
 )
 def get_local_servers(
-    user: VerifiedUser = Depends(verify_user),
+    user: VerifiedUser = Depends(dep_ver_usr),
     session: Session = Depends(get_db_session)
 ) -> ResponseLocalServers:
 
