@@ -10,7 +10,7 @@
 
 > A unified API gateway for multiple LLM providers.
 
-This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. Currently only Ollama is supported, but the intention is to add support for more providers later on (Anthropic, OpenAI, Melious, etc.).
+This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. Currently the following LLM Providers are supported: Ollama, Anthropic and Melious. I'll likely add OpenAI and Google as well.
 
 ## Features
 - Login support (Google OAuth2) for Applications intended to serve multiple users.
