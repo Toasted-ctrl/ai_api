@@ -7,9 +7,9 @@ from core.config import config
 from core.logging import get_logger
 from database.providers import get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
-from dependencies.d_v_user import dep_ver_usr, VerifiedUser
-from io_models.chat_completion import PayloadChatCompletion
-from providers.ollama.chat_completion import complete_chat_ollama
+from auth.dep_verify_user import depends_verify_user, VerifiedUser
+from iom.chat_completion import PayloadChatCompletion
+from providers.chat_completion import complete_chat
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ log = get_logger()
 )
 async def post_chat_completion(
     payload: PayloadChatCompletion,
-    user: VerifiedUser = Depends(dep_ver_usr),
+    user: VerifiedUser = Depends(depends_verify_user),
     session: Session = Depends(get_db_session)
 ) -> StreamingResponse:
 
@@ -50,30 +50,22 @@ async def post_chat_completion(
 
         prov: ProviderConfiguration = getattr(p_reg, payload.provider)
 
-        # TODO: Currently this works, but we'll need to add support for Melious (OpenAI) and Anthropic as well.
-        # Build more general streaming response class and use langchain_con from the provider to determine 
-        # which connector to use.
-        # Raising error for now if a provider is selected that chat_completion is not supported for currently.
+        # TODO: Not sure what happens if we run into an unexpected/unsupported Provider/langchain_con...
+        # TODO: Check how/what error is raised.
 
-        if prov.langchain_con == "ChatOllama":
-
-            return StreamingResponse(
-                complete_chat_ollama(
-                    prompt=payload.prompt,
-                    url=prov.base_url,
-                    model=payload.model,
-                    stream=payload.stream,
-                    temperature=payload.parameters.temperature,
-                    top_k=payload.parameters.top_k,
-                    top_p=payload.parameters.top_p
-                )
+        return StreamingResponse(
+            complete_chat(
+                langchain_con=prov.langchain_con,
+                encrypted_api_key=prov.encrypted_api_key,
+                prompt=payload.prompt,
+                base_url=prov.base_url,
+                model=payload.model,
+                stream=payload.stream,
+                temperature=payload.parameters.temperature,
+                top_k=payload.parameters.top_k,
+                top_p=payload.parameters.top_p
             )
-
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail=f"Chat Completion not yet implemented for Provider '{prov.name}'"
-            )
+        )
 
     except (ConnectTimeout, ConnectError):
         raise HTTPException(
