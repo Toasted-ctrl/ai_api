@@ -11,10 +11,12 @@ import base64
 import json
 import uuid
 
-from auth.client import VerifiedClient, get_verified_frontend_client
+from auth.dep_verify_client import VerifiedClient, depends_get_application_client
 from core.config import config
 from core.logging import get_logger
+from database.client import ApplicationClient, get_client_from_client_id
 from database.session import get_db_session
+from security.encryption import decrypt
 from security.google import (
     verify_google_token,
     VerifiedGoogleUser,
@@ -23,16 +25,15 @@ from security.google import (
 )
 from security.hmac import hash_hmac, is_valid_hmac
 from security.jwt import create_jwt
-from setup.application_user import (
-    VerifiedApplicationUser,
-    get_or_create_application_user
-)
+from setup.application_user import VerifiedApplicationUser, get_or_create_application_user
+
 
 log = get_logger()
 
 router = APIRouter()
 
 tags = ["Login"]
+
 
 @router.get(
     "/auth/google/login",
@@ -45,7 +46,7 @@ tags = ["Login"]
     tags=tags
 )
 async def google_login(
-    client: VerifiedClient = Depends(get_verified_frontend_client)
+    client: VerifiedClient = Depends(depends_get_application_client)
 ) -> RedirectResponse:
 
     state_data = json.dumps({"client_id": str(client.id)})
@@ -79,20 +80,21 @@ async def google_login(
         "and will not work when called directly through the browser.\n"
         "\nNOTE: This method will store a cookie on the user's browser."
     ),
+    response_class=RedirectResponse,
     tags=tags
 )
 async def google_callback(
     code: str,
     state: str,
     session: Session = Depends(get_db_session)
-):
+) -> RedirectResponse:
 
     log.debug("Receiving Callback from Google's OAuth service...")
     try:
         state_data, state_signature = state.rsplit(".", 1)
         log.debug("Received valid state format from Google...")
     except ValueError:
-        log.warning(f"Received invalid state format: '{state}'...")
+        log.warning("Received invalid state format from Google...")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid State format"
@@ -115,46 +117,52 @@ async def google_callback(
     if not raw_client_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing client_id"
+            detail="Missing Client ID"
         )
-    
-    client_id = uuid.UUID(raw_client_id) # TODO: Implement function to check if the client_id exists in our db.
+
+    try:
+        client: ApplicationClient = get_client_from_client_id(
+            session=session,
+            client_id=uuid.UUID(raw_client_id)
+        )
+    except LookupError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Client ID"
+        )
+
     g_jwt: ExchangedGoogleCode = await exchange_google_code(code=code)
     g_user: VerifiedGoogleUser = verify_google_token(token=g_jwt.id_token)
     s_user: VerifiedApplicationUser = get_or_create_application_user(
         first_name=g_user.first_name,
         last_name=g_user.last_name,
         email=g_user.email,
-        client_id=client_id,
+        client_id=client.id,
         login_provider="Google",
         external_id=g_user.sub,
         session=session
     )
 
-    user_jwt = create_jwt(
+    user_jwt: str = create_jwt(
         client_id=s_user.client_id,
         user_id=s_user.user_id
     )
 
-    redirect_uri = "http://localhost:8501" # TODO: Remove hardcoded redirect.
-
     response = RedirectResponse(
-        url=redirect_uri,
+        url=decrypt(client.encrypted_redirect_uri),
         status_code=status.HTTP_302_FOUND
     )
-
-    log.debug(f"Created cookie for Client '{s_user.client_id}' for User '{s_user.user_id}'...")
 
     response.set_cookie(
         key="session_token",
         value=user_jwt,
         httponly=True,
-        secure=False, # Set to True in production.
+        secure=config.COOKIE_SECURE,
         samesite="lax",
-        max_age=86_400,
+        max_age=config.COOKIE_MAX_AGE,
         path="/"
     )
 
-    log.debug(f"User '{s_user.user_id}' authenticated for Client '{s_user.client_id}' via Google, redirecting >> '{redirect_uri}'...")
+    log.debug(f"Set cookie for User ID: '{s_user.id}' for Client: '{s_user.client_id}'")
 
     return response
