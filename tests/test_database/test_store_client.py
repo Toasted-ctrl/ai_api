@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
 import pytest
 
-from auth.hash import get_hash_sha256
 from core.config import config
 from database.store_client import store_client, StoredClient
 from database.schemas.clients import ClientsT
 from security.encryption import decrypt
+from security.hash import get_hash_sha256
 from security.hmac import hash_hmac
+
 
 class TestCreateApiKey:
 
