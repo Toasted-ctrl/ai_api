@@ -6,10 +6,10 @@ metadata:
 data:
   APP_ENV: "production"
   LOG_LEVEL: "info"
-  PG_PORT: 5432
+  PG_PORT: "5432"
   PG_DIALECT: "postgresql"
   PG_DRIVER: "psycopg2"
-  REDIS_PORT: 6379
-  COOKIE_SECURE: false
-  COOKIE_MAX_AGE: 86400
-  ENABLE_GOOGLE_LOGIN: false
+  REDIS_PORT: "6379"
+  COOKIE_SECURE: "false"
+  COOKIE_MAX_AGE: "86400"
+  ENABLE_GOOGLE_LOGIN: "false"
