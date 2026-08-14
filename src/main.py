@@ -5,15 +5,17 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 import uvicorn
 
-from api.v1 import chat_completion, root, servers, models, status, translation, providers
+from api.v1 import (
+    chat_completion,
+    root,
+    models,
+    status,
+    translation,
+    providers
+)
 from api.v1.login import google_login
 from core.config import config
 from core.logging import get_logger
-from setup.create_tables import create_tables
-from setup.preconfigurations import (
-    create_preconfigured_clients,
-    create_preconfigured_providers
-)
 
 log = get_logger()
 
@@ -36,7 +38,7 @@ app = FastAPI(
 )
 
 if config.ENABLE_GOOGLE_LOGIN:
-    log.debug("Starting with Google Login enabled...")
+    log.info("Starting with Google Login enabled...")
     app.include_router(
         router=google_login.router,
         prefix=v1_prefix
@@ -49,11 +51,6 @@ app.include_router(
 
 app.include_router(
     router=providers.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=servers.router,
     prefix=v1_prefix
 )
 
@@ -98,18 +95,6 @@ async def secure_logging(request: Request, call_next):
     return response
 
 if __name__ == "__main__":
-
-    if config.CREATE_TABLES:
-        create_tables()
-
-    if config.CREATE_PRECONFIGURED_PROVIDERS:
-        create_preconfigured_providers()
-
-    if config.CREATE_PRECONFIGURED_CLIENTS:
-        try:
-            create_preconfigured_clients()
-        except ValueError as e:
-            log.info(e)
 
     uvicorn.run(
         app=app,
