@@ -14,6 +14,9 @@ from setup.user_client_user import create_user_client_user
 
 log = get_logger()
 
+# TODO: This entire file needs to be rewritten.
+
+
 def create_preconfigured_clients() -> None:
 
     """Loads the configure_init_clients.json file and adds all preconfigured clients to the database.
@@ -88,6 +91,9 @@ def create_preconfigured_clients() -> None:
                         log.info("Attempting to add User Client preconfigured keys...")
                         for provider, key in client.get("keys").items():
                             log.info(f"Add key: Adding Provider '{provider}' with key {key[:10]}...")
+
+                            # TODO: get_provider() is deprecated, we'll need to rewrite this.
+
                             prov = get_provider(
                                 session=session,
                                 provider_name=provider
@@ -120,7 +126,8 @@ def create_preconfigured_clients() -> None:
                         require_external_id=client.get("require_external_id"),
                         require_jwt=client.get("require_jwt"),
                         api_key=client.get("api_key"),
-                        hmac_secret=client.get("hmac")
+                        hmac_secret=client.get("hmac"),
+                        redirect_uri=client.get("redirect_uri")
                     )
 
     except ValueError as e:

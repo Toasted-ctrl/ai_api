@@ -1,6 +1,7 @@
 import pytest
 
-from auth.hash import get_hash_sha256
+from security.hash import get_hash_sha256
+
 
 def test_valid():
 

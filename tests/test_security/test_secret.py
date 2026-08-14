@@ -1,4 +1,5 @@
-from auth.create_secret import create_secret
+from security.secret import create_secret
+
 
 def test_valid():
 

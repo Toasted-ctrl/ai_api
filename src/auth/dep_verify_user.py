@@ -4,7 +4,7 @@ from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session
 import uuid
 
-from auth.client import VerifiedClient, get_client_from_key
+from auth.dep_verify_client import VerifiedClient, depends_get_client
 from core.logging import get_logger
 from database.schemas.persons_users import UsersT
 from database.session import get_db_session
@@ -17,8 +17,8 @@ class VerifiedUser:
     id: uuid.UUID
 
 
-def dep_ver_usr(
-    client: VerifiedClient = Depends(get_client_from_key),
+def depends_verify_user(
+    client: VerifiedClient = Depends(depends_get_client),
     session: Session = Depends(get_db_session)
 ) -> VerifiedUser:
 

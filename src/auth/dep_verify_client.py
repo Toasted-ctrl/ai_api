@@ -5,10 +5,10 @@ from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import Session
 import uuid
 
-from auth.hash import get_hash_sha256
 from core.logging import get_logger
 from database.schemas.clients import ClientsT
 from database.session import get_db_session
+from security.hash import get_hash_sha256
 
 log = get_logger()
 
@@ -21,7 +21,7 @@ class VerifiedClient:
     key_type: str
 
 
-def get_client_from_key(
+def depends_get_client(
     api_key: str = Security(api_key_header),
     session: Session = Depends(get_db_session)
 ) -> VerifiedClient:
@@ -58,8 +58,8 @@ def get_client_from_key(
     )
 
 
-def get_verified_frontend_client( # TODO: Build test for this function.
-    client: VerifiedClient = Depends(get_client_from_key)
+def depends_get_application_client(
+    client: VerifiedClient = Depends(depends_get_client)
 ) -> VerifiedClient:
 
     """Verifying if the client is a frontend application client.
