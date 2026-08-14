@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: artificial-intelligence-api-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/artificial-intelligence-api
+  claimRef:
+    namespace: artificial-intelligence-api
+    name: artificial-intelligence-api-pvc
