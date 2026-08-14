@@ -10,7 +10,7 @@
 
 > A unified API gateway for multiple LLM providers.
 
-This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. Currently the following LLM Providers are supported: Ollama, Anthropic and Melious. I'll likely add OpenAI and Google as well.
+This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-power hardware.
 
 ## Features
 - Login support (Google OAuth2) for Applications intended to serve multiple users.
@@ -22,11 +22,21 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ## Tech Stack
 - FastAPI
 - LangChain
-- Ollama
 - Docker (Compose)
 - Redis
 - PostgreSQL
 - GCP (OAuth2)
+
+## Supported LLM Providers
+- Current supported Providers are tested and verified with personally obtained API keys.
+
+### Current
+- Ollama (if self-hosted)
+- Anthropic
+- Melious
+
+### Upcoming
+- OpenAI
 
 ## Setup
 - Please check the 'SETUP.md' file to get started.
@@ -34,20 +44,24 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ## API Endpoints
 > All Endpoints are prefixed with '/api/v1'.
 
+### GET
 - GET /auth/google/login
 - GET /auth/google/callback
-- POST /chat_completion
 - GET /models
 - GET /models/chat_completion
 - GET /models/translation
 - GET /models/vector_embedding
 - GET /providers
-- GET /servers
+- GET /root
 - GET /status
 - GET /translation/translategemma
+
+### POST
+- POST /chat_completion
 - POST /translation/translategemma
 
 ## Roadmap
+
 ### Short Term
 - Tests for all base functionalities (i.e., Google Login).
 - Making Redis caching optional.
@@ -58,6 +72,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 servers first, follow by external ones. Return internal as this one is free of charge.
 
 ### Long Term
+- Caching solution for internal non-route functions, to avoid repeat expensive calls.
 - Add support for more Login providers.
 - Add agent building functionalities.
 - Log conversation ids and history in a conversation table.
@@ -65,10 +80,6 @@ servers first, follow by external ones. Return internal as this one is free of c
 - Build 'testing' endpoints, which is intended to build tests for agents you created.
 - Add MCP calling support.
 - Add upload of documents endpoint, including vector embedding said documents.
-
-## Recently Implemented
-- Add support for storing API Keys for external providers in the database.
-- Implement support for various LLM providers (OpenAI, Anthropic, Melious, etc.), expanding beyond Ollama.
 
 ## Contributing
 PRs welcome!

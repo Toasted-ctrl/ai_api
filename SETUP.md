@@ -5,6 +5,7 @@
 - **Docker** and **Docker Compose** installed
 - **Redis 6+** instance (local or hosted)
 - **PostgreSQL** instance (local or hosted)
+- **UV**
 
 ---
 
@@ -89,27 +90,25 @@ GOOGLE_TOKEN_URL=
 GOOGLE_CLIENT_SECRET=
 ```
 
-### Preconfigured Clients and Providers (Optional)
-
-Set these to `true` if you want the application to seed initial clients and providers on startup from the configuration files described in [Step 2](#2-configure-initial-clients-and-providers-optional). Tables are created automatically by default.
-
-```env
-CREATE_PRECONFIGURED_CLIENTS=false
-CREATE_PRECONFIGURED_PROVIDERS=false
-CREATE_TABLES=true
-```
-
 ---
 
 ## 2. Configure Initial Clients and Providers (Optional)
 
-If you set `CREATE_PRECONFIGURED_CLIENTS` or `CREATE_PRECONFIGURED_PROVIDERS` to `true`, you need to set up the corresponding configuration files.
+> [!NOTE]
+> If skipping this step, you'll need to add all tables manually.
+
+in src/init.py, set whether you want to create all tables, as well as preconfigured Providers and Clients / Users:
+```python
+CREATE_PRECONFIGURED_CLIENTS=true       # Seed initial Clients/Users from src/init/configure_init_clients.json
+CREATE_PRECONFIGURED_PROVIDERS=true     # Seed initial Providers from src/init/configure_init_providers.json
+CREATE_TABLES=true                      # Create required database tables
+```
 
 ### Providers
 
 ```bash
-cp src/setup/configure_init_providers.json.example src/setup/configure_init_providers.json
-nano src/setup/configure_init_providers.json
+cp src/init/configure_init_providers.json.example src/setup/configure_init_providers.json
+nano src/init/configure_init_providers.json
 ```
 
 Fill in the provider details according to your infrastructure.
@@ -117,8 +116,8 @@ Fill in the provider details according to your infrastructure.
 ### Clients
 
 ```bash
-cp src/setup/configure_init_clients.json.example src/setup/configure_init_clients.json
-nano src/setup/configure_init_clients.json
+cp src/init/configure_init_clients.json.example src/setup/configure_init_clients.json
+nano src/init/configure_init_clients.json
 ```
 
 There are two types of clients:
@@ -129,6 +128,12 @@ There are two types of clients:
 | **User Client** | A client where users interact with the API directly (e.g., a frontend application). | Add under the `users` section |
 
 Add each client to the appropriate section in the configuration file based on how it will interact with the API.
+
+### Init Tables & Users
+From the root directory, run:
+```bash
+uv run src/init.py
+```
 
 ---
 
