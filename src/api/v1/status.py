@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from io_models.status import ResponseStatus
+from iom.status import ResponseStatus
 
 router = APIRouter()
 tags = ["Status"]

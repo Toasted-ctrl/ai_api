@@ -10,19 +10,16 @@ from fastapi_cache.decorator import cache
 from httpx import ConnectError, ConnectTimeout
 from sqlalchemy.orm import Session
 
+from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.cache import cache_key_builder
 from database.providers import ProviderConfiguration
 from database.session import get_db_session
-from dependencies.d_v_user import dep_ver_usr, VerifiedUser
-from io_models.translations import (
+from iom.translations import (
     ResponseTranslation,
     PayloadTranslation,
     ResponseTranslationLanguages
 )
-from providers.ollama.translategemma import (
-    translategemma_languages,
-    get_translation_translategemma
-)
+from providers.ollama.translategemma import translategemma_languages, get_translation_translategemma
 from providers.models import get_all_provider_configurations
 
 router = APIRouter()
@@ -38,7 +35,7 @@ tags = ["Translation"]
 )
 async def post_translation_translategemma(
     payload: PayloadTranslation,
-    user: VerifiedUser = Depends(dep_ver_usr),
+    user: VerifiedUser = Depends(depends_verify_user),
     session: Session = Depends(get_db_session)
 ) -> ResponseTranslation:
 
@@ -97,7 +94,7 @@ async def post_translation_translategemma(
 def get_languages_translategemma(
     request: Request,
     response: Response,
-    user: VerifiedUser = Depends(dep_ver_usr)
+    user: VerifiedUser = Depends(depends_verify_user)
 ) -> ResponseTranslationLanguages:
     
     return {

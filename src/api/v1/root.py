@@ -5,18 +5,25 @@ from fastapi import (
 )
 from fastapi_cache.decorator import cache
 
-from io_models.root import ResponseRoot
+from iom.root import ResponseRoot
 from core.cache import cache_key_builder
 from core.config import config
 
 router = APIRouter()
 
+
 @router.get(
-    "",
+    "/root",
     response_model=ResponseRoot,
+    description=(
+        "Retrieves API name, version and contact/maintainer information."
+    ),
     tags=["Default"]
 )
-@cache(expire=300, key_builder=cache_key_builder)
+@cache(
+    expire=300,
+    key_builder=cache_key_builder
+)
 def get_root(
     request: Request,
     response: Response

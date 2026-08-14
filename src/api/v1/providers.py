@@ -5,11 +5,11 @@ from fastapi import (
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
+from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.cache import cache_key_builder
 from database.providers import get_all_provider_configurations
 from database.session import get_db_session
-from dependencies.d_v_user import dep_ver_usr, VerifiedUser
-from io_models.providers import ProvidersResponse
+from iom.providers import ProvidersResponse
 
 router = APIRouter(prefix='/providers')
 
@@ -28,7 +28,7 @@ tags = ["Providers"]
 )
 @cache(expire=600, key_builder=cache_key_builder)
 async def get_all_providers(
-    user: VerifiedUser = Depends(dep_ver_usr),
+    user: VerifiedUser = Depends(depends_verify_user),
     session: Session = Depends(get_db_session)
 ) -> ProvidersResponse:
 
