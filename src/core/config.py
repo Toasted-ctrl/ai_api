@@ -55,10 +55,6 @@ class Config(BaseSettings):
     PG_DRIVER: str = ""
     PG_PORT: int
 
-    CREATE_PRECONFIGURED_CLIENTS: bool = False
-    CREATE_PRECONFIGURED_PROVIDERS: bool = False
-    CREATE_TABLES: bool = True
-
     ENCRYPTION_KEY: str = ""
 
     BLIND_INDEX_KEY: str = ""
@@ -66,6 +62,9 @@ class Config(BaseSettings):
     JWT_SECRET: str = ""
 
     LOG_LEVEL: str = ""
+
+    COOKIE_SECURE: bool = True
+    COOKIE_MAX_AGE: int
 
     ENABLE_GOOGLE_LOGIN: bool = False
     GOOGLE_CLIENT_ID: str = ""
