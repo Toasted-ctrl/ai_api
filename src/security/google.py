@@ -9,6 +9,7 @@ from core.logging import get_logger
 
 log = get_logger()
 
+
 @dataclass(frozen=True)
 class ExchangedGoogleCode:
     id_token: str
@@ -44,7 +45,7 @@ async def exchange_google_code(code: str) -> ExchangedGoogleCode:
         r_data = response.json()
         return ExchangedGoogleCode(
             id_token=r_data.get("id_token"),
-            refresh_token=r_data.get("id_token"),
+            refresh_token=r_data.get("refresh_token"),
             scope=r_data.get("scope"),
             token_type=r_data.get("token_type"),
             expires_in=r_data.get("expires_in"),
