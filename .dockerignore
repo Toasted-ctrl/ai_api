@@ -1,0 +1,61 @@
+# ---- Version Control ----
+.git
+.gitignore
+
+# ---- Dependencies ----
+node_modules
+vendor
+
+# ---- Cache
+__pycache__
+.pytest_cache
+.uv_cache
+
+# ---- Environment & Secrets ----
+.env
+.env.*
+*.pem
+*.key
+.venv
+
+# ---- IDE / Editor Files ----
+.vscode
+.idea
+*.swp
+*.swo
+
+# ---- OS Files ----
+.DS_Store
+Thumbs.db
+
+# ---- Docker Files ----
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# ---- Build & Output ----
+dist
+build
+*.log
+coverage
+
+# ---- Documentation ----
+README.md
+SECURITY.md
+SETUP.md
+LICENSE
+docs
+
+# ---- Tests ----
+tests
+test
+*.test.*
+*.spec.*
+
+# ---- Init files ----
+init
+init.py
+configure_init_clients.json*
+configure_init_providers.json*
+preconfigurations.py
+create_tables.py
