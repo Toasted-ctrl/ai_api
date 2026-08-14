@@ -6,6 +6,7 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/kubernetes-v1.28-blue?logo=kubernetes&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > A unified API gateway for multiple LLM providers.
@@ -26,6 +27,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Redis
 - PostgreSQL
 - GCP (OAuth2)
+- Kubernetes
 
 ## Supported LLM Providers
 - Current supported Providers are tested and verified with personally obtained API keys.
