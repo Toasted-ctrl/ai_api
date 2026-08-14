@@ -2,9 +2,9 @@ from cryptography.fernet import Fernet
 
 from core.config import config
 
-def encrypt(content: str) -> str:
 
-    """Returns an encrypted string"""
+def encrypt(content: str) -> str:
+    """Returns an encrypted string based on the configured encryption key."""
 
     if not isinstance(content, str):
         raise TypeError("Content must be a string")
@@ -18,8 +18,7 @@ def encrypt(content: str) -> str:
 
 
 def decrypt(content: str) -> str:
-
-    """Returns a decrypted string"""
+    """Returns a decrypted string based on the configured encryption key."""
 
     if not isinstance(content, str):
         raise TypeError("Content must be a string")
