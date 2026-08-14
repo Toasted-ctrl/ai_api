@@ -7,6 +7,7 @@ log = get_logger()
 
 # TODO: Build tests.
 
+
 def create_application_client(
     session: Session,
     client_name: str,
@@ -14,8 +15,9 @@ def create_application_client(
     owner_email: str,
     require_jwt: bool,
     require_external_id: bool,
+    redirect_uri: str,
     api_key: str | None = None,
-    hmac_secret: str | None = None
+    hmac_secret: str | None = None,
 ) -> StoredClient | None:
 
     """Creates a new Frontend Application client."""
@@ -31,7 +33,8 @@ def create_application_client(
             require_jwt=require_jwt,
             require_external_id=require_external_id,
             api_key=api_key,
-            hmac_secret=hmac_secret
+            hmac_secret=hmac_secret,
+            redirect_uri=redirect_uri
         )
 
         return client

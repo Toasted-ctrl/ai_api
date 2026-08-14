@@ -87,6 +87,12 @@ class ClientsT(Base):
         nullable=False
     )
 
+    encrypted_redirect_uri: Mapped[str] = mapped_column(
+        String(255),
+        nullable=True,
+        unique=True
+    )
+
     blind_index_client_name: Mapped[str] = mapped_column(
         String(255),
         nullable=False

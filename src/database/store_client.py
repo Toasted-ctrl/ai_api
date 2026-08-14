@@ -2,15 +2,16 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 import uuid
 
-from auth.create_secret import create_secret
-from auth.hash import get_hash_sha256
 from core.config import config
 from core.logging import get_logger
 from database.schemas.clients import ClientsT
 from security.encryption import encrypt, decrypt
+from security.hash import get_hash_sha256
 from security.hmac import hash_hmac
+from security.secret import create_secret
 
 log = get_logger()
+
 
 @dataclass(frozen=True)
 class StoredClient:
@@ -33,7 +34,8 @@ def store_client(
     require_external_id: bool = True,
     is_active: bool = True,
     api_key: str | None = None,
-    hmac_secret: str | None = None
+    hmac_secret: str | None = None,
+    redirect_uri: str | None = None
 ) -> StoredClient:
 
     """Generates and stores a new API key for a client / user.
@@ -90,6 +92,7 @@ def store_client(
         encrypted_hmac_secret=encrypt(hmac),
         encrypted_owner_email=encrypt(owner_email),
         encrypted_client_name=encrypt(client_name),
+        encrypted_redirect_uri=encrypt(redirect_uri) if redirect_uri else None,
         blind_index_client_name=blind_index_client_name_value,
         blind_index_owner_email=blind_index_owner_email_value
     )
