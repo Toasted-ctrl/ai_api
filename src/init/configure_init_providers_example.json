@@ -2,7 +2,7 @@
     "version": "0.1",
     "configured": false,
     "providers": [
-        {,
+        {
             "name": "Ollama",
             "langchain_con": "ChatOllama",
             "base_url": "http://some-ip-address:11434",
@@ -11,7 +11,7 @@
             "internal": true,
             "requires_api_key": false
         },
-        {,
+        {
             "name": "Melious",
             "langchain_con": "ChatOpenAI",
             "base_url": "https://api.melious.ai/v1",
