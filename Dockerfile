@@ -7,6 +7,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Set the working directory inside the container
 WORKDIR /code
 
+ARG VERSION
+ENV APP_VERSION=${VERSION}
+
 # Copy dependency files and install dependencies
 COPY ./pyproject.toml /code/pyproject.toml
 COPY ./uv.lock /code/uv.lock
