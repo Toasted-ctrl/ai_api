@@ -33,13 +33,13 @@ class Config(BaseSettings):
         "_SKIP_EMPTY_CHECK",
         "APP_NAME",
         "APP_MAINTAINER",
-        "APP_VERSION",
         "_GOOGLE_ENV_VARS"
+        "APP_VERSION"
     }
 
     APP_NAME: str = "AIA: Artificial Intelligence API"
     APP_MAINTAINER: str = "Toasted-ctrl"
-    APP_VERSION: str = "0.1.1"
+    APP_VERSION: str = ""
 
     REDIS_USER: str = ""
     REDIS_HOSTNAME: str = ""
