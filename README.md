@@ -7,6 +7,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-v1.36-blue?logo=kubernetes&logoColor=white)
+![Keel](https://img.shields.io/badge/Keel-1b1f23?logo=keel.sh&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > A unified API gateway for multiple LLM providers.
