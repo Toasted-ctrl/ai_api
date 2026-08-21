@@ -96,7 +96,7 @@ async def complete_chat(
         encrypted_api_key=encrypted_api_key,
     )
 
-    log.debug("Chat Model Constructed, returning/streaming Chat Completion content ...")
+    log.debug("Chat Model constructed, returning/streaming Chat Completion content ...")
 
     async for chunk in llm.astream(prompt):
         yield chunk.content
