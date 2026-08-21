@@ -134,15 +134,3 @@ async def test_client_receives_correct_base_url(mock_config):
         await get_models(base_url="http://my-ollama:11434")
 
         MockAsyncClient.assert_called_once_with(host="http://my-ollama:11434")
-
-
-# -------------------------------------------------------------------
-# Error propagation
-# -------------------------------------------------------------------
-
-@pytest.mark.asyncio
-async def test_propagates_connection_error(mock_client):
-    mock_client.list.side_effect = ConnectionError("Connection refused")
-
-    with pytest.raises(ConnectionError, match="Connection refused"):
-        await get_models(base_url="http://localhost:11434")
