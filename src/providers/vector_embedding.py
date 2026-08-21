@@ -21,6 +21,8 @@ def _build_embedding_model(
 ):
     """Embedding model factory."""
 
+    # TODO: Add dimensions as well, in case the model supports variable dimensions.
+
     common_kwargs = {
         "model": model,
         "base_url": base_url,
