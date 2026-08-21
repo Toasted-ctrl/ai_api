@@ -32,9 +32,9 @@ class Config(BaseSettings):
     _SKIP_EMPTY_CHECK: ClassVar[Set[str]] = {
         "_SKIP_EMPTY_CHECK",
         "APP_NAME",
+        "APP_VERSION",
         "APP_MAINTAINER",
         "_GOOGLE_ENV_VARS"
-        "APP_VERSION"
     }
 
     APP_NAME: str = "AIA: Artificial Intelligence API"
