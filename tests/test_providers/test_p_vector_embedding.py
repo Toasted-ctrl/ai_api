@@ -67,7 +67,8 @@ class TestBuildEmbeddingModel:
             model="openai-embed-random",
             base_url="http://openai.randomlink",
             dimensions=None,
-            api_key="api-key"
+            api_key="api-key",
+            check_embedding_ctx_length=True
         )
 
         assert result == sentinel

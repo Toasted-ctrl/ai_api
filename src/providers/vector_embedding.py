@@ -34,7 +34,8 @@ def _build_embedding_model(
             log.debug(f"Requesting OpenAI embedding model '{model}' ...")
             return OpenAIEmbeddings(
                 **common_kwargs,
-                api_key=decrypt(encrypted_api_key)
+                api_key=decrypt(encrypted_api_key),
+                check_embedding_ctx_length=False if 'melious' in base_url else True
             )
 
         case _:
