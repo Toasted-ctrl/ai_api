@@ -1,39 +1,41 @@
 from enum import Enum
 from langchain_ollama import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
 
 from core.config import config
 from core.logging import get_logger
+from providers.dataclasses import LangChainCon
+from security.encryption import decrypt
 
 log = get_logger()
-
-
-class LangChainCon(str, Enum):
-    ANTHROPIC = "ChatAnthropic"
-    OLLAMA = "ChatOllama"
-    OPENAI = "ChatOpenAI"
 
 
 def _build_embedding_model(
     langchain_con: LangChainCon,
     model: str,
     base_url: str,
+    dimensions: int | None = None,
     encrypted_api_key: str | None = None
-):
+) -> OllamaEmbeddings | OpenAIEmbeddings:
     """Embedding model factory."""
-
-    # TODO: Add dimensions as well, in case the model supports variable dimensions.
 
     common_kwargs = {
         "model": model,
         "base_url": base_url,
+        "dimensions": dimensions
     }
-
-    # For now only one case for testing purposes, add more Provider options later on.
 
     match langchain_con:
         case LangChainCon.OLLAMA:
             log.debug(f"Requesting Ollama embedding model '{model}' ...")
             return OllamaEmbeddings(**common_kwargs)
+
+        case LangChainCon.OPENAI:
+            log.debug(f"Requesting OpenAI embedding model '{model}' ...")
+            return OpenAIEmbeddings(
+                **common_kwargs,
+                api_key=decrypt(encrypted_api_key)
+            )
 
         case _:
             raise NotImplementedError(f"Embedding not supported for '{langchain_con}' ...")
@@ -44,6 +46,7 @@ async def get_embedding(
     model: str,
     prompt: str,
     base_url: str,
+    dimensions: int | None = None,
     encrypted_api_key: str | None = None
 ) -> list[float]:
     """Retrieve embedding from indicated Provider with specified Embedding model."""
@@ -59,6 +62,7 @@ async def get_embedding(
         langchain_con=langchain_con,
         model=model,
         base_url=base_url,
+        dimensions=dimensions,
         encrypted_api_key=encrypted_api_key
     )
 
@@ -66,6 +70,6 @@ async def get_embedding(
 
     result = await embedding.aembed_query(prompt)
 
-    log.debug("Embedding complete, returning ...")
+    log.debug(f"Embedding complete, returning {result[:5]}...")
 
     return result

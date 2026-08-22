@@ -6,6 +6,7 @@ from providers.vector_embedding import (
     _build_embedding_model,
     get_embedding,
 )
+from security.encryption import encrypt
 
 
 class TestBuildEmbeddingModel:
@@ -26,7 +27,9 @@ class TestBuildEmbeddingModel:
         mock_ollama_cls.assert_called_once_with(
             model="nomic-embed-text",
             base_url="http://localhost:11434",
+            dimensions=None
         )
+
         assert result is sentinel
 
 
@@ -46,6 +49,30 @@ class TestBuildEmbeddingModel:
         assert "api_key" not in call_kwargs
 
 
+    @patch("providers.vector_embedding.OpenAIEmbeddings")
+    def test_openai_returns_openai_embeddings(self, mock_openai_cls):
+        """Should instantiate OpenAIEmbeddings with model, base_url, dimensions and api key."""
+        sentinel = MagicMock()
+        mock_openai_cls.return_value = sentinel
+
+        result = _build_embedding_model(
+            langchain_con=LangChainCon.OPENAI,
+            model="openai-embed-random",
+            base_url="http://openai.randomlink",
+            dimensions=None,
+            encrypted_api_key=encrypt("api-key")
+        )
+
+        mock_openai_cls.assert_called_once_with(
+            model="openai-embed-random",
+            base_url="http://openai.randomlink",
+            dimensions=None,
+            api_key="api-key"
+        )
+
+        assert result == sentinel
+
+
     def test_unsupported_provider_raises_not_implemented(self):
         """Providers without embedding support should raise NotImplementedError."""
         with pytest.raises(NotImplementedError, match="not supported"):
@@ -53,15 +80,7 @@ class TestBuildEmbeddingModel:
                 langchain_con=LangChainCon.ANTHROPIC,
                 model="some-model",
                 base_url="http://localhost",
-            )
-
-    def test_openai_raises_not_implemented(self):
-        """OpenAI isn't wired up yet — should also raise."""
-        with pytest.raises(NotImplementedError):
-            _build_embedding_model(
-                langchain_con=LangChainCon.OPENAI,
-                model="text-embedding-3-small",
-                base_url="https://api.openai.com",
+                dimensions=None
             )
 
 
@@ -128,6 +147,7 @@ class TestGetEmbedding:
             langchain_con=LangChainCon.OLLAMA,
             model=self.VALID_MODEL,
             base_url=self.BASE_URL,
+            dimensions=None,
             encrypted_api_key="key123",
         )
 
