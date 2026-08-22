@@ -11,7 +11,8 @@ from api.v1 import (
     models,
     status,
     translation,
-    providers
+    providers,
+    vector_embedding
 )
 from api.v1.login import google_login
 from core.config import config
@@ -71,6 +72,11 @@ app.include_router(
 
 app.include_router(
     router=chat_completion.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=vector_embedding.router,
     prefix=v1_prefix
 )
 
