@@ -5,18 +5,12 @@ from langchain_openai import ChatOpenAI
 from typing import AsyncGenerator
 
 from core.logging import get_logger
+from providers.dataclasses import LangChainCon
 from security.encryption import decrypt
-
 
 log = get_logger()
 
 # TODO: Build tests
-
-
-class LangChainCon(str, Enum):
-    ANTHROPIC = "ChatAnthropic"
-    OLLAMA = "ChatOllama"
-    OPENAI = "ChatOpenAI"
 
 
 def _build_llm(
@@ -28,7 +22,7 @@ def _build_llm(
     top_k: int | None,
     top_p: float | None,
     encrypted_api_key: str | None,
-):
+) -> ChatAnthropic | ChatOllama | ChatOpenAI:
     """Construct the correct LangChain chat model for the given provider."""
 
     common_kwargs = {
@@ -83,7 +77,7 @@ async def complete_chat(
     top_k: int | None = None,
     top_p: float | None = None,
 ) -> AsyncGenerator[str, None]:
-    """Async generator that yields content chunks from any supported provider."""
+    """Async generator that yields content chunks from any supported Provider."""
 
     llm = _build_llm(
         langchain_con=langchain_con,
