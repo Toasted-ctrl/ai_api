@@ -76,7 +76,8 @@
         "multilingual-e5-large",
         "multilingual-e5-large-instruct",
         "paraphrase-multilingual-mpnet",
-        "qwen3-embedding-8b"
+        "qwen3-embedding-8b",
+        "nomic-embed-text:latest"
     ],
     "image_generation": [
         "flux-1-dev",
