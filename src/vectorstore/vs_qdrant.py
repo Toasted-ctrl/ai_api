@@ -16,6 +16,9 @@ def qdrant_store_docs(
 ) -> list[str]:
     """Adds documents to the Qdrant vector store instance."""
 
+    # TODO: This function can now create duplicates. Perhaps we should make a check for
+    # if an item is a duplicate for the user.
+
     log.debug(f"Storing {len(texts)} documents into Qdrant ...")
 
     documents = [
