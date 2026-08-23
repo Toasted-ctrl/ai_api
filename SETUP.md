@@ -1,90 +1,133 @@
-# Setup Guide
+# Setup
 
 > [!NOTE]
-> This document was last reviewed on 2026-08-16.
+> This document was last reviewed on 2026-08-23.
 
-## Prerequisites
+This guide covers setting up, building, and deploying the Artificial Intelligence API (AIA).
 
-- **Docker** and **Docker Compose** installed
-- **Redis 6+** instance (local or hosted)
-- **PostgreSQL** instance (local or hosted)
-- **UV**
+The project supports two ways of running the application:
 
----
+- Local development using uv
+- Kubernetes deployment using the manifests provided in k8s/
 
-## 1. Environment Configuration
+Docker Compose is no longer used or supported as a deployment method.
+## 1. Prerequisites
 
-Copy the example environment file and open it for editing:
+Depending on how you intend to run the application, you will need:
+### Local development
 
+- Python
+- uv
+- PostgreSQL
+- Redis 6+
+- Qdrant 
+
+### Kubernetes deployment
+
+- A running Kubernetes cluster
+- kubectl configured to access the cluster
+- Docker or another container image builder
+- A container registry accessible by the Kubernetes cluster
+- An NGINX Ingress Controller if you want to use the included Ingress manifest
+
+PostgreSQL and Redis must be available to the application. They may be hosted inside or outside the Kubernetes cluster.
+
+## 2. Clone the Repository
+```bash
+git clone https://github.com/Toasted-ctrl/ai_api.git
+cd ai_api
+```
+## 3. Initialize the Database
+The project includes an initialization script for creating the required database tables and optionally creating preconfigured clients, providers, vector stores and vector store collections.
+
+Configuration is controlled in src/init.py:
+
+```python
+CREATE_PRECONFIGURED_CLIENTS = True
+CREATE_PRECONFIGURED_PROVIDERS = True
+CREATE_TABLES = True
+```
+
+Once your configuration is complete, initialize the database:
+
+```bash
+uv run src/init.py
+```
+
+
+All commands in this guide assume that you are running them from the repository root.
+## 4. Local Development
 ```bash
 cp .env.example .env
 nano .env
 ```
+### 4.1 Redis
+Redis 6+ is required by the application.
+```dotenv
+REDIS_USER=
+REDIS_HOSTNAME=
+REDIS_PASSWORD=
+REDIS_PREFIX=
+REDIS_PORT=
+```
+### 4.2 PostgreSQL
+PostgreSQL is required for application data.
+```dotenv
+PG_HOSTNAME=
+PG_USERNAME=
+PG_PASSWORD=
+PG_DATABASE=
+PG_DIALECT=
+PG_DRIVER=
+PG_PORT=
+```
+### 4.3 Encryption
 
-Fill in each section as described below.
+Sensitive data is encrypted at rest. Configure a strong encryption key:
 
-### Redis Credentials
+```dotenv
+ENCRYPTION_KEY=
+```
+### 4.4 Blind Index
 
-A Redis 6+ instance is required. Some API GET requests are cached through Redis.
+The blind index key is used for searchable encrypted data.
 
-```env
-REDIS_USER=your_redis_user
-REDIS_HOSTNAME=your_redis_host
-REDIS_PASSWORD=your_redis_password
-REDIS_PREFIX=your_prefix
-REDIS_PORT=6379
+Use a separate key from ENCRYPTION_KEY:
+
+```dotenv
+BLIND_INDEX_KEY=
+```
+### 4.5 JWT
+
+JWT tokens are signed using:
+
+```dotenv
+JWT_SECRET=
+```
+### 4.6 Logging
+
+The available log levels are:
+
+```dotenv
+debug
+info
+warn
+error
 ```
 
-### PostgreSQL Credentials
+### 4.7 Google Login
 
-```env
-PG_HOSTNAME=your_pg_host
-PG_USERNAME=your_pg_user
-PG_PASSWORD=your_pg_password
-PG_DATABASE=your_database_name
-PG_DIALECT=postgresql
-PG_DRIVER=psycopg2
-PG_PORT=5432
+Google OAuth is optional.
+
+To enable it:
+
+```dotenv
+ENABLE_GOOGLE_LOGIN=true
 ```
 
-### Encryption
+Then configure the remaining Google OAuth variables:
 
-All sensitive data is encrypted at rest. You must provide a strong encryption key.
-
-```env
-ENCRYPTION_KEY=your_encryption_key
-```
-
-### Blind Index
-
-The blind index key is used for searchable encryption. Generate a separate key from your encryption key.
-
-```env
-BLIND_INDEX_KEY=your_blind_index_key
-```
-
-### JWT Secret
-
-Used to sign and verify authentication tokens.
-
-```env
-JWT_SECRET=your_jwt_secret
-```
-
-### Logging
-
-Available levels: `debug`, `info`, `warn`, `error`
-
-```env
-LOG_LEVEL=debug
-```
-
-### Google Login (Optional)
-
-Set `ENABLE_GOOGLE_LOGIN=true` and fill in the remaining fields only if you want to enable Google OAuth.
-
-```env
-ENABLE_GOOGLE_LOGIN=false
+```dotenv
 GOOGLE_CLIENT_ID=
 GOOGLE_REDIRECT_URI=
 GOOGLE_AUTH_URL=
@@ -92,225 +135,80 @@ GOOGLE_HMAC=
 GOOGLE_TOKEN_URL=
 GOOGLE_CLIENT_SECRET=
 ```
+### 4.8 Cookies
 
----
+Cookie configuration is also available:
 
-## 2. Configure Initial Clients and Providers (Optional)
-
-> [!NOTE]
-> If skipping this step, you'll need to add all tables manually.
-
-in src/init.py, set whether you want to create all tables, as well as preconfigured Providers and Clients / Users:
-```python
-CREATE_PRECONFIGURED_CLIENTS=true       # Seed initial Clients/Users from src/init/configure_init_clients.json
-CREATE_PRECONFIGURED_PROVIDERS=true     # Seed initial Providers from src/init/configure_init_providers.json
-CREATE_TABLES=true                      # Create required database tables
+```dotenv
+COOKIE_SECURE=false
+COOKIE_MAX_AGE=86400
 ```
 
-### Providers
+For production deployments using HTTPS, COOKIE_SECURE should normally be set to true.
+
+## 5. Building the image
+
+The repository includes build.sh for building the application container image.
+
+To see the available options:
 
 ```bash
-cp src/init/configure_init_providers_example.json src/setup/configure_init_providers.json
-nano src/init/configure_init_providers.json
+./build.sh --help
+```
+The script creates both a versioned image and a latest tag.
+
+For example:
+
+```
+storage01:5000/artificial-intelligence-api:0.1.1
+storage01:5000/artificial-intelligence-api:latest
 ```
 
-Fill in the provider details according to your infrastructure.
+If you are using a different container registry, update the registry configuration in build.sh before building and pushing the image.
+## 6. Kubernetes Deployment
 
-### Clients
+The repository includes the Kubernetes manifests required to deploy the application under the k8s/ directory. The current manifests include a namespace, ConfigMap, Deployment example, Service, PersistentVolume, PersistentVolumeClaim, Secret example, and Ingress.
 
-```bash
-cp src/init/configure_init_clients_example.json src/setup/configure_init_clients.json
-nano src/init/configure_init_clients.json
+The Kubernetes deployment is intended to run the application as a container and expose it through a Kubernetes Service.
+### 6.1 Prepare the Kubernetes Manifests
+
+Before deploying, review the files in:
+
+`k8s/`
+
+The directory contains:
+
 ```
-
-There are two types of clients:
-
-| Type | Description | Where to add |
-|------|-------------|--------------|
-| **Application Client** | A backend service or application that calls the API on behalf of users. Users do not interact with the API directly. | Add under the `applications` section |
-| **User Client** | A client where users interact with the API directly (e.g., a frontend application). | Add under the `users` section |
-
-Add each client to the appropriate section in the configuration file based on how it will interact with the API.
-
-### Init Tables & Users
-From the root directory, run:
-```bash
-uv run src/init.py
+configmap.yaml
+deployment_example.yaml
+ingress.yaml
+namespace.yaml
+pv.yaml
+pvc.yaml
+secrets_example.yaml
+service.yaml
 ```
+Update all manifests with your own details.
+### 6.2 Deploy the Application
 
----
-
-## 3. Docker Compose Deployment
-
-```bash
-docker compose up
-```
-
-To run in detached mode:
-
-```bash
-docker compose up -d
-```
-
-To verify the container is running:
-
-```bash
-docker compose ps
-```
-
-To view logs:
-
-```bash
-docker compose logs -f
-```
-
----
-
-## 4. Kubernetes Deployment
-
-The repository includes Kubernetes manifests in the k8s/ directory for deploying the API to a Kubernetes cluster.
-
-### Prerequisites
-
-You will need:
-
-- A running Kubernetes cluster
-- kubectl configured to access the cluster
-- An image of the application pushed to a container registry accessible by the cluster
-- An NGINX Ingress Controller if you want to use the included Ingress configuration
-
-The manifests create a dedicated artificial-intelligence-api namespace.
-
-### 4.1 Configure the Secret
-
-Copy the example Secret manifest:
-
-```bash
-cp k8s/secret.yaml.example k8s/secret.yaml
-```
-
-Edit k8s/secret.yaml and replace the placeholder values with your PostgreSQL, Redis, encryption, JWT, and optional Google OAuth credentials.
-
-```bash
-nano k8s/secret.yaml
-```
-
-Do **not** commit k8s/secret.yaml containing real credentials to the repository.
-
-The Secret is consumed by the application Deployment as environment variables.
-
-### 4.2 Configure the Container Image
-
-Copy the example Deployment:
-
-```bash
-cp k8s/deployment.yaml.example k8s/deployment.yaml
-```
-
-Edit k8s/deployment.yaml and replace:
-
-```yaml
-image: "YOUR IMAGE REPOSITORY/artificial-intelligence-api:latest"
-```
-
-with the image you want Kubernetes to deploy, for example:
-
-```yaml
-image: "registry.example.com/artificial-intelligence-api:latest"
-```
-
-The example Deployment runs three replicas and is configured for rolling updates. It also expects an image-pull secret named registry-credentials when pulling from a private registry.
-
-If your registry is private, create the pull secret before deploying:
-
-```bash
-kubectl create secret docker-registry registry-credentials \
-  --docker-server=<REGISTRY> \
-  --docker-username=<USERNAME> \
-  --docker-password=<PASSWORD> \
-  --namespace=artificial-intelligence-api
-```
-
-### 4.3 Review the ConfigMap
-
-The default ConfigMap contains the non-sensitive application configuration:
-
-```yaml
-APP_ENV: "production"
-LOG_LEVEL: "info"
-PG_PORT: "5432"
-PG_DIALECT: "postgresql"
-PG_DRIVER: "psycopg2"
-REDIS_PORT: "6379"
-COOKIE_SECURE: "false"
-COOKIE_MAX_AGE: "86400"
-ENABLE_GOOGLE_LOGIN: "false"
-```
-
-Adjust these values in k8s/configmap.yaml if required by your environment. Sensitive values should remain in the Kubernetes Secret rather than the ConfigMap.
-
-### 4.4 Deploy the Application
-
-From the repository root, apply the Kubernetes manifests:
+From the repository root, apply the manifests:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
+kubectl apply -f k8s/secrets.yaml
 kubectl apply -f k8s/pv.yaml
 kubectl apply -f k8s/pvc.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
-
-Verify that the resources were created:
+Verify the deployment:
 
 ```bash
 kubectl get all -n artificial-intelligence-api
 ```
-
-Check the deployment:
-
-```bash
-kubectl get deployment -n artificial-intelligence-api
-```
-
-Check the pods:
+Check the Pods:
 
 ```bash
 kubectl get pods -n artificial-intelligence-api
 ```
-
-The Deployment exposes the application on container port 8000 and the Service exposes it internally on port 80.
-
-### 4.5 Ingress
-
-The repository includes an NGINX Ingress configuration for:
-
-`http://ai-api.k8s.internal`
-
-Apply it with:
-
-```bash
-kubectl apply -f k8s/ingress.yaml
-```
-
-The Ingress routes traffic to artificial-intelligence-api-service on port 80.
-
-If you use a different hostname, edit k8s/ingress.yaml before applying it:
-
-```yaml
-rules:
-  - host: your-hostname.example.com
-```
-
-Make sure DNS or your local /etc/hosts configuration resolves the hostname to the NGINX Ingress Controller.
-
-## Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| Redis connection errors | Verify Redis 6+ is running and credentials in `.env` are correct |
-| PostgreSQL connection errors | Verify PostgreSQL is running and credentials in `.env` are correct |
-| Preconfigured data not loading | Ensure the JSON config files exist (without `.example`) and `CREATE_PRECONFIGURED_CLIENTS` / `CREATE_PRECONFIGURED_PROVIDERS` are set to `true` |
-| Container won't start | Run `docker compose logs` to check for specific error messages |
