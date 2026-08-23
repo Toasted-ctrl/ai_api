@@ -6,6 +6,7 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
+![Qdrant](https://img.shields.io/badge/Qdrant-D6405B?logo=qdrant&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-v1.36-blue?logo=kubernetes&logoColor=white)
 ![Keel](https://img.shields.io/badge/Keel-1b1f23?logo=keel.sh&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -20,6 +21,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Chat completion through LLM providers.
 - Local Ollama configurations may be added.
 - Users may add their own API keys for interaction with third party LLM Providers.
+- Integration with Qdrant.
 
 ## Tech Stack
 - FastAPI
@@ -29,6 +31,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - PostgreSQL
 - GCP (OAuth2)
 - Kubernetes
+- Qdrant
 
 ## Supported LLM Providers
 - Current supported Providers are tested and verified with personally obtained API keys.
@@ -37,9 +40,6 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Ollama (if self-hosted)
 - Anthropic
 - Melious
-
-### Upcoming
-- OpenAI
 
 ## Setup
 - Please check the 'SETUP.md' file to get started.
@@ -62,14 +62,13 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ### POST
 - POST /chat_completion
 - POST /translation/translategemma
+- POST /vector_store/save
+- POST /vector_embedding/test
 
 ## Roadmap
 
 ### Short Term
-- Tests for all base functionalities (i.e., Google Login).
-- Making Redis caching optional.
 - Add HMAC hashing and verification for each path.
-- Add Chat Completion support for all supported Providers.
 - Add OpenAI support.
 - Build a function to locate which server is currently supporting translategemma: Check internal
 servers first, follow by external ones. Return internal as this one is free of charge.
@@ -82,7 +81,7 @@ servers first, follow by external ones. Return internal as this one is free of c
 - Enable possibility to share agents with other users.
 - Build 'testing' endpoints, which is intended to build tests for agents you created.
 - Add MCP calling support.
-- Add upload of documents endpoint, including vector embedding said documents.
+- Add support for Semantic Search on vector db (Qdrant).
 
 ## Contributing
 PRs welcome!
