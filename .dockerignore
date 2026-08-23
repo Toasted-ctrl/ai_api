@@ -55,7 +55,13 @@ test
 # ---- Init files ----
 init
 init.py
+configure_init_clients_example.json*
+configure_init_providers_example.json*
+configure_init_vs_example.json*
+configure_init_vs_collections_example.json*
 configure_init_clients.json*
 configure_init_providers.json*
+configure_init_vs.json*
+configure_init_vs_collections.json*
 preconfigurations.py
 create_tables.py
