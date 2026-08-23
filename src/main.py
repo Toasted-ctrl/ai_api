@@ -12,7 +12,8 @@ from api.v1 import (
     status,
     translation,
     providers,
-    vector_embedding
+    vector_embedding,
+    vector_store
 )
 from api.v1.login import google_login
 from core.config import config
@@ -39,9 +40,16 @@ app = FastAPI(
 )
 
 if config.ENABLE_GOOGLE_LOGIN:
-    log.info("Starting with Google Login enabled...")
+    log.info("Starting with Google Login enabled.")
     app.include_router(
         router=google_login.router,
+        prefix=v1_prefix
+    )
+
+if config.ENABLE_QDRANT:
+    log.info("Starting with Qdrant vector store enabled.")
+    app.include_router(
+        router=vector_store.router,
         prefix=v1_prefix
     )
 
