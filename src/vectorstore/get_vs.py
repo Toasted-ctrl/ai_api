@@ -4,6 +4,7 @@ from langchain_qdrant import QdrantVectorStore
 from core.logging import get_logger
 from providers.dataclasses import LangChainCon
 from providers.vector_embedding import _build_embedding_model
+from security.encryption import decrypt
 
 log = get_logger()
 
@@ -17,6 +18,7 @@ def get_vector_store(
     vs_vendor: VectorStore,
     vs_port: int,
     vs_base_url: str,
+    vs_encrypted_api_key: str | None,
     e_model: str,
     e_base_url: str,
     e_langchain_con: LangChainCon,
@@ -43,7 +45,8 @@ def get_vector_store(
                 collection_name=vs_collection_name,
                 url=vs_base_url,
                 embedding=emb,
-                port=vs_port
+                port=vs_port,
+                api_key=decrypt(vs_encrypted_api_key) if vs_encrypted_api_key else None
             )
 
         # TODO: Add support for additional Vector Store vendors.
