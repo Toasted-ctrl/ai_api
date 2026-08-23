@@ -56,7 +56,7 @@ def store_document(
         e_dimensions=vscf.e_dimensions
     )
 
-    # TODO: replace with a more general version where we can swap out multiple Vector Stores.
+    # TODO: replace with a more generic version where we can swap out multiple Vector Stores.
     doc_ids = qdrant_store_docs(
         vector_store=vs,
         texts=payload.texts,
