@@ -16,6 +16,8 @@ curl_tests.txt
 # Config files
 configure_init_providers.json
 configure_init_clients.json
+configure_init_vs.json
+configure_init_vs_collections.json
 
 # k82 manifests
 secrets.yaml
