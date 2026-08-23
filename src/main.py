@@ -46,12 +46,10 @@ if config.ENABLE_GOOGLE_LOGIN:
         prefix=v1_prefix
     )
 
-if config.ENABLE_QDRANT:
-    log.info("Starting with Qdrant vector store enabled.")
-    app.include_router(
-        router=vector_store.router,
-        prefix=v1_prefix
-    )
+app.include_router(
+    router=vector_store.router,
+    prefix=v1_prefix
+)
 
 app.include_router(
     router=root.router,
