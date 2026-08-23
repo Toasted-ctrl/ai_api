@@ -1,0 +1,9 @@
+[
+    {
+        "id": "UUID for vector store db",
+        "vendor": "qdrant",
+        "api_key": "api key for connecting to the vector store",
+        "base_url": "url of hosted vector store",
+        "port": 80
+    }
+]

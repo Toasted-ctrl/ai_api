@@ -1,0 +1,15 @@
+[
+    {   
+        "id": "UUID for your embedding model",
+        "embedding_provider": "Provider name that matches any of the previously added Providers",
+        "vector_store_id": "UUID of the vector store to connect to",
+        "embedding_model": "Embedding model used for the collection",
+        "embedding_dimensions": 768,
+        "access_type": "Access type, i.e., Agent Memory, User Memory, etc.",
+        "required_filters": [
+            "document_name",
+            "document_id"
+        ],
+        "name": "collection name"
+    }
+]
