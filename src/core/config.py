@@ -34,7 +34,7 @@ class Config(BaseSettings):
         "APP_NAME",
         "APP_VERSION",
         "APP_MAINTAINER",
-        "_GOOGLE_ENV_VARS"
+        "_SKIP_GOOGLE_ENV_VARS",
     }
 
     APP_NAME: str = "AIA: Artificial Intelligence API"
@@ -74,9 +74,7 @@ class Config(BaseSettings):
     GOOGLE_TOKEN_URL: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
 
-    # Required to exclude Google variables from startup check,
-    # if Google Login is disabled. 
-    _GOOGLE_ENV_VARS: ClassVar[set[str]] = {
+    _SKIP_GOOGLE_ENV_VARS: ClassVar[set[str]] = {
         "GOOGLE_CLIENT_ID",
         "GOOGLE_REDIRECT_URI",
         "GOOGLE_AUTH_URL",
@@ -93,9 +91,9 @@ class Config(BaseSettings):
         unset = all_fields - self.model_fields_set - self._SKIP_EMPTY_CHECK
 
         if self.ENABLE_GOOGLE_LOGIN == False:
-            log.debug(f"Google Login disabled. Skipping environment variables: {' ,'.join(sorted(self._GOOGLE_ENV_VARS))}...")
-            unset - self._GOOGLE_ENV_VARS
-            unpopulated - self._GOOGLE_ENV_VARS
+            log.debug(f"Google Login disabled. Skipping environment variables: {' ,'.join(sorted(self._SKIP_GOOGLE_ENV_VARS))} ...")
+            unset - self._SKIP_GOOGLE_ENV_VARS
+            unpopulated - self._SKIP_GOOGLE_ENV_VARS
         
         empty = {
             name
@@ -166,5 +164,6 @@ class Config(BaseSettings):
     def CHAT_COMPLETION_MODELS(self) -> list:
         """Returns a list of chat completion models"""
         return _model_types().get("chat_completion", [])
+    
 
 config = Config()
