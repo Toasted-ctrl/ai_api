@@ -33,7 +33,7 @@ def get_vector_store_settings(
     col: VectorStoreCollectionT = (
         session.query(VectorStoreCollectionT)
         .filter(VectorStoreCollectionT.name == collection_name)
-        .one_or_none
+        .one_or_none()
     )
 
     if not col:
@@ -52,14 +52,14 @@ def get_vector_store_settings(
 
     log.debug("Returning Vector Store client.")
     return VectorStoreConfig(
-        collection_name=col.name,
+        vs_collection_name=col.name,
         e_dimensions=col.e_dimensions,
         e_provider=col.e_provider,
         e_model=col.e_model,
-        encrypted_api_key=vs.encrypted_api_key,
+        vs_encrypted_api_key=vs.encrypted_api_key,
         access_type=col.access_type,
-        vendor=vs.vendor,
-        base_url=vs.base_url,
-        port=vs.port,
+        vs_vendor=vs.vendor,
+        vs_base_url=vs.base_url,
+        vs_port=vs.port,
         required_filters=col.required_filters
     )
