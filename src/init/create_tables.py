@@ -3,12 +3,13 @@ from sqlalchemy import create_engine
 from core.config import config
 from core.logging import get_logger
 
-# Imported so their tables are registered with Base.metadata
 from database.schemas.base import Base
 from database.schemas.clients import ClientsT
 from database.schemas.persons_users import PersonsT, UsersT
 from database.schemas.providers import ProvidersT
 from database.schemas.user_keys import UserKeysT
+from database.schemas.vector_store import VectorStoreSettingsT
+from database.schemas.vector_store_collections import VectorStoreCollectionT
 
 log = get_logger()
 
