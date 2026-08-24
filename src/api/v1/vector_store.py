@@ -7,8 +7,8 @@ from database.providers import get_all_provider_configurations, ProviderConfigur
 from database.session import get_db_session
 from database.vector_store import get_vector_store_settings, VectorStoreConfig
 from iom.vector_store import PayloadSaveDocuments, ResponseSavedDocuments
-from vectorstore.get_vs import get_vector_store
-from vectorstore.vs_qdrant import qdrant_store_docs
+from vs.get_vs import get_vector_store
+from vs.vs_qdrant import qdrant_store_docs
 
 router = APIRouter()
 
