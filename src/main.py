@@ -47,11 +47,6 @@ if config.ENABLE_GOOGLE_LOGIN:
     )
 
 app.include_router(
-    router=vector_store.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
     router=root.router,
     prefix=v1_prefix
 )
@@ -83,6 +78,11 @@ app.include_router(
 
 app.include_router(
     router=vector_embedding.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=vector_store.router,
     prefix=v1_prefix
 )
 
