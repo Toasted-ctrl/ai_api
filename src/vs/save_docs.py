@@ -40,15 +40,15 @@ def _prep_docs_personal_data(
     """Prepares the data for ingestion. Will create 'Documents' for each piece of text to be ingested.
     Document preparation only intended for preparing PERSONAL data."""
 
-    # TODO: Requires tests.
+    # TODO: Convert UUID input prior before loading.
 
     documents = []
     for text, metadata in zip(texts, metadatas):
         document_hash = hashlib.sha256(text.encode()).hexdigest()
-        user_id = str(metadata.get("user_id")) # NOTE: Likely to be a UUID.
+        user_id = str(metadata.get("user_id"))
         chunks = _chunker(text=text)
-        for j, chunk in enumerate(chunks):
-            document_id = f"{user_id}:{document_hash}:{j}"
+        for i, chunk in enumerate(chunks):
+            document_id = f"{user_id}:{document_hash}:{i}"
             documents.append(
                 Document(
                     id=document_id,
