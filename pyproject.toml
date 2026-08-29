@@ -17,6 +17,7 @@ dependencies = [
     "langchain-ollama>=1.1.0",
     "langchain-openai>=1.5.1",
     "langchain-qdrant>=1.1.0",
+    "langchain-text-splitters>=1.1.2",
     "ollama>=0.6.2",
     "openai>=2.53.0",
     "psycopg2-binary>=2.9.12",
@@ -24,6 +25,7 @@ dependencies = [
     "pydantic-settings>=2.14.2",
     "requests>=2.34.2",
     "sqlalchemy>=2.0.51",
+    "tiktoken>=0.13.0",
     "uvicorn>=0.51.0",
     "wakeonlan>=4.0.0",
 ]
