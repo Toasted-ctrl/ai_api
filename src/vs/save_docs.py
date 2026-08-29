@@ -45,7 +45,7 @@ def _prep_docs_personal_data(
     documents = []
     for text, metadata in zip(texts, metadatas):
         document_hash = hashlib.sha256(text.encode()).hexdigest()
-        user_id = str(metadata.get("user_id"))
+        user_id = metadata.get("user_id")
         chunks = _chunker(text=text)
         for i, chunk in enumerate(chunks):
             document_id = f"{user_id}:{document_hash}:{i}"
