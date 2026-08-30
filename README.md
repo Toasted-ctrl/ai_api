@@ -29,7 +29,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ## Tech Stack
 - FastAPI
 - LangChain
-- Docker (Compose)
+- Docker
 - Redis
 - PostgreSQL
 - GCP (OAuth2)
