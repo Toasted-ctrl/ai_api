@@ -8,7 +8,7 @@ from database.session import get_db_session
 from database.vector_store import get_vector_store_settings, VectorStoreConfig
 from iom.vector_store import PayloadSaveDocuments, ResponseSavedDocuments
 from vs.get_vs import get_vector_store
-from vs.vs_qdrant import qdrant_store_docs
+from vs.save_docs import save_docs
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ log = get_logger()
 
 
 @router.post(
-    path="/vector_store/save",
+    path="/vector_store/store",
     tags=tags,
     description="Store (a) document(s) in the specified Vector Store collection."
 )
@@ -32,6 +32,12 @@ def store_document(
         session=session,
         collection_name=payload.collection_name
     )
+
+    # TODO: Probably we should not name the collection, just what type of data:
+    # - User Memory
+    # - User Personal
+    # - Agent Documentation
+    # - etc.
 
     p_reg: UserProviderRegistry = get_all_provider_configurations(
         session=session,
@@ -56,11 +62,23 @@ def store_document(
         e_dimensions=vscf.e_dimensions
     )
 
-    # TODO: replace with a more generic version where we can swap out multiple Vector Stores.
-    doc_ids = qdrant_store_docs(
+    metadatas = []
+    _metadatas = payload.metadata
+    if 'user_id' in vscf.required_filters:
+        for metadata in _metadatas:
+            meta_dict = metadata.model_dump()
+            meta_dict['user_id'] = user.id
+            metadatas.append(meta_dict)
+
+    else:
+        metadatas = [metadata.model_dump() for metadata in metadatas]
+
+    doc_ids = save_docs(
         vector_store=vs,
+        doctype='personal',
         texts=payload.texts,
-        user_id=user.id,
+        metadatas=metadatas,
+        required_metadata=vscf.required_filters
     )
 
     return ResponseSavedDocuments(

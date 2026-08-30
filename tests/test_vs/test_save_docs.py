@@ -1,7 +1,12 @@
 from langchain_core.documents import Document
 import uuid
 
-from vs.save_docs import _chunker, _prep_docs_personal_data
+from vs.save_docs import (
+    _chunker,
+    _prep_docs_personal_data,
+    _normalize_texts,
+    _sanitize_metadata
+)
 
 
 class TestChunker:
@@ -108,12 +113,10 @@ class TestPrepDocsPersonalData:
         assert isinstance(docs, list)
         assert isinstance(doc1, Document)
         assert isinstance(doc2, Document)
-        assert doc1.metadata == doc2.metadata
         assert doc1.id != doc2.id
-        assert doc1.id.split(sep=':')[0] == doc2.id.split(sep=':')[0]
-        assert doc1.id.split(sep=':')[1] == doc2.id.split(sep=':')[1]
-        assert doc1.id.split(sep=':')[2] == '0'
-        assert doc2.id.split(sep=':')[2] == '1'
+        assert doc1.metadata['chunk_id'] != doc2.metadata['chunk_id']
+        assert doc1.metadata['document_hash'] == doc2.metadata['document_hash']
+        assert doc1.metadata['user_id'] == doc2.metadata['user_id']
 
 
     def test_multiple_documents(self):
@@ -137,9 +140,77 @@ class TestPrepDocsPersonalData:
         assert isinstance(docs, list)
         assert isinstance(doc1, Document)
         assert isinstance(doc2, Document)
-        assert doc1.metadata == doc2.metadata
         assert doc1.id != doc2.id
-        assert doc1.id.split(sep=':')[0] == doc2.id.split(sep=':')[0]
-        assert doc1.id.split(sep=':')[1] != doc2.id.split(sep=':')[1]
-        assert doc1.id.split(sep=':')[2] == '0'
-        assert doc2.id.split(sep=':')[2] == '0'
+        assert doc1.metadata['chunk_id'] == doc2.metadata['chunk_id']
+        assert doc1.metadata['document_hash'] != doc2.metadata['document_hash']
+        assert doc1.metadata['user_id'] == doc2.metadata['user_id']
+
+
+class TestNormalizeTexts:
+
+    def test_text_unchanged(self):
+        text = "This is an example text."
+        result = _normalize_texts(texts=[text])
+
+        assert isinstance(result, list)
+        assert isinstance(result[0], str)
+        assert len(result) == 1
+        assert result[0] == text
+
+
+    def test_remove_trailing_leading_spaces(self):
+        text = "    This is an example text    "
+        result = _normalize_texts(texts=[text])
+        
+        assert isinstance(result, list)
+        assert isinstance(result[0], str)
+        assert len(result) == 1
+        assert result[0] == "This is an example text"
+
+
+    def test_remove_unnecessary_middle_spaces(self):
+        text = "This      is an example text"
+        result = _normalize_texts(texts=[text])
+                
+        assert isinstance(result, list)
+        assert isinstance(result[0], str)
+        assert len(result) == 1
+        assert result[0] == "This is an example text"
+
+
+    def test_remove_additional_linebreaks(self):
+        text = "This is \n\n\n\n an example text"
+        result = _normalize_texts(texts=[text])
+                        
+        assert isinstance(result, list)
+        assert isinstance(result[0], str)
+        assert len(result) == 1
+        assert result[0] == "This is\n\nan example text"
+
+
+class TestSanitizeMetadata:
+
+    def test_no_uuid(self):
+        metadata = {
+            "user": "test_user"
+        }
+
+        result = _sanitize_metadata(metadatas=[metadata])
+
+        assert isinstance(result, list)
+        assert isinstance(result[0], dict)
+        assert len(result) == 1
+        assert result[0] == metadata
+
+
+    def test_convert_uuid(self):
+        metadata = {
+            "user_id": uuid.uuid4()
+        }
+
+        result = _sanitize_metadata(metadatas=[metadata])
+        
+        assert isinstance(result, list)
+        assert isinstance(result[0], dict)
+        assert len(result) == 1
+        assert result[0]['user_id'] == str(metadata['user_id'])

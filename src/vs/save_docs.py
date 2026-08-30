@@ -1,7 +1,10 @@
+from enum import Enum
 from langchain_core.documents import Document
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import hashlib
+import re
+import uuid
 
 from core.logging import get_logger
 from vs.count import count_tokens
@@ -33,6 +36,20 @@ def _chunker(
     return split
 
 
+def _normalize_texts(texts: list[str]) -> list[str]:
+    """Removes unnecessary leading/trailing and internal whitespace from text."""
+    normalized = []
+    for text in texts:
+        lines = [line.strip() for line in text.splitlines()]
+        text = "\n".join(lines)
+        text = re.sub(r"[ \t]+", " ", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        text = text.strip()
+        normalized.append(text)
+    log.debug("Normalized texts, returning ...")
+    return normalized
+
+
 def _prep_docs_personal_data(
     texts: list[str],
     metadatas: list[dict],
@@ -40,15 +57,20 @@ def _prep_docs_personal_data(
     """Prepares the data for ingestion. Will create 'Documents' for each piece of text to be ingested.
     Document preparation only intended for preparing PERSONAL data."""
 
-    # TODO: Convert UUID input prior before loading.
-
     documents = []
     for text, metadata in zip(texts, metadatas):
         document_hash = hashlib.sha256(text.encode()).hexdigest()
         user_id = metadata.get("user_id")
         chunks = _chunker(text=text)
         for i, chunk in enumerate(chunks):
-            document_id = f"{user_id}:{document_hash}:{i}"
+
+            # Qdrant only supports integers or UUIDs as point ID.
+            # Use uuid.uuid(5) so we can generate a reproducable UUID, so
+            # duplicate entries can be accounted for.
+
+            document_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{user_id}:{document_hash}:{i}"))
+            metadata['document_hash'] = str(document_hash)
+            metadata['chunk_id'] = i
             documents.append(
                 Document(
                     id=document_id,
@@ -59,8 +81,24 @@ def _prep_docs_personal_data(
     return documents
 
 
+def _sanitize_metadata(metadatas: list[dict]) -> list[dict]:
+    """Converts any UUID values in metadata dicts to string."""
+    sanitized = []
+    for metadata in metadatas:
+        sanitized.append(
+            {k: str(v) if isinstance(v, uuid.UUID) else v for k, v, in metadata.items()}
+        )
+    return sanitized
+
+
+class DocType(str, Enum):
+    PERSONAL = 'personal'
+    AGENT = 'agent'
+
+
 def save_docs(
     vector_store: QdrantVectorStore,
+    doctype: DocType,
     texts: list[str],
     metadatas: list[dict] | None = None,
     required_metadata: list[str] | None = None
@@ -80,18 +118,31 @@ def save_docs(
                 if missing:
                     raise ValueError(f"Metadata at index {i} missing required keys: {missing} ...")
 
-    # TODO: This function can now create duplicates. Perhaps we should make a check for
-    # if an item is a duplicate for the user.
+    _texts = _normalize_texts(texts=texts)
+    _metadatas = _sanitize_metadata(metadatas=metadatas)
 
-    # TODO: Maybe we also want to create a hash for each document uploaded?
+    match doctype:
+        case DocType.PERSONAL:
+            log.debug("Saving documents of doctype 'PERSONAL' ...")
+            docs = _prep_docs_personal_data(
+                texts=_texts,
+                metadatas=_metadatas
+            )
+
+        # TODO: Implement case for when DocType is AGENT.
+
+        case _:
+            log.error(f"Unsupported doctype detected: {doctype} ...")
+            raise ValueError(f"Unsupported Vector Store type: {doctype}")
+
 
     match vector_store:
         case QdrantVectorStore():
             log.debug("Saving documents to Qdrant vector store ...")
-            pass
+            ids = vector_store.add_documents(documents=docs)
+            return ids
 
-            # TODO: Add processing for Qdrant
-            # TODO: Also ensure we cannot add duplicates
+        # TODO: Add support for other Vector Databases
 
         case _:
             log.error(f"Unsupported Vector Store detected: {type(vector_store).__name__} ...")
