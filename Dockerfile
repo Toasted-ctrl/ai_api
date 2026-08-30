@@ -22,4 +22,4 @@ COPY ./src /code/app
 ENV PYTHONPATH=/code/app
 
 # Command to run the app
-CMD ["uv", "run", "python", "-m", "app.main"]
+CMD ["uv", "run", "--frozen", "python", "-m", "app.main"]
