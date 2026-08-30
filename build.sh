@@ -168,8 +168,10 @@ main() {
         fi
 
         write_version "$new_version"
+        sed -i '/^\[project\]/,/^\[/ s/^version = ".*"/version = "'"${new_version}"'"/' "${SCRIPT_DIR}/pyproject.toml"
         ok "Image built: ${image_tagged}"
         current_version="$new_version"
+
     fi
 
     # ─── Push ─────────────────────────────
