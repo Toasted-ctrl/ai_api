@@ -18,27 +18,27 @@ class VectorStoreConfig:
     e_dimensions: int
     e_provider: str
     e_model: str
-    access_type: str
+    scope: str
     required_filters: list
 
 
 def get_vector_store_settings(
-    collection_name: str,
+    scope: str,
     session: Session
 ) -> VectorStoreConfig:
     """Fetches and returns the Vector Store collection and configuration details, 
     to enable building a Vector Store client."""
 
-    log.debug(f"Retrieving Vector Store settings for collection name '{collection_name}' ...")
+    log.debug(f"Retrieving Vector Store settings for scope '{scope}' ...")
     col: VectorStoreCollectionT = (
         session.query(VectorStoreCollectionT)
-        .filter(VectorStoreCollectionT.name == collection_name)
+        .filter(VectorStoreCollectionT.scope == scope)
         .one_or_none()
     )
 
     if not col:
-        log.info(f"No Vector Store found with collection name '{collection_name}'.")
-        raise ValueError(f"Vector Store with name '{collection_name}' does not exist ...")
+        log.info(f"No Vector Store found with scope '{scope}'.")
+        raise ValueError(f"Vector Store with name '{scope}' does not exist ...")
 
     vs: VectorStoreSettingsT = (
         session.query(VectorStoreSettingsT)
@@ -57,7 +57,7 @@ def get_vector_store_settings(
         e_provider=col.e_provider,
         e_model=col.e_model,
         vs_encrypted_api_key=vs.encrypted_api_key,
-        access_type=col.access_type,
+        scope=col.scope,
         vs_vendor=vs.vendor,
         vs_base_url=vs.base_url,
         vs_port=vs.port,

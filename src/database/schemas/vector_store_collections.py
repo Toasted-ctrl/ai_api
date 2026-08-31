@@ -7,7 +7,7 @@ from database.schemas.base import Base
 
 
 class VectorStoreCollectionT(Base):
-    __tablename__ = "vector_store_collection"
+    __tablename__ = "vector_store_collections"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID,
@@ -42,7 +42,7 @@ class VectorStoreCollectionT(Base):
         nullable=False
     )
 
-    access_type: Mapped[str] = mapped_column(
+    scope: Mapped[str] = mapped_column(
         String(30),
         nullable=False
     )

@@ -147,7 +147,7 @@ def create_preconfigured_vector_store_collections() -> None:
                 e_provider=col.get("embedding_provider"),
                 e_model=col.get("embedding_model"),
                 e_dimensions=col.get("embedding_dimensions"),
-                access_type=col.get("access_type"),
+                scope=col.get("scope"),
                 required_filters=col.get("required_filters")
             )
 
