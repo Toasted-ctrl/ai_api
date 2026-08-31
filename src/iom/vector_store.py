@@ -8,9 +8,12 @@ class Metadata(BaseModel):
 
 class PayloadSaveDocuments(BaseModel):
     texts: list[str]
-    metadata: list[Metadata]
-    collection_name: str
+    metadatas: list[Metadata]
 
 
 class ResponseSavedDocuments(BaseModel):
-    added_docs: list[uuid.UUID]
+    added_documents: list[uuid.UUID]
+
+
+class PayloadSearchDocuments(BaseModel):
+    query: str
