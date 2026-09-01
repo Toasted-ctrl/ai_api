@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class ChatCompletionParameters(BaseModel):
     temperature: float | None = None
     top_k: int | None = None
