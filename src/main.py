@@ -6,6 +6,7 @@ from redis import asyncio as aioredis
 import uvicorn
 
 from api.v1 import (
+    agent_stream,
     chat_completion,
     root,
     models,
@@ -73,6 +74,11 @@ app.include_router(
 
 app.include_router(
     router=chat_completion.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=agent_stream.router,
     prefix=v1_prefix
 )
 
