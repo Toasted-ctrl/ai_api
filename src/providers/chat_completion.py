@@ -1,5 +1,5 @@
-from enum import Enum
 from langchain_anthropic import ChatAnthropic
+from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from typing import AsyncGenerator
@@ -17,18 +17,16 @@ def _build_llm(
     langchain_con: LangChainCon,
     model: str,
     base_url: str,
-    stream: bool,
     temperature: float | None,
     top_k: int | None,
     top_p: float | None,
     encrypted_api_key: str | None,
-) -> ChatAnthropic | ChatOllama | ChatOpenAI:
+) -> BaseChatModel:
     """Construct the correct LangChain chat model for the given provider."""
 
     common_kwargs = {
         "model": model,
         "base_url": base_url,
-        "disable_streaming": not stream,
         "temperature": temperature,
         "top_p": top_p,
     }
@@ -71,8 +69,8 @@ async def complete_chat(
     model: str,
     prompt: str,
     base_url: str,
+    stream: bool,
     encrypted_api_key: str | None = None,
-    stream: bool = True,
     temperature: float | None = None,
     top_k: int | None = None,
     top_p: float | None = None,
@@ -83,7 +81,6 @@ async def complete_chat(
         langchain_con=langchain_con,
         model=model,
         base_url=base_url,
-        stream=stream,
         temperature=temperature,
         top_k=top_k,
         top_p=top_p,
@@ -92,5 +89,12 @@ async def complete_chat(
 
     log.debug("Chat Model constructed, returning/streaming Chat Completion content ...")
 
-    async for chunk in llm.astream(prompt):
-        yield chunk.content
+    if stream:
+        async for chunk in llm.astream(prompt):
+            if chunk.content:
+                yield chunk.content
+
+    else:
+        response = await llm.ainvoke(prompt)
+        if response.content:
+            yield response.content
