@@ -57,6 +57,7 @@ async def post_chat_completion(
             complete_chat(
                 langchain_con=prov.langchain_con,
                 encrypted_api_key=prov.encrypted_api_key,
+                user_id=user.id,
                 prompt=payload.prompt,
                 base_url=prov.base_url,
                 model=payload.model,

@@ -93,7 +93,7 @@ async def stream_agent_response(
                 )
 
                 async for event in stream_agent(
-                    agent=agent, prompt=payload.prompt, thread_id=thread_id
+                    agent=agent, prompt=payload.prompt, thread_id=thread_id, user_id=user.id
                 ):
                     yield f"data: {json.dumps(_serialize_event(event=event))}\n\n"
 

@@ -12,6 +12,9 @@ from providers.dataclasses import LangChainCon
 log = get_logger()
 
 
+# TODO: Create tests for all functions here.
+
+
 def build_agent_model(
     langchain_con: LangChainCon,
     model: str,
@@ -73,7 +76,8 @@ def _extract_content(token: Any) -> str:
 async def stream_agent(
     agent: CompiledStateGraph,
     prompt: str,
-    thread_id: uuid.UUID
+    thread_id: uuid.UUID,
+    user_id: uuid.UUID
 ) -> AsyncGenerator[AgentEvent, None]:
 
     config = {
@@ -82,9 +86,12 @@ async def stream_agent(
         },
         "callbacks": [langfuse_handler],
         "metadata": {
-            "langfuse_session_id": str(thread_id)
+            "thread_id": str(thread_id),
+            "user_id": str(user_id)
         }
     }
+
+    log.debug(f"Stream agent config created for User '{user_id}'")
     
     yield {"type": "thread", "data": {"thread_id": str(thread_id)}}
     async for event in agent.astream(

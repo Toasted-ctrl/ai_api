@@ -3,7 +3,9 @@ from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from typing import AsyncGenerator
+import uuid
 
+from core.langfuse import langfuse_handler
 from core.logging import get_logger
 from providers.dataclasses import LangChainCon
 from security.encryption import decrypt
@@ -67,6 +69,7 @@ def _build_llm(
 async def complete_chat(
     langchain_con: LangChainCon,
     model: str,
+    user_id: uuid.UUID,
     prompt: str,
     base_url: str,
     stream: bool,
@@ -87,14 +90,21 @@ async def complete_chat(
         encrypted_api_key=encrypted_api_key,
     )
 
+    config = {
+        "callbacks": [langfuse_handler],
+        "metadata": {
+            "user_id": str(user_id)
+        }
+    }
+
     log.debug("Chat Model constructed, returning/streaming Chat Completion content ...")
 
     if stream:
-        async for chunk in llm.astream(prompt):
+        async for chunk in llm.astream(prompt, config=config):
             if chunk.content:
                 yield chunk.content
 
     else:
-        response = await llm.ainvoke(prompt)
+        response = await llm.ainvoke(prompt, config=config)
         if response.content:
             yield response.content
