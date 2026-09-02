@@ -1,4 +1,5 @@
 from langchain.agents import create_agent
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph.state import CompiledStateGraph
 from typing import AsyncGenerator, Any, TypedDict, Literal
 import uuid
@@ -19,7 +20,8 @@ def build_agent_model(
     top_p: float | None,
     encrypted_api_key: str | None,
     tools: list,
-    system_prompt: str | None = None
+    system_prompt: str | None = None,
+    checkpointer: AsyncPostgresSaver | None = None,
 ) -> CompiledStateGraph:
 
     log.debug("Creating agent ...")
@@ -39,7 +41,8 @@ def build_agent_model(
     agent = create_agent(
         model=model,
         tools=tools,
-        system_prompt=system_prompt
+        system_prompt=system_prompt,
+        checkpointer=checkpointer
     )
 
     log.debug("Agent created, returning ...")
@@ -71,9 +74,17 @@ async def stream_agent(
     prompt: str,
     thread_id: uuid.UUID
 ) -> AsyncGenerator[AgentEvent, None]:
+
+    config = {
+        "configurable": {
+            "thread_id": str(thread_id)
+        }
+    }
+    
     yield {"type": "thread", "data": {"thread_id": str(thread_id)}}
     async for event in agent.astream(
         {"messages": [{"role": "user", "content": prompt}]},
+        config=config,
         stream_mode=["messages", "updates"],
         version="v2",
     ):
@@ -81,7 +92,7 @@ async def stream_agent(
             token, metadata = event["data"]
             content = _extract_content(token)
             if content:
-                yield {"type": "message", "data": {"content": content}}
+                yield {"type": "message", "data": {"content": content, "metadata": metadata}}
 
         elif event["type"] == "updates":
             yield {"type": "update", "data": event["data"]}

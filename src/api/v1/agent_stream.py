@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 from httpx import ConnectTimeout, ConnectError
 from langchain_core.messages import BaseMessage
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from sqlalchemy.orm import Session
 import json
 import uuid
@@ -42,7 +43,7 @@ async def stream_agent_response(
 ) -> StreamingResponse:
 
     try:
-        # TODO: Implement custom agent calling by utilizing thread_id.
+        # TODO: Implement custom agent calling by utilizing agent_id.
         if payload.agent_id:
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -73,28 +74,33 @@ async def stream_agent_response(
         else:
             thread_id = uuid.UUID(payload.thread_id)
 
-        agent = build_agent_model(
-            langchain_con=prov.langchain_con,
-            model=payload.model,
-            base_url=prov.base_url,
-            temperature=payload.parameters.temperature,
-            top_k=payload.parameters.top_k,
-            top_p=payload.parameters.top_p,
-            encrypted_api_key=prov.encrypted_api_key,
-            tools=[],
-            system_prompt=None
-        )
-
         async def event_stream(thread_id: uuid.UUID):
-            async for event in stream_agent(agent=agent, prompt=payload.prompt, thread_id=thread_id):
-                yield f"data: {json.dumps(_serialize_event(event=event))}\n\n"
+            async with AsyncPostgresSaver.from_conn_string(
+                conn_string=config.PG_CHECKPOINTER_URL
+            ) as checkpointer:
+                
+                agent = build_agent_model(
+                    langchain_con=prov.langchain_con,
+                    model=payload.model,
+                    base_url=prov.base_url,
+                    temperature=payload.parameters.temperature,
+                    top_k=payload.parameters.top_k,
+                    top_p=payload.parameters.top_p,
+                    encrypted_api_key=prov.encrypted_api_key,
+                    tools=[],
+                    system_prompt=None,
+                    checkpointer=checkpointer,
+                )
+
+                async for event in stream_agent(
+                    agent=agent, prompt=payload.prompt, thread_id=thread_id
+                ):
+                    yield f"data: {json.dumps(_serialize_event(event=event))}\n\n"
 
         return StreamingResponse(
             event_stream(thread_id=thread_id),
             media_type="text/event-stream",
-            headers={
-                "X-Thread-ID": str(thread_id)
-            }
+            headers={"X-Thread-ID": str(thread_id)}
         )
 
     except (ConnectTimeout, ConnectError):
