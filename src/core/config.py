@@ -132,12 +132,24 @@ class Config(BaseSettings):
     @cached_property
     def PG_DB_URL(self) -> str:
 
-        """Returns the database url"""
+        """Returns the database URL."""
 
         return (
             f"{self.PG_DIALECT}+{self.PG_DRIVER}://"
             f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
             f"{self.PG_HOSTNAME}:{self.PG_PORT}/{self.PG_DATABASE}"
+        )
+
+
+    @cached_property
+    def PG_CHECKPOINTER_URL(self) -> str:
+
+        """Returns checkpointer database URL."""
+
+        return (
+            f"{self.PG_DIALECT}://"
+            f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
+            f"{self.PG_HOSTNAME}/{self.PG_DATABASE}"
         )
     
 
