@@ -63,6 +63,10 @@ class Config(BaseSettings):
 
     LOG_LEVEL: str = ""
 
+    LANGFUSE_SECRET_KEY: str = ""
+    LANGFUSE_PUBLIC_KEY: str = ""
+    LANGFUSE_BASE_URL: str = ""
+
     COOKIE_SECURE: bool = True
     COOKIE_MAX_AGE: int
 

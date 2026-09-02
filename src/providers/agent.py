@@ -4,6 +4,7 @@ from langgraph.graph.state import CompiledStateGraph
 from typing import AsyncGenerator, Any, TypedDict, Literal
 import uuid
 
+from core.langfuse import langfuse_handler
 from core.logging import get_logger
 from providers.chat_completion import _build_llm
 from providers.dataclasses import LangChainCon
@@ -78,6 +79,10 @@ async def stream_agent(
     config = {
         "configurable": {
             "thread_id": str(thread_id)
+        },
+        "callbacks": [langfuse_handler],
+        "metadata": {
+            "langfuse_session_id": str(thread_id)
         }
     }
     
