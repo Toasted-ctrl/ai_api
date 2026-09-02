@@ -14,7 +14,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-08-31.
+> This document was last reviewed on 2026-09-02.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -63,6 +63,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - GET /translation/translategemma
 
 ### POST
+- POST /agent/stream
 - POST /chat_completion
 - POST /translation/translategemma
 - POST /vector_store/{scope}/add
@@ -85,7 +86,6 @@ servers first, follow by external ones. Return internal as this one is free of c
 - Enable possibility to share agents with other users.
 - Build 'testing' endpoints, which is intended to build tests for agents you created.
 - Add MCP calling support.
-- Add support for Semantic Search on vector db (Qdrant).
 
 ## Contributing
 PRs welcome!
