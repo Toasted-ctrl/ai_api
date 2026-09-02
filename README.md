@@ -3,6 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.14-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?logo=langchain&logoColor=white)
+![Langfuse](https://img.shields.io/badge/Langfuse-5B2EFF?style=flat-square)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
@@ -29,6 +30,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ## Tech Stack
 - FastAPI
 - LangChain
+- LangFuse
 - Docker
 - Redis
 - PostgreSQL
