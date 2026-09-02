@@ -19,6 +19,7 @@ dependencies = [
     "langchain-openai>=1.5.1",
     "langchain-qdrant>=1.1.0",
     "langchain-text-splitters>=1.1.2",
+    "langgraph-checkpoint-postgres[binary]>=3.1.2",
     "ollama>=0.6.2",
     "openai>=2.53.0",
     "psycopg2-binary>=2.9.12",
