@@ -1,4 +1,5 @@
 from pydantic import BaseModel, model_validator
+import uuid
 
 
 class ModelParamaters(BaseModel):
@@ -9,8 +10,8 @@ class ModelParamaters(BaseModel):
 
 class PayloadAgentStream(BaseModel):
     prompt: str
-    agent_id: str | None = None
-    thread_id: str | None = None
+    agent_id: uuid.UUID | None = None
+    thread_id: uuid.UUID | None = None
     provider: str
     model: str | None = None
     tools: list[str] | None = None
