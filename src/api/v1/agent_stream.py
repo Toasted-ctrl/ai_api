@@ -10,6 +10,7 @@ import uuid
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.config import config
 from core.logging import get_logger
+from database.message_threads import store_thread_id, verify_thread_id
 from database.providers import get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
 from iom.agent_stream import PayloadAgentStream
@@ -56,6 +57,25 @@ async def stream_agent_response(
                 detail="Model not supported by Provider"
             )
 
+        if payload.thread_id:
+            thread_id = verify_thread_id(
+                session=session,
+                thread_id=payload.thread_id,
+                user_id=user.id
+            )
+            if not thread_id:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Invalid thread_id"
+                )
+
+        else:
+            thread_id = store_thread_id(
+                session=session,
+                thread_id=uuid.uuid4(),
+                user_id=user.id
+            )
+
         p_reg = get_all_provider_configurations(
             session=session,
             user_id=user.id
@@ -68,11 +88,6 @@ async def stream_agent_response(
             )
 
         prov: ProviderConfiguration = getattr(p_reg, payload.provider)
-
-        if not payload.thread_id:
-            thread_id = uuid.uuid4()
-        else:
-            thread_id = uuid.UUID(payload.thread_id)
 
         async def event_stream(thread_id: uuid.UUID):
             async with AsyncPostgresSaver.from_conn_string(
