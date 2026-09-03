@@ -2,9 +2,9 @@ from sqlalchemy import create_engine
 
 from core.config import config
 from core.logging import get_logger
-
 from database.schemas.base import Base
 from database.schemas.clients import ClientsT
+from database.schemas.message_threads import MessageThreadsT
 from database.schemas.persons_users import PersonsT, UsersT
 from database.schemas.providers import ProvidersT
 from database.schemas.user_keys import UserKeysT
