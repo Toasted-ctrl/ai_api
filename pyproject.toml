@@ -1,6 +1,6 @@
 [project]
 name = "ai-api"
-version = "0.1.10"
+version = "0.1.12"
 description = "AI API that functions as a general gateway for multiple providers (e.g., Ollama, Anthropic)."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -24,13 +24,13 @@ dependencies = [
     "ollama>=0.6.2",
     "openai>=2.53.0",
     "psycopg2-binary>=2.9.12",
+    "psycopg[binary]>=3.3.5",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
     "requests>=2.34.2",
     "sqlalchemy>=2.0.51",
     "tiktoken>=0.13.0",
     "uvicorn>=0.51.0",
-    "wakeonlan>=4.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
