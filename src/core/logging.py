@@ -1,12 +1,26 @@
 import logging
 import sys
 
+from .config import config
+
+
+def _get_log_level_from_config() -> int:
+    level_name = getattr(config, "LOG_LEVEL", "DEBUG").upper()
+    level = logging.getLevelNamesMapping().get(level_name)
+    if level is None:
+        return logging.DEBUG
+    return level
+
+
 def get_logger(
     name: str = "DEFAULT_NAME",
-    level: int = logging.DEBUG,
+    level: int | None = None,
     fmt: str = "%(levelname)-9s %(asctime)s | Func: %(funcName)s | Mod: %(module)s | %(message)s",
     datefmt: str = "%Y-%m-%d %H:%M:%S"
 ) -> logging.Logger:
+
+    if level is None:
+        level = _get_log_level_from_config()
     
     logger = logging.getLogger(name=name)
     logger.setLevel(level=level)

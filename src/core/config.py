@@ -3,11 +3,10 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import ClassVar, Set
 import json
+import logging
 import os
 
-from core.logging import get_logger
-
-log = get_logger()
+log = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 _env_file = BASE_DIR / ".env"
