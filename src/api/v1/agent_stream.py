@@ -10,11 +10,11 @@ import uuid
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.config import config
 from core.logging import get_logger
-from database.message_threads import store_thread_id, verify_thread_id
+from database.message_threads import verify_or_get_thread_id
 from database.providers import get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
-from iom.agent_stream import PayloadAgentStream
-from providers.agent import build_agent_model, stream_agent
+from iom.agent import PayloadAgent, ResponseAgentRun
+from providers.agent import build_agent_model, stream_agent, run_agent
 
 router = APIRouter()
 
@@ -33,12 +33,98 @@ def _serialize_event(event):
 
 
 @router.post(
-    "/agent/stream",
-    tags=["Agent"],
-    response_class=StreamingResponse,
+    "/agent",
+    tags=["Agent Invocation"],
+    response_model=ResponseAgentRun,
+    description=(
+        "Invokes a non-streaming response from an agent (by agent_id), or a "
+        "response from a model if an agent_id is not provided."
+    )
 )
-async def stream_agent_response(
-    payload: PayloadAgentStream,
+async def agent_response(
+    payload: PayloadAgent,
+    user: VerifiedUser = Depends(depends_verify_user),
+    session: Session = Depends(get_db_session)
+) -> ResponseAgentRun:
+
+    try:
+        # TODO: Implement custom agent calling by utilizing agent_id.
+        if payload.agent_id:
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="Calling agents by agent_id is not implemented yet"
+            )
+        
+        if payload.provider_settings.model not in config.CHAT_COMPLETION_MODELS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Model not supported by Provider"
+            )
+
+        p_reg = get_all_provider_configurations(
+            session=session,
+            user_id=user.id
+        )
+        
+        if payload.provider_settings.name not in p_reg.names or payload.provider_settings.name in p_reg.not_configured:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Provider '{payload.provider}' is not supported or not configured"
+            )
+
+        thread_id = verify_or_get_thread_id(
+            session=session,
+            user_id=user.id,
+            thread_id=payload.thread_id
+        )
+        
+        prov: ProviderConfiguration = getattr(p_reg, payload.provider_settings.name)
+
+        async with AsyncPostgresSaver.from_conn_string(conn_string=config.PG_CHECKPOINTER_URL) as checkpointer:
+            agent = build_agent_model(
+                langchain_con=prov.langchain_con,
+                model=payload.provider_settings.model,
+                base_url=prov.base_url,
+                temperature=payload.parameters.temperature,
+                top_k=payload.parameters.top_k,
+                top_p=payload.parameters.top_p,
+                encrypted_api_key=prov.encrypted_api_key,
+                tools=[],
+                system_prompt=None,
+                checkpointer=checkpointer,
+            )
+
+            result = await run_agent(
+                agent=agent,
+                prompt=payload.prompt,
+                thread_id=thread_id,
+                user_id=user.id
+            )
+
+        return {
+            "thread_id": thread_id,
+            "messages": [_serialize_event(m) for m in result['messages']]
+        }
+
+
+    except (ConnectTimeout, ConnectError):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to connect to Provider"
+        )
+
+
+@router.post(
+    "/agent/stream",
+    tags=["Agent Invocation"],
+    response_class=StreamingResponse,
+    description=(
+        "Invokes a streaming response from an agent (by agent_id), or a "
+        "streaming response from a model if an agent_id is not provided."
+    )
+)
+async def agent_response_stream(
+    payload: PayloadAgent,
     user: VerifiedUser = Depends(depends_verify_user),
     session: Session = Depends(get_db_session)
 ) -> StreamingResponse:
@@ -51,43 +137,30 @@ async def stream_agent_response(
                 detail="Calling agents by agent_id is not implemented yet"
             )
 
-        if payload.model not in config.CHAT_COMPLETION_MODELS:
+        if payload.provider_settings.model not in config.CHAT_COMPLETION_MODELS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
 
-        if payload.thread_id:
-            thread_id = verify_thread_id(
-                session=session,
-                thread_id=payload.thread_id,
-                user_id=user.id
-            )
-            if not thread_id:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Invalid thread_id"
-                )
-
-        else:
-            thread_id = store_thread_id(
-                session=session,
-                thread_id=uuid.uuid4(),
-                user_id=user.id
-            )
+        thread_id = verify_or_get_thread_id(
+            session=session,
+            user_id=user.id,
+            thread_id=payload.thread_id
+        )
 
         p_reg = get_all_provider_configurations(
             session=session,
             user_id=user.id
         )
 
-        if payload.provider not in p_reg.names or payload.provider in p_reg.not_configured:
+        if payload.provider_settings.name not in p_reg.names or payload.provider_settings.name in p_reg.not_configured:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Provider '{payload.provider}' is not supported or not configured"
+                detail=f"Provider '{payload.provider.name}' is not supported or not configured"
             )
 
-        prov: ProviderConfiguration = getattr(p_reg, payload.provider)
+        prov: ProviderConfiguration = getattr(p_reg, payload.provider_settings.name)
 
         async def event_stream(thread_id: uuid.UUID):
             async with AsyncPostgresSaver.from_conn_string(
@@ -96,7 +169,7 @@ async def stream_agent_response(
                 
                 agent = build_agent_model(
                     langchain_con=prov.langchain_con,
-                    model=payload.model,
+                    model=payload.provider_settings.model,
                     base_url=prov.base_url,
                     temperature=payload.parameters.temperature,
                     top_k=payload.parameters.top_k,

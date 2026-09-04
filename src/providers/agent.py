@@ -91,7 +91,7 @@ async def stream_agent(
         }
     }
 
-    log.debug(f"Stream agent config created for User '{user_id}'")
+    log.debug(f"Stream agent config created for User '{user_id}'.")
     
     yield {"type": "thread", "data": {"thread_id": str(thread_id)}}
     async for event in agent.astream(
@@ -108,3 +108,30 @@ async def stream_agent(
 
         elif event["type"] == "updates":
             yield {"type": "update", "data": event["data"]}
+
+
+async def run_agent(
+    agent: CompiledStateGraph,
+    prompt: str,
+    thread_id: uuid.UUID,
+    user_id: uuid.UUID
+) -> dict:
+    config = {
+        "configurable": {
+            "thread_id": str(thread_id)
+        },
+        "callbacks": [langfuse_handler],
+        "metadata": {
+            "thread_id": str(thread_id),
+            "user_id": str(user_id)
+        }
+    }
+
+    log.debug(f"Run agent config created for User '{user_id}'.")
+
+    result = await agent.ainvoke(
+        {"messages": [{"role": "user", "content": prompt}]},
+        config=config
+    )
+
+    return result
