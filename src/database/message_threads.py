@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import uuid
 
@@ -29,20 +30,37 @@ def store_thread_id(
     return ntid.id
 
 
-def verify_thread_id(
+def verify_or_get_thread_id(
     session: Session,
-    thread_id: uuid.UUID,
-    user_id: uuid.UUID
+    user_id: uuid.UUID,
+    thread_id: uuid.UUID | None = None
 ) -> uuid.UUID:
-    """Searched for and returns the thread_id if it belongs to the user_id."""
+    """Searcheds for and returns the thread_id if it belongs to the user_id.
+    Will raise a HTTPException if the thread_id does not belong to the user_id.
+    Creates and stores a new threa_id if the passed threa_id is None."""
 
-    id = (
-        session.query(MessageThreadsT.id)
-        .filter(
-            MessageThreadsT.user_id == user_id,
-            MessageThreadsT.id == thread_id
+    if thread_id:
+        id = (
+            session.query(MessageThreadsT.id)
+            .filter(
+                MessageThreadsT.user_id == user_id,
+                MessageThreadsT.id == thread_id
+            )
+            .scalar()
         )
-        .scalar()
-    )
 
-    return id
+        if id:
+            return id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invalid thread_id"
+            )
+
+    else:
+        ntid = uuid.uuid4()
+        return store_thread_id(
+            session=session,
+            thread_id=ntid,
+            user_id=user_id
+        )
