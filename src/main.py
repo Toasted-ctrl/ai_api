@@ -19,7 +19,7 @@ from api.v1 import (
 from api.v1.login import google_login
 from core.config import config
 from core.logging import get_logger
-from exception_handlers import register_exception_handlers
+from exch import register_exception_handlers
 
 log = get_logger()
 
