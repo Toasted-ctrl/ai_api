@@ -59,17 +59,17 @@ async def agent_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
-
-        thread_id: uuid.UUID = verify_or_get_thread_id(
-            session=session,
-            user_id=user.id,
-            thread_id=payload.thread_id
-        )
         
         prov: ProviderConfiguration = get_provider_config(
             session=session,
             provider_name=payload.provider_settings.name,
             user_id=user.id
+        )
+
+        thread_id: uuid.UUID = verify_or_get_thread_id(
+            session=session,
+            user_id=user.id,
+            thread_id=payload.thread_id
         )
 
         async with AsyncPostgresSaver.from_conn_string(
@@ -136,16 +136,16 @@ async def agent_response_stream(
                 detail="Model not supported by Provider"
             )
 
-        thread_id: uuid.UUID = verify_or_get_thread_id(
-            session=session,
-            user_id=user.id,
-            thread_id=payload.thread_id
-        )
-
         prov: ProviderConfiguration = get_provider_config(
             session=session,
             provider_name=payload.provider_settings.name,
             user_id=user.id
+        )
+
+        thread_id: uuid.UUID = verify_or_get_thread_id(
+            session=session,
+            user_id=user.id,
+            thread_id=payload.thread_id
         )
 
         async def event_stream(thread_id: uuid.UUID):
