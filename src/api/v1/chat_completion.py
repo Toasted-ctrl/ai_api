@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.config import config
 from core.logging import get_logger
-from database.providers import get_all_provider_configurations, ProviderConfiguration
+from database.providers import ProviderConfiguration, get_provider_config
 from database.session import get_db_session
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from iom.chat_completion import PayloadChatCompletion
@@ -35,23 +35,11 @@ async def post_chat_completion(
                 detail="Model not supported by Provider"
             )
 
-        # TODO: Do we perhaps want to confirm that the model is supported by the provider?
-
-        p_reg = get_all_provider_configurations(
+        prov: ProviderConfiguration = get_provider_config(
             session=session,
+            provider_name=payload.provider,
             user_id=user.id
         )
-
-        if payload.provider not in p_reg.names or payload.provider in p_reg.not_configured:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Provider '{payload.provider}' is not supported or not configured"
-            )
-
-        prov: ProviderConfiguration = getattr(p_reg, payload.provider)
-
-        # TODO: Not sure what happens if we run into an unexpected/unsupported Provider/langchain_con...
-        # TODO: Check how/what error is raised.
 
         return StreamingResponse(
             complete_chat(
