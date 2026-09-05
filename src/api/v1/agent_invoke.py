@@ -11,7 +11,7 @@ from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.config import config
 from core.logging import get_logger
 from database.message_threads import verify_or_get_thread_id
-from database.providers import get_all_provider_configurations, ProviderConfiguration
+from database.providers import ProviderConfiguration, get_provider_config
 from database.session import get_db_session
 from iom.agent import PayloadAgent, ResponseAgentRun
 from providers.agent import build_agent_model, stream_agent, run_agent
@@ -46,7 +46,6 @@ async def agent_response(
     user: VerifiedUser = Depends(depends_verify_user),
     session: Session = Depends(get_db_session)
 ) -> ResponseAgentRun:
-
     try:
         # TODO: Implement custom agent calling by utilizing agent_id.
         if payload.agent_id:
@@ -61,26 +60,21 @@ async def agent_response(
                 detail="Model not supported by Provider"
             )
 
-        p_reg = get_all_provider_configurations(
-            session=session,
-            user_id=user.id
-        )
-        
-        if payload.provider_settings.name not in p_reg.names or payload.provider_settings.name in p_reg.not_configured:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Provider '{payload.provider}' is not supported or not configured"
-            )
-
-        thread_id = verify_or_get_thread_id(
+        thread_id: uuid.UUID = verify_or_get_thread_id(
             session=session,
             user_id=user.id,
             thread_id=payload.thread_id
         )
         
-        prov: ProviderConfiguration = getattr(p_reg, payload.provider_settings.name)
+        prov: ProviderConfiguration = get_provider_config(
+            session=session,
+            provider_name=payload.provider_settings.name,
+            user_id=user.id
+        )
 
-        async with AsyncPostgresSaver.from_conn_string(conn_string=config.PG_CHECKPOINTER_URL) as checkpointer:
+        async with AsyncPostgresSaver.from_conn_string(
+            conn_string=config.PG_CHECKPOINTER_URL
+        ) as checkpointer:
             agent = build_agent_model(
                 langchain_con=prov.langchain_con,
                 model=payload.provider_settings.model,
@@ -128,7 +122,6 @@ async def agent_response_stream(
     user: VerifiedUser = Depends(depends_verify_user),
     session: Session = Depends(get_db_session)
 ) -> StreamingResponse:
-
     try:
         # TODO: Implement custom agent calling by utilizing agent_id.
         if payload.agent_id:
@@ -143,24 +136,17 @@ async def agent_response_stream(
                 detail="Model not supported by Provider"
             )
 
-        thread_id = verify_or_get_thread_id(
+        thread_id: uuid.UUID = verify_or_get_thread_id(
             session=session,
             user_id=user.id,
             thread_id=payload.thread_id
         )
 
-        p_reg = get_all_provider_configurations(
+        prov: ProviderConfiguration = get_provider_config(
             session=session,
+            provider_name=payload.provider_settings.name,
             user_id=user.id
         )
-
-        if payload.provider_settings.name not in p_reg.names or payload.provider_settings.name in p_reg.not_configured:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Provider '{payload.provider.name}' is not supported or not configured"
-            )
-
-        prov: ProviderConfiguration = getattr(p_reg, payload.provider_settings.name)
 
         async def event_stream(thread_id: uuid.UUID):
             async with AsyncPostgresSaver.from_conn_string(
@@ -181,7 +167,10 @@ async def agent_response_stream(
                 )
 
                 async for event in stream_agent(
-                    agent=agent, prompt=payload.prompt, thread_id=thread_id, user_id=user.id
+                    agent=agent,
+                    prompt=payload.prompt,
+                    thread_id=thread_id,
+                    user_id=user.id
                 ):
                     yield f"data: {json.dumps(_serialize_event(event=event))}\n\n"
 
