@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from warnings import deprecated
 import uuid
@@ -282,3 +283,25 @@ def get_providers_by_id(
         )
         for p in providers
     ]
+
+
+def get_provider_config(
+    session: Session,
+    provider_name: str,
+    user_id: uuid.UUID
+) -> ProviderConfiguration:
+    """"Retrieves the Provider configuration for the indicated Provider if configured.
+    If the providers is not configured, or is not supported, will raise a HTTPException."""
+
+    p_reg = get_all_provider_configurations(
+        session=session,
+        user_id=user_id
+    )
+
+    if provider_name not in p_reg.names or provider_name in p_reg.not_configured:
+        raise HTTPException(
+            status=status.HTTP_400_BAD_REQUEST,
+            detail=f"Provider '{provider_name}' is not supported or not configured"
+        )
+
+    return getattr(p_reg, provider_name)
