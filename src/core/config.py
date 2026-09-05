@@ -3,10 +3,8 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import ClassVar, Set
 import json
-import logging
 import os
 
-log = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 _env_file = BASE_DIR / ".env"
@@ -88,13 +86,15 @@ class Config(BaseSettings):
 
 
     def model_post_init(self, context) -> None:
+
+        # Continue with settings check.
         all_fields = set(self.__class__.__annotations__.keys())
 
         unpopulated = all_fields - self._SKIP_EMPTY_CHECK
         unset = all_fields - self.model_fields_set - self._SKIP_EMPTY_CHECK
 
-        if self.ENABLE_GOOGLE_LOGIN == False:
-            log.debug(f"Google Login disabled. Skipping environment variables: {' ,'.join(sorted(self._SKIP_GOOGLE_ENV_VARS))} ...")
+        if not self.ENABLE_GOOGLE_LOGIN:
+            print(f"Google Login disabled. Skipping environment variables: {' ,'.join(sorted(self._SKIP_GOOGLE_ENV_VARS))} ...")
             unset - self._SKIP_GOOGLE_ENV_VARS
             unpopulated - self._SKIP_GOOGLE_ENV_VARS
         
@@ -111,13 +111,13 @@ class Config(BaseSettings):
                 msgs.append(f"Missing: {', '.join(sorted(unset))}")
             if empty:
                 msgs.append(f"Empty: {', '.join(sorted(empty))}")
-            log.warning(
+            print(
                 "The following fields have problems in the .env:\n"
                 + "\n".join(msgs)
                 + "\nShutting down"
             )
             raise SystemExit(1)
-        log.info("Environment variables loaded")
+        print("Environment variables loaded")
 
 
     @cached_property
