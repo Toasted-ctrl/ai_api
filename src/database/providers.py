@@ -299,8 +299,9 @@ def get_provider_config(
     )
 
     if provider_name not in p_reg.names or provider_name in p_reg.not_configured:
+        log.debug(f"Unsupported/unconfigured provider: '{provider_name}'.")
         raise HTTPException(
-            status=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Provider '{provider_name}' is not supported or not configured"
         )
 
