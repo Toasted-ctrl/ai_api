@@ -55,6 +55,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ### GET
 - GET /auth/google/login
 - GET /auth/google/callback
+- GET /auth/me
 - GET /models
 - GET /models/chat_completion
 - GET /models/translation
