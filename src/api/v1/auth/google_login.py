@@ -32,7 +32,7 @@ log = get_logger()
 
 router = APIRouter()
 
-tags = ["Login"]
+tags = ["Auth"]
 
 
 @router.get(

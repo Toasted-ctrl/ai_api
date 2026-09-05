@@ -16,7 +16,7 @@ from api.v1 import (
     vector_embedding,
     vector_store
 )
-from api.v1.login import google_login
+from api.v1.auth import google_login, me
 from core.config import config
 from core.logging import get_logger
 from exch import register_exception_handlers
@@ -52,6 +52,11 @@ if config.ENABLE_GOOGLE_LOGIN:
 
 app.include_router(
     router=root.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=me.router,
     prefix=v1_prefix
 )
 
