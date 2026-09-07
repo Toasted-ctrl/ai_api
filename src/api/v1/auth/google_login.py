@@ -16,6 +16,7 @@ from core.config import config
 from core.logging import get_logger
 from database.client import ApplicationClient, get_client_from_client_id
 from database.session import get_db_session
+from database.user_sessions import post_session
 from security.encryption import decrypt
 from security.google import (
     verify_google_token,
@@ -24,7 +25,6 @@ from security.google import (
     ExchangedGoogleCode
 )
 from security.hmac import hash_hmac, is_valid_hmac
-from security.jwt import create_jwt
 from setup.application_user import VerifiedApplicationUser, get_or_create_application_user
 
 
@@ -143,19 +143,17 @@ async def google_callback(
         session=session
     )
 
-    user_jwt: str = create_jwt(
-        client_id=s_user.client_id,
-        user_id=s_user.user_id
-    )
-
     response = RedirectResponse(
         url=decrypt(client.encrypted_redirect_uri),
         status_code=status.HTTP_302_FOUND
     )
 
     response.set_cookie(
-        key="session_token",
-        value=user_jwt,
+        key="session_id",
+        value=post_session(
+            session=session,
+            user_id=s_user.user_id
+        ),
         httponly=True,
         secure=config.COOKIE_SECURE,
         samesite="lax",
@@ -163,6 +161,6 @@ async def google_callback(
         path="/"
     )
 
-    log.debug(f"Set cookie for User ID: '{s_user.id}' for Client: '{s_user.client_id}'")
+    log.debug(f"Set cookie for User ID: '{s_user.user_id}' for Client: '{s_user.client_id}'")
 
     return response
