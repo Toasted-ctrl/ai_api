@@ -1,7 +1,7 @@
 # Security
 
 > [!NOTE]
-> This document was last reviewed on 2026-08-14.
+> This document was last reviewed on 2026-09-07.
 
 ## Authentication
 This API supports authentication via:
@@ -35,6 +35,9 @@ The following fields are encrypted at rest (the encryption key is only known to 
 ## Data Sharing
 All information is processed locally and is **not** shared with third parties, with one exception: message completion requests and model queries are sent to the relevant external AI provider (e.g., Anthropic) using a User's own provided API keys. Requests to external AI Providers using a personal API key may be logged by the Provider.
 The User's message history is encrypted at rest.
+
+## Session Management
+Sessions are handled server side. Authentication through frontend applications will store a cookie with session_id after logging in.
 
 ## Network
 It is recommended to run this behind a VPN or on a local network (e.g., Tailscale).
