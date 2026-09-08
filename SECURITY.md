@@ -1,7 +1,7 @@
 # Security
 
 > [!NOTE]
-> This document was last reviewed on 2026-09-07.
+> This document was last reviewed on 2026-09-08.
 
 ## Authentication
 This API supports authentication via:
@@ -11,7 +11,7 @@ This API supports authentication via:
 JWT-based authentication is planned for a future release.
 
 ## Hashing
-Client API keys for connection to the API are stored as a hash.
+Client API keys for connection to the API are stored as a hash, as well as Session IDs.
 
 ## Encryption
 The following fields are encrypted at rest (the encryption key is only known to the API):

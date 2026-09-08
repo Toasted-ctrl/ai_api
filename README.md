@@ -15,7 +15,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-09-04.
+> This document was last reviewed on 2026-09-08.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -26,6 +26,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Local Ollama configurations may be added.
 - Users may add their own API keys for interaction with third party LLM Providers.
 - Integration with Qdrant.
+- Server side session management for frontend apps.
 
 ## Tech Stack
 - FastAPI
