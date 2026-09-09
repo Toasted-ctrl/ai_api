@@ -82,7 +82,8 @@ def verify_client_from_application_id(
     query = (
         session.query(ClientsT)
         .filter(
-            ClientsT.api_key_hash == get_hash_sha256(application_id)
+            ClientsT.api_key_hash == get_hash_sha256(application_id),
+            ClientsT.key_type == "Application"
         )
         .one_or_none()
     )
