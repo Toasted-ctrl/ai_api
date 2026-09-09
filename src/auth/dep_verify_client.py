@@ -72,3 +72,26 @@ def depends_get_application_client(
         )
 
     return client
+
+
+def verify_client_from_application_id(
+    application_id: str,
+    session: Session
+) -> VerifiedClient:
+    """Checks and verifies the application id (api key for frontiend clients) in the db."""
+    query = (
+        session.query(ClientsT)
+        .filter(
+            ClientsT.api_key_hash == get_hash_sha256(application_id)
+        )
+        .one_or_none()
+    )
+    if not query:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Client ID"
+        )
+    return VerifiedClient(
+        id=query.id,
+        key_type=query.key_type
+    )

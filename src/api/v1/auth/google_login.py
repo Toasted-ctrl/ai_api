@@ -11,7 +11,7 @@ import base64
 import json
 import uuid
 
-from auth.dep_verify_client import VerifiedClient, depends_get_application_client
+from auth.dep_verify_client import VerifiedClient, verify_client_from_application_id
 from core.config import config
 from core.logging import get_logger
 from database.client import ApplicationClient, get_client_from_client_id
@@ -36,7 +36,7 @@ tags = ["Auth"]
 
 
 @router.get(
-    "/auth/google/login",
+    "/auth/google/login/{application_id}",
     description=(
         "WARNING!!! This method will not work when called through the documentation. "
         "Please call this path through a browser directly.\n"
@@ -46,8 +46,17 @@ tags = ["Auth"]
     tags=tags
 )
 async def google_login(
-    client: VerifiedClient = Depends(depends_get_application_client)
+    application_id: str = None,
+    session: Session = Depends(get_db_session)
 ) -> RedirectResponse:
+
+    # TODO: For frontend apps the api key is actually the application ID.
+    # We'll want to change that and make it more clear in the schema.
+
+    client: VerifiedClient = verify_client_from_application_id(
+        application_id=application_id,
+        session=session
+    )
 
     state_data = json.dumps({"client_id": str(client.id)})
     state = base64.urlsafe_b64encode(state_data.encode()).decode()
