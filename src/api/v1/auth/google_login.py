@@ -36,7 +36,7 @@ tags = ["Auth"]
 
 
 @router.get(
-    "/auth/google/login/{application_id}",
+    "/auth/google/login",
     description=(
         "WARNING!!! This method will not work when called through the documentation. "
         "Please call this path through a browser directly.\n"
@@ -46,7 +46,7 @@ tags = ["Auth"]
     tags=tags
 )
 async def google_login(
-    application_id: str = None,
+    application_id: str,
     session: Session = Depends(get_db_session)
 ) -> RedirectResponse:
 
