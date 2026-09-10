@@ -165,7 +165,7 @@ async def google_callback(
         ),
         httponly=True,
         secure=config.COOKIE_SECURE,
-        samesite="lax",
+        samesite="none" if config.COOKIE_SECURE else "lax",
         max_age=config.COOKIE_MAX_AGE,
         path="/"
     )
