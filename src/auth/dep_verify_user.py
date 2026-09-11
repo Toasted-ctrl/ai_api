@@ -76,6 +76,8 @@ def depends_verify_user(
                     detail="User is not authorized"
                 )
 
+            log.debug(f"Verified User: {user.user_id}")
+
         case KeyType.USER:
             try:
                 user = session.query(UsersT).filter(UsersT.api_key_id == client.id).one_or_none()
@@ -86,14 +88,14 @@ def depends_verify_user(
                     detail="Unexpected error. Please contact your administrator."
                 )
 
+            log.debug(f"Verified User: {user.id}")
+            return VerifiedUser(
+                id=user.id
+            )
+
         case _:
             log.error(f"Invalid key_type: {client.key_type}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Unexpected error. Please contact your administrator."
             )
-
-    log.debug(f"Verified User: {user.id}")
-    return VerifiedUser(
-        id=user.id
-    )
