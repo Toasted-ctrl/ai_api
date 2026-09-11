@@ -77,6 +77,9 @@ def depends_verify_user(
                 )
 
             log.debug(f"Verified User: {user.user_id}")
+            return VerifiedUser(
+                id=user.user_id
+            )
 
         case KeyType.USER:
             try:
