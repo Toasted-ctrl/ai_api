@@ -64,6 +64,8 @@ class Config(BaseSettings):
     LANGFUSE_PUBLIC_KEY: str = ""
     LANGFUSE_BASE_URL: str = ""
 
+    ALLOWED_ORIGINS: str = ""
+
     COOKIE_SECURE: bool = True
     COOKIE_MAX_AGE: int
 
@@ -130,6 +132,12 @@ class Config(BaseSettings):
     def BLIND_INDEX_HMAC_KEY(self) -> bytes:
         """Returns blind index key."""
         return self.BLIND_INDEX_KEY.encode('utf-8')
+
+
+    @cached_property
+    def CORS_ALLOWED_ORIGINS(self) -> list[str]:
+        """Returns a list of allowed origins."""
+        return json.loads(self.ALLOWED_ORIGINS)
 
 
     @cached_property
