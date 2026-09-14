@@ -1,10 +1,10 @@
+import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi.middleware.cors import CORSMiddleware
 from redis import asyncio as aioredis
-import uvicorn
 
 from api.v1 import (
     agent_invoke,
@@ -15,12 +15,14 @@ from api.v1 import (
     translation,
     providers,
     vector_embedding,
-    vector_store
+    vector_store,
+    user_keys
 )
 from api.v1.auth import google_login, me
 from core.config import config
 from core.logging import get_logger
 from exch import register_exception_handlers
+
 
 log = get_logger()
 
@@ -88,6 +90,11 @@ app.include_router(
 
 app.include_router(
     router=agent_invoke.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=user_keys.router,
     prefix=v1_prefix
 )
 

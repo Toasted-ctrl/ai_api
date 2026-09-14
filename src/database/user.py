@@ -1,11 +1,39 @@
+import uuid
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
-import uuid
 
 from core.logging import get_logger
 from database.schemas.persons_users import UsersT
 
+
 log = get_logger()
+
+
+@dataclass(frozen=True)
+class UserDetails:
+    user_id: uuid.UUID
+    person_id: uuid.UUID
+
+
+def get_user_by_user_id(
+    session: Session,
+    user_id: uuid.UUID
+) -> UserDetails | None:
+    """Retrieves a user by ID."""
+
+    user = (
+        session.query(UsersT)
+        .filter(UsersT.id == user_id)
+        .one_or_none()
+    )
+
+    if not user:
+        return None
+
+    return UserDetails(
+        id=user.id,
+        person_id=user.person_id
+    )
 
 
 @dataclass(frozen=True)

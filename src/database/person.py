@@ -1,15 +1,47 @@
+import uuid
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-import uuid
 
 from core.config import config
 from core.logging import get_logger
 from database.schemas.persons_users import PersonsT
-from security.encryption import encrypt
+from security.encryption import encrypt, decrypt
 from security.hmac import hash_hmac
 
+
 log = get_logger()
+
+
+@dataclass(frozen=True)
+class PersonDetails:
+    id: uuid.UUID
+    first_name: str
+    last_name: str
+    email: str
+
+
+def get_person_by_person_id(
+    session: Session,
+    person_id: uuid.UUID
+) -> PersonDetails | None:
+    """Retrieves a Person's data by searching for their ID."""
+
+    person = (
+        session.query(PersonsT)
+        .filter(PersonsT.id == person_id)
+        .one_or_none()
+    )
+
+    if not person:
+        return None
+
+    return PersonDetails(
+        person_id=person.id,
+        first_name=decrypt(person.encrypted_first_name),
+        last_name=decrypt(person.encrypted_last_name),
+        email=decrypt(person.encrypted_email)
+    )
 
 
 @dataclass(frozen=True)
