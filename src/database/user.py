@@ -31,7 +31,7 @@ def get_user_by_user_id(
         return None
 
     return UserDetails(
-        id=user.id,
+        user_id=user.id,
         person_id=user.person_id
     )
 

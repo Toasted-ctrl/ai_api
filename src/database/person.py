@@ -15,7 +15,7 @@ log = get_logger()
 
 @dataclass(frozen=True)
 class PersonDetails:
-    id: uuid.UUID
+    person_id: uuid.UUID
     first_name: str
     last_name: str
     email: str
