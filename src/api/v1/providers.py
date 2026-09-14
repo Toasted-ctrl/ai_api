@@ -1,7 +1,4 @@
-from fastapi import (
-    APIRouter,
-    Depends
-)
+from fastapi import APIRouter, Depends
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
@@ -11,20 +8,19 @@ from database.providers import get_all_provider_configurations
 from database.session import get_db_session
 from iom.providers import ProvidersResponse
 
-router = APIRouter(prefix='/providers')
 
-tags = ["Providers"]
+router = APIRouter()
 
 
 @router.get(
-    "",
+    "/providers/configuration",
     response_model=ProvidersResponse,
     description=(
         "Returns a list of Providers that are available through the API. "
         "Provides an indication of whether a User-provided Provider API key is required, "
         "and if a Provider API key has been configured."
     ),
-    tags=tags
+    tags=["Providers"]
 )
 @cache(expire=600, key_builder=cache_key_builder)
 async def get_all_providers(
