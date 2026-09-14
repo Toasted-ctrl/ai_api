@@ -6,7 +6,6 @@ from database.session import get_db_session
 from database.providers import UserProviderRegistry, get_all_provider_configurations
 from database.user_keys import get_or_store_key
 from iom.user_keys import PayloadUserKeys, ResponseUserKey
-from security.encryption import encrypt
 
 
 router = APIRouter()
@@ -32,7 +31,7 @@ def store_user_key(
     if payload.provider in p.not_configured:
         sk = get_or_store_key(
             session=session,
-            api_key=encrypt(payload.api_key),
+            api_key=payload.api_key,
             user_id=user.id,
             provider_id=p[payload.provider].id
         )

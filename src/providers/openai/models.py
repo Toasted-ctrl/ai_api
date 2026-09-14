@@ -1,7 +1,9 @@
 from openai import AsyncOpenAI
 
+from core.config import config
 from core.logging import get_logger
 from security.encryption import decrypt
+
 
 log = get_logger()
 
@@ -27,7 +29,7 @@ async def get_models(
         # Vector Embedding models or other types of models.
         
         return {
-            "chat_completion": [model.id for model in models.data],
-            "translation": [],
-            "vector_embedding": []
+            "chat_completion": [model.id for model in models.data if model.id in config.CHAT_COMPLETION_MODELS],
+            "translation": [model.id for model in models.data if model.id in config.TRANSLATION_MODELS],
+            "vector_embedding": [model.id for model in models.data if model.id in config.VECTOR_EMBEDDING_MODELS]
         }
