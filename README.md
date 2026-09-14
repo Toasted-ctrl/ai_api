@@ -15,7 +15,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-09-08.
+> This document was last reviewed on 2026-09-14.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -57,11 +57,8 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - GET /auth/google/login
 - GET /auth/google/callback
 - GET /auth/me
-- GET /models
-- GET /models/chat_completion
-- GET /models/translation
-- GET /models/vector_embedding
-- GET /providers
+- GET /providers/configuration
+- GET /providers/models
 - GET /root
 - GET /status
 - GET /translation/translategemma
