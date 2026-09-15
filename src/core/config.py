@@ -1,9 +1,10 @@
+import json
+import os
 from functools import lru_cache, cached_property
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import ClassVar, Set
-import json
-import os
+from warnings import deprecated
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -11,6 +12,7 @@ _env_file = BASE_DIR / ".env"
 
 
 @lru_cache(maxsize=1)
+@deprecated("Replaced with model_config")
 def _model_types() -> dict:
     """Loads and caches the model_types json data."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -142,9 +144,7 @@ class Config(BaseSettings):
 
     @cached_property
     def PG_DB_URL(self) -> str:
-
         """Returns the database URL."""
-
         return (
             f"{self.PG_DIALECT}+{self.PG_DRIVER}://"
             f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
@@ -154,17 +154,15 @@ class Config(BaseSettings):
 
     @cached_property
     def PG_CHECKPOINTER_URL(self) -> str:
-
         """Returns checkpointer database URL."""
-
         return (
             f"{self.PG_DIALECT}://"
             f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
             f"{self.PG_HOSTNAME}/{self.PG_DATABASE}"
         )
     
-
     @cached_property
+    @deprecated("Replaced with model_config")
     def MODEL_TYPES(self) -> dict:
         """Returns a dictionary of model types, categorized by their expertise
         (e.g., llms, translations, vector-embeddings)"""
@@ -172,18 +170,21 @@ class Config(BaseSettings):
     
 
     @cached_property
+    @deprecated("Replaced with model_config")
     def TRANSLATION_MODELS(self) -> list:
         """Returns a list of models suitable for translation tasks."""
         return _model_types().get("translation", [])
     
-    
+
     @cached_property
+    @deprecated("Replaced with model_config")
     def VECTOR_EMBEDDING_MODELS(self) -> list:
         """Returns a list of models suitable for vector embeddings."""
         return _model_types().get("vector_embedding", [])
     
 
     @cached_property
+    @deprecated("Replaced with model_config")
     def CHAT_COMPLETION_MODELS(self) -> list:
         """Returns a list of chat completion models"""
         return _model_types().get("chat_completion", [])
