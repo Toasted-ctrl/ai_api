@@ -1,7 +1,8 @@
 from ollama import AsyncClient
 
-from core.config import config
 from core.logging import get_logger
+from core.model_types import model_config
+
 
 log = get_logger()
 
@@ -26,26 +27,30 @@ async def get_models(
 
     mds = [model.model for model in response.models]
 
+    TM = model_config.TRANSLATION_MODELS
+    CC = model_config.CHAT_COMPLETION_MODELS
+    VE = model_config.VECTOR_EMBEDDING_MODELS
+
     # Chat Completion models
-    ccm = [
+    cc = [
         m for m in mds
-        if m in config.CHAT_COMPLETION_MODELS
+        if m in CC
     ]
 
     # Vector Embedding models
-    vem = [
+    ve = [
         m for m in mds
-        if m in config.VECTOR_EMBEDDING_MODELS
+        if m in VE
     ]
 
     # Translation models
     tm = [
         m for m in mds
-        if m in config.TRANSLATION_MODELS
+        if m in TM
     ]
 
     return {
-        "chat_completion": ccm,
+        "chat_completion": cc,
         "translation": tm,
-        "vector_embedding": vem
+        "vector_embedding": ve
     }
