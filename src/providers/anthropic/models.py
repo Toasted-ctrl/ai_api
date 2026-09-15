@@ -20,7 +20,7 @@ async def get_models(
         models = await client.models.list()
 
         return {
-            "chat_completion": [model.display_name for model in models.data if model.display_name in config.CHAT_COMPLETION_MODELS],
-            "translation": [model.display_name for model in models.data if model.display_name in config.TRANSLATION_MODELS],
-            "vector_embedding": [model.display_name for model in models.data if model.display_name in config.VECTOR_EMBEDDING_MODELS]
+            "chat_completion": [model.id for model in models.data if model.id in config.CHAT_COMPLETION_MODELS],
+            "translation": [model.id for model in models.data if model.id in config.TRANSLATION_MODELS],
+            "vector_embedding": [model.id for model in models.data if model.id in config.VECTOR_EMBEDDING_MODELS]
         }
