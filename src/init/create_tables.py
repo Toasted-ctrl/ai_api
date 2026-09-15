@@ -5,12 +5,14 @@ from core.logging import get_logger
 from database.schemas.base import Base
 from database.schemas.clients import ClientsT
 from database.schemas.message_threads import MessageThreadsT
+from database.schemas.models import ModelsT
 from database.schemas.persons_users import PersonsT, UsersT
 from database.schemas.providers import ProvidersT
 from database.schemas.user_keys import UserKeysT
 from database.schemas.user_sessions import SessionsT
 from database.schemas.vector_store import VectorStoreSettingsT
 from database.schemas.vector_store_collections import VectorStoreCollectionT
+
 
 log = get_logger()
 

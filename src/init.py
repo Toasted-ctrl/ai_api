@@ -10,7 +10,8 @@ from init.preconfigurations import (
     create_preconfigured_user_clients,
     create_preconfigured_providers,
     create_preconfigured_vector_store,
-    create_preconfigured_vector_store_collections
+    create_preconfigured_vector_store_collections,
+    create_preconfigured_models
 )
 
 # -------------------------------------------------------------------
@@ -27,6 +28,7 @@ CREATE_PRECONFIGURED_APPLICATION_CLIENTS = True
 CREATE_PRECONFIGURED_PROVIDERS = True
 CREATE_PRECONFIGURED_VECTOR_STORES = True
 CREATE_PRECONFIGURED_VECTOR_STORE_COLLECTIONS = True
+CREATE_PRECONFIGURED_MODELS = True
 
 log = get_logger()
 
@@ -59,5 +61,9 @@ if CREATE_CHECKPOINT_TABLES:
     with PostgresSaver.from_conn_string(conn_string=config.PG_CHECKPOINTER_URL) as checkpointer:
         checkpointer.setup()
         log.info("DONE: Checkpoint tables created.")
+
+if CREATE_PRECONFIGURED_MODELS:
+    print("\n---- STARTING ADDITION OF MODELS TO MODELST ----\n")
+    create_preconfigured_models()
 
 print("\n>>> DONE: FINISHED INITIALIZATION!\n")

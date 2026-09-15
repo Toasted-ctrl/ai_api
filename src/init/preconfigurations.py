@@ -5,6 +5,7 @@ import uuid
 from core.logging import get_logger
 from database.providers import get_or_create_provider
 from database.schemas.clients import ClientsT
+from database.schemas.models import ModelsT
 from database.schemas.persons_users import UsersT, PersonsT
 from database.schemas.providers import ProvidersT
 from database.schemas.user_keys import UserKeysT
@@ -13,6 +14,7 @@ from database.schemas.vector_store_collections import VectorStoreCollectionT
 from database.session import get_db_session_ctx
 from security.encryption import encrypt
 from security.hash import get_hash_sha256
+
 
 log = get_logger()
 
@@ -352,3 +354,64 @@ def create_preconfigured_user_clients() -> None:
 
     log.info("DONE: All user Clients configured.")
     return
+
+
+def create_preconfigured_models() -> None:
+    """Adds all preconfigured models to the ModelsT table based on their respective expertise."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, 'configure_model_types.json')
+    if not os.path.exists(file_path):
+        log.error(
+            "ENV: CREATE_PRECONFIGURED_MODELS is enabled, but 'configure_model_types.json' is missing. "
+            "Shutting down ..."
+        )
+        raise SystemExit(1)
+                
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    with get_db_session_ctx() as session:
+        chat_completion_models = data.get("chat_completion")
+        for model in chat_completion_models:
+            exists = (
+                session.query(ModelsT)
+                .filter(ModelsT.name == model)
+                .all()
+            )
+            if not exists:
+                log.info(f"Model '{model}' does not exist in ModelsT with expertise 'chat_completion', adding ...")
+                nm = ModelsT(
+                    name=model,
+                    expertise="chat_completion"
+                )
+                session.add(nm)
+
+        translation_models = data.get("translation")
+        for model in translation_models:
+            exists = (
+                session.query(ModelsT)
+                .filter(ModelsT.name == model)
+                .all()
+            )
+            if not exists:
+                log.info(f"Model '{model}' does not exist in ModelsT with expertise 'translation', adding ...")
+                nm = ModelsT(
+                    name=model,
+                    expertise="translation"
+                )
+                session.add(nm)
+
+        vector_embedding_models = data.get("vector_embedding")
+        for model in vector_embedding_models:
+            exists = (
+                session.query(ModelsT)
+                .filter(ModelsT.name == model)
+                .all()
+            )
+            if not exists:
+                log.info(f"Model '{model}' does not exist in ModelsT with expertise 'vector_embedding', adding ...")
+                nm = ModelsT(
+                    name=model,
+                    expertise="vector_embedding"
+                )
+                session.add(nm)
