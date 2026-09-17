@@ -1,11 +1,12 @@
 [project]
 name = "ai-api"
-version = "0.1.35"
+version = "0.1.36"
 description = "AI API that functions as a general gateway for multiple providers (e.g., Ollama, Anthropic)."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "anthropic>=0.120.2",
+    "cachetools>=7.2.0",
     "cryptography>=49.0.0",
     "fastapi>=0.139.0",
     "fastapi-cache2[redis]>=0.2.2",

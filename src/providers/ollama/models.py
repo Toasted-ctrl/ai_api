@@ -27,26 +27,22 @@ async def get_models(
 
     mds = [model.model for model in response.models]
 
-    TM = model_config.TRANSLATION_MODELS
-    CC = model_config.CHAT_COMPLETION_MODELS
-    VE = model_config.VECTOR_EMBEDDING_MODELS
-
     # Chat Completion models
     cc = [
         m for m in mds
-        if m in CC
+        if m in model_config.CHAT_COMPLETION_MODELS
     ]
 
     # Vector Embedding models
     ve = [
         m for m in mds
-        if m in VE
+        if m in model_config.VECTOR_EMBEDDING_MODELS
     ]
 
     # Translation models
     tm = [
         m for m in mds
-        if m in TM
+        if m in model_config.TRANSLATION_MODELS
     ]
 
     return {

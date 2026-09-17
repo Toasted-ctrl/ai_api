@@ -1,22 +1,25 @@
+import json
+import uuid
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 from httpx import ConnectTimeout, ConnectError
 from langchain_core.messages import BaseMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from sqlalchemy.orm import Session
-import json
-import uuid
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.config import config
 from core.logging import get_logger
+from core.model_types import model_config
 from database.message_threads import verify_or_get_thread_id
 from database.providers import ProviderConfiguration, get_provider_config
 from database.session import get_db_session
 from iom.agent import PayloadAgent, ResponseAgentRun
 from providers.agent import build_agent_model, stream_agent, run_agent
 
+
 router = APIRouter()
+
 
 log = get_logger()
 
@@ -54,7 +57,7 @@ async def agent_response(
                 detail="Calling agents by agent_id is not implemented yet"
             )
         
-        if payload.provider_settings.model not in config.CHAT_COMPLETION_MODELS:
+        if payload.provider_settings.model not in model_config.CHAT_COMPLETION_MODELS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
@@ -130,7 +133,7 @@ async def agent_response_stream(
                 detail="Calling agents by agent_id is not implemented yet"
             )
 
-        if payload.provider_settings.model not in config.CHAT_COMPLETION_MODELS:
+        if payload.provider_settings.model not in model_config.CHAT_COMPLETION_MODELS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"

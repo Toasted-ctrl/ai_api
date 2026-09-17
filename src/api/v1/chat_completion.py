@@ -3,15 +3,17 @@ from fastapi.responses import StreamingResponse
 from httpx import ConnectTimeout, ConnectError
 from sqlalchemy.orm import Session
 
-from core.config import config
 from core.logging import get_logger
+from core.model_types import model_config
 from database.providers import ProviderConfiguration, get_provider_config
 from database.session import get_db_session
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from iom.chat_completion import PayloadChatCompletion
 from providers.chat_completion import complete_chat
 
+
 router = APIRouter()
+
 
 log = get_logger()
 
@@ -29,7 +31,7 @@ async def post_chat_completion(
 
     try:
 
-        if payload.model not in config.CHAT_COMPLETION_MODELS:
+        if payload.model not in model_config.CHAT_COMPLETION_MODELS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
