@@ -15,7 +15,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-09-14.
+> This document was last reviewed on 2026-09-18.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -46,6 +46,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Ollama (if self-hosted)
 - Anthropic
 - Melious
+- OpenAI
 
 ## Setup
 - Please check the 'SETUP.md' file to get started.
@@ -76,12 +77,10 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 
 ### Short Term
 - Add HMAC hashing and verification for each path.
-- Add OpenAI support.
 - Build a function to locate which server is currently supporting translategemma: Check internal
 servers first, follow by external ones. Return internal as this one is free of charge.
 
 ### Long Term
-- Caching solution for internal non-route functions, to avoid repeat expensive calls.
 - Add support for more Login providers.
 - Add agent building functionalities.
 - Log conversation ids and history in a conversation table.
