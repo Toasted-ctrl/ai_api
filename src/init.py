@@ -11,7 +11,8 @@ from init.preconfigurations import (
     create_preconfigured_providers,
     create_preconfigured_vector_store,
     create_preconfigured_vector_store_collections,
-    create_preconfigured_models
+    create_preconfigured_models,
+    create_preconfigured_mcps
 )
 
 # -------------------------------------------------------------------
@@ -29,6 +30,7 @@ CREATE_PRECONFIGURED_PROVIDERS = True
 CREATE_PRECONFIGURED_VECTOR_STORES = True
 CREATE_PRECONFIGURED_VECTOR_STORE_COLLECTIONS = True
 CREATE_PRECONFIGURED_MODELS = True
+CREATE_PRECONFIGURED_MCPS = True
 
 log = get_logger()
 
@@ -65,5 +67,9 @@ if CREATE_CHECKPOINT_TABLES:
 if CREATE_PRECONFIGURED_MODELS:
     print("\n---- STARTING ADDITION OF MODELS TO MODELST ----\n")
     create_preconfigured_models()
+
+if CREATE_PRECONFIGURED_MCPS:
+    print("\n---- ADDING MCPS TO MCPST ----\n")
+    create_preconfigured_mcps()
 
 print("\n>>> DONE: FINISHED INITIALIZATION!\n")

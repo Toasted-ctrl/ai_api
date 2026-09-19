@@ -5,6 +5,7 @@ import uuid
 from core.logging import get_logger
 from database.providers import get_or_create_provider
 from database.schemas.clients import ClientsT
+from database.schemas.mcp import MCPsT
 from database.schemas.models import ModelsT
 from database.schemas.persons_users import UsersT, PersonsT
 from database.schemas.providers import ProvidersT
@@ -415,3 +416,44 @@ def create_preconfigured_models() -> None:
                     expertise="vector_embedding"
                 )
                 session.add(nm)
+
+
+def create_preconfigured_mcps() -> None:
+    """Adds all preconfigured mcps to the MCPsT table."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, 'configure_init_mcps.json')
+    if not os.path.exists(file_path):
+        log.error(
+            "ENV: CREATE_PRECONFIGURED_MCPS is enabled, but 'configure_init_mcps.json' is missing. "
+            "Shutting down ..."
+        )
+        raise SystemExit(1)
+                    
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    with get_db_session_ctx() as session:
+
+        for mcp in data:
+
+            exists = (
+                session.query(MCPsT)
+                .filter(
+                    MCPsT.name == mcp.get("name"),
+                    MCPsT.transport == mcp.get("transport"),
+                    MCPsT.url == mcp.get("url")
+                )
+                .all()
+            )
+
+            if exists:
+                continue
+
+            log.info(f"Adding MCP {mcp.get("name")} to MCPsT.")
+            nmcp = MCPsT(
+                name=mcp.get("name"),
+                transport=mcp.get("transport"),
+                url=mcp.get("url")
+            )
+
+            session.add(nmcp)
