@@ -1,4 +1,5 @@
 from langchain.agents import create_agent
+from langchain_core.messages import AIMessageChunk, ToolMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph.state import CompiledStateGraph
 from typing import AsyncGenerator, Any, TypedDict, Literal
@@ -55,7 +56,7 @@ def build_agent_model(
 
 
 class AgentEvent(TypedDict):
-    type: Literal["message", "update", "error"]
+    type: Literal["thread", "message", "tool_call", "tool_result", "update", "error"]
     data: dict[str, Any]
 
 
@@ -102,9 +103,29 @@ async def stream_agent(
     ):
         if event["type"] == "messages":
             token, metadata = event["data"]
-            content = _extract_content(token)
-            if content:
-                yield {"type": "message", "data": {"content": content, "metadata": metadata}}
+
+            if isinstance(token, AIMessageChunk):
+                if token.tool_call_chunks:
+                    for chunk in token.tool_call_chunks:
+                        yield {"type": "tool_call", "data": {
+                            "name": chunk.get("name"),
+                            "args": chunk.get("args", ""),
+                            "id": chunk.get("id"),
+                            "index": chunk.get("index", 0),
+                            "metadata": metadata,
+                        }}
+
+                content = _extract_content(token)
+                if content:
+                    yield {"type": "message", "data": {"content": content, "metadata": metadata}}
+
+            elif isinstance(token, ToolMessage):
+                yield {"type": "tool_result", "data": {
+                    "content": token.content,
+                    "name": token.name,
+                    "tool_call_id": token.tool_call_id,
+                    "metadata": metadata,
+                }}
 
         elif event["type"] == "updates":
             yield {"type": "update", "data": event["data"]}
