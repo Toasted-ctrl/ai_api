@@ -15,7 +15,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-09-18.
+> This document was last reviewed on 2026-09-20.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -27,6 +27,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Users may add their own API keys for interaction with third party LLM Providers.
 - Integration with Qdrant.
 - Server side session management for frontend apps.
+- MCP support.
 
 ## Tech Stack
 - FastAPI
@@ -85,7 +86,6 @@ servers first, follow by external ones. Return internal as this one is free of c
 - Add agent building functionalities.
 - Log conversation ids and history in a conversation table.
 - Enable possibility to share agents with other users.
-- Add MCP calling support.
 
 ## Contributing
 PRs welcome!

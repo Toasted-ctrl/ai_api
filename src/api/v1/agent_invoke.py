@@ -15,6 +15,7 @@ from database.message_threads import verify_or_get_thread_id
 from database.providers import ProviderConfiguration, get_provider_config
 from database.session import get_db_session
 from iom.agent import PayloadAgent, ResponseAgentRun
+from mcp_s.tools import get_mcp_tools
 from providers.agent import build_agent_model, stream_agent, run_agent
 
 
@@ -75,6 +76,14 @@ async def agent_response(
             thread_id=payload.thread_id
         )
 
+        if payload.mcp_tools:
+            tools = await get_mcp_tools(
+                session=session,
+                mcp_ids=payload.mcp_tools
+            )
+        else:
+            tools = []
+
         async with AsyncPostgresSaver.from_conn_string(
             conn_string=config.PG_CHECKPOINTER_URL
         ) as checkpointer:
@@ -86,7 +95,7 @@ async def agent_response(
                 top_k=payload.parameters.top_k,
                 top_p=payload.parameters.top_p,
                 encrypted_api_key=prov.encrypted_api_key,
-                tools=[],
+                tools=tools,
                 system_prompt=None,
                 checkpointer=checkpointer,
             )
@@ -151,6 +160,14 @@ async def agent_response_stream(
             thread_id=payload.thread_id
         )
 
+        if payload.mcp_tools:
+            tools = await get_mcp_tools(
+                session=session,
+                mcp_ids=payload.mcp_tools
+            )
+        else:
+            tools = []
+
         async def event_stream(thread_id: uuid.UUID):
             async with AsyncPostgresSaver.from_conn_string(
                 conn_string=config.PG_CHECKPOINTER_URL
@@ -164,7 +181,7 @@ async def agent_response_stream(
                     top_k=payload.parameters.top_k,
                     top_p=payload.parameters.top_p,
                     encrypted_api_key=prov.encrypted_api_key,
-                    tools=[],
+                    tools=tools,
                     system_prompt=None,
                     checkpointer=checkpointer,
                 )

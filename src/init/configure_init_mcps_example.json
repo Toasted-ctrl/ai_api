@@ -1,7 +1,7 @@
 [
     {
         "name": "example-mcp-name",
-        "transport": "streamable-http",
-        "url": "example.url.com"
+        "transport": "streamable_http",
+        "url": "http://example.url.com"
     }
 ]

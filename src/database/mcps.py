@@ -29,3 +29,29 @@ def get_mcps(session: Session) -> list[MCP]:
         )
         for mcp in mcps
     ]
+
+
+@dataclass(frozen=True)
+class MCPConfig:
+    id: uuid.UUID
+    name: str
+    url: str
+    transport: str
+
+
+def get_mcp_by_id(session: Session, mcp_id: uuid.UUID) -> MCPConfig:
+    """Returns MCP configuration based on MCP id."""
+    mcp = (
+        session.query(MCPsT)
+        .filter(MCPsT.id == mcp_id)
+        .one_or_none()
+    )
+    if mcp is None:
+        raise ValueError(f"MCP with ID {mcp_id} does not exist.")
+    log.info(f"Fetched configuration details for MCP '{mcp_id}'.")
+    return MCPConfig(
+        id=mcp.id,
+        name=mcp.name,
+        url=mcp.url,
+        transport=mcp.transport
+    )

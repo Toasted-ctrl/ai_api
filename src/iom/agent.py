@@ -13,7 +13,7 @@ class PayloadAgent(BaseModel):
     parameters: ModelParamaters | None = None
 
     prompt: str
-    tools: list[str] | None = None
+    mcp_tools: list[uuid.UUID] | None = None
 
     @model_validator(mode='after')
     def validate_without_agent_id(self):
