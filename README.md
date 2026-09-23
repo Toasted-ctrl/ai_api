@@ -48,6 +48,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Anthropic
 - Melious
 - OpenAI
+- Z.ai
 
 ## Setup
 - Please check the 'SETUP.md' file to get started.
