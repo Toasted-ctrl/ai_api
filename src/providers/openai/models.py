@@ -14,7 +14,7 @@ async def get_models(
 ) -> dict[str, list[str]]:
 
     """Fetches and returns all models supported by the API Key.
-    This method will work for both OpenAI as well as Melious endpoints."""
+    This method will work for both OpenAI as well as Melious and Z.ai endpoints."""
 
     log.debug(f"Fetching models for Provider URL '{base_url}' with API Key '{encrypted_api_key[:10]}'...")
 
