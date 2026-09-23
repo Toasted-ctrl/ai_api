@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from auth.dep_verify_user import VerifiedUser, depends_verify_user
 from core.logging import get_logger
+from database.documents_users import store_user_document
 from database.providers import get_all_provider_configurations, ProviderConfiguration, UserProviderRegistry
 from database.session import get_db_session
 from database.vector_store import get_vector_store_settings, VectorStoreConfig
@@ -11,9 +12,12 @@ from vs.get_vs import get_vector_store
 from vs.save_docs import save_docs
 from vs.search import search_docs_similarity
 
+
 router = APIRouter()
 
+
 tags = ["Vector Store"]
+
 
 log = get_logger()
 
@@ -21,7 +25,8 @@ log = get_logger()
 @router.post(
     path="/vector_store/{scope}/add",
     tags=tags,
-    description="Store (a) document(s) in the specified Vector Store scope."
+    description="Store (a) document(s) in the specified Vector Store based on scope.",
+    response_model=ResponseSavedDocuments
 )
 def store_document(
     payload: PayloadSaveDocuments,
@@ -30,8 +35,20 @@ def store_document(
     session: Session = Depends(get_db_session),
 ) -> ResponseSavedDocuments:
 
-    # TODO: Perhaps check if the type of info exists in the database?
-    # TODO: Also add some kind of description of what 'scope' refers to.
+    if not scope in ["documents_user_files"]:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown scope: {scope}"
+        )
+
+    udids = []
+    for metadata in payload.metadatas:
+        udids.append(store_user_document(
+            session=session,
+            user_id=user.id,
+            name=metadata.document_name,
+            scope=scope
+        ))
 
     vscf: VectorStoreConfig = get_vector_store_settings(
         session=session,
@@ -62,19 +79,20 @@ def store_document(
     )
 
     metadatas = []
-    _metadatas = payload.metadatas
-    if 'user_id' in vscf.required_filters:
-        for metadata in _metadatas:
-            meta_dict = metadata.model_dump()
-            meta_dict['user_id'] = user.id
-            metadatas.append(meta_dict)
+    for metadata, udid in zip(payload.metadatas, udids):
+        meta_dict = metadata.model_dump()
+        if 'user-id' in vscf.required_filters:
+            meta_dict['user-id'] = user.id
+        if 'user-document-id' in vscf.required_filters:
+            meta_dict['user-document-id'] = udid
 
-    else:
-        metadatas = [metadata.model_dump() for metadata in metadatas]
+        # NOTE: Changing keys to use dashes, required for Qdrant.
+        meta_dict = {key.replace('_', '-'): value for key, value in meta_dict.items()}
+        metadatas.append(meta_dict)
 
     doc_ids = save_docs(
         vector_store=vs,
-        doctype='personal',
+        scope=scope,
         texts=payload.texts,
         metadatas=metadatas,
         required_metadata=vscf.required_filters
@@ -128,7 +146,7 @@ def search_document(
     results = search_docs_similarity(
         vector_store=vs,
         query=payload.query,
-        filter={"user_id": user.id}
+        filter={"user-id": user.id}
     )
 
     return {

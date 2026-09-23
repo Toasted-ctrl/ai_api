@@ -1,13 +1,14 @@
+import hashlib
+import re
+import uuid
 from enum import Enum
 from langchain_core.documents import Document
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import hashlib
-import re
-import uuid
 
 from core.logging import get_logger
 from vs.count import count_tokens
+
 
 log = get_logger()
 
@@ -52,7 +53,7 @@ def _normalize_texts(texts: list[str]) -> list[str]:
 
 def _prep_docs_personal_data(
     texts: list[str],
-    metadatas: list[dict],
+    metadatas: list[dict]
 ) -> list[Document]:
     """Prepares the data for ingestion. Will create 'Documents' for each piece of text to be ingested.
     Document preparation only intended for preparing PERSONAL data."""
@@ -60,7 +61,7 @@ def _prep_docs_personal_data(
     documents = []
     for text, metadata in zip(texts, metadatas):
         document_hash = hashlib.sha256(text.encode()).hexdigest()
-        user_id = metadata.get("user_id")
+        user_id = metadata.get("user-id")
         chunks = _chunker(text=text)
         for i, chunk in enumerate(chunks):
 
@@ -68,9 +69,9 @@ def _prep_docs_personal_data(
             # Use uuid.uuid(5) so we can generate a reproducable UUID, so
             # duplicate entries can be accounted for.
 
-            document_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{user_id}:{document_hash}:{i}"))
-            metadata['document_hash'] = str(document_hash)
-            metadata['chunk_id'] = i
+            document_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{user_id}:{document_hash}:{i}:{metadata.get("document-name")}"))
+            metadata['document-hash'] = str(document_hash)
+            metadata['chunk-id'] = i
             documents.append(
                 Document(
                     id=document_id,
@@ -91,14 +92,14 @@ def _sanitize_metadata(metadatas: list[dict]) -> list[dict]:
     return sanitized
 
 
-class DocType(str, Enum):
-    PERSONAL = 'personal'
+class VectorStoreScope(str, Enum):
+    DOCUMENTS_USER_FILES = 'documents_user_files'
     AGENT = 'agent'
 
 
 def save_docs(
     vector_store: QdrantVectorStore,
-    doctype: DocType,
+    scope: VectorStoreScope,
     texts: list[str],
     metadatas: list[dict] | None = None,
     required_metadata: list[str] | None = None
@@ -121,19 +122,20 @@ def save_docs(
     _texts = _normalize_texts(texts=texts)
     _metadatas = _sanitize_metadata(metadatas=metadatas)
 
-    match doctype:
-        case DocType.PERSONAL:
-            log.debug("Saving documents of doctype 'PERSONAL' ...")
+    match scope:
+        case VectorStoreScope.DOCUMENTS_USER_FILES:
+            log.debug("Saving documents of doctype 'DOCUMENTS_USER_FILES' ...")
             docs = _prep_docs_personal_data(
                 texts=_texts,
                 metadatas=_metadatas
             )
 
         # TODO: Implement case for when DocType is AGENT.
+        # TODO: We'll likely want to add more scopes. Like 'documents_user_memory'.
 
         case _:
-            log.error(f"Unsupported doctype detected: {doctype} ...")
-            raise ValueError(f"Unsupported Vector Store type: {doctype}")
+            log.error(f"Unsupported doctype detected: {scope} ...")
+            raise ValueError(f"Unsupported Vector Store type: {scope}")
 
 
     match vector_store:

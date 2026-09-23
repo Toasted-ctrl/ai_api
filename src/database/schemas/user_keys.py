@@ -1,16 +1,7 @@
-from datetime import datetime, timedelta, timezone
-from sqlalchemy import (
-    UUID,
-    DateTime,
-    func,
-    String,
-    text
-)
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column
-)
 import uuid
+from datetime import datetime, timedelta, timezone
+from sqlalchemy import UUID, DateTime, func, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from database.schemas.base import Base
 
