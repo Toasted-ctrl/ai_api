@@ -35,7 +35,7 @@ def store_document(
     session: Session = Depends(get_db_session),
 ) -> ResponseSavedDocuments:
 
-    if not scope in ["user_vs_docs", "user_vs_memories"]:
+    if not scope in ["user_vs_files", "user_vs_memories"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Unknown scope: {scope}"
