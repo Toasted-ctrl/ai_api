@@ -35,7 +35,7 @@ def store_document(
     session: Session = Depends(get_db_session),
 ) -> ResponseSavedDocuments:
 
-    if not scope in ["documents_user_files"]:
+    if not scope in ["user_vs_docs", "user_vs_memories"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Unknown scope: {scope}"
@@ -81,6 +81,8 @@ def store_document(
     metadatas = []
     for metadata, udid in zip(payload.metadatas, udids):
         meta_dict = metadata.model_dump()
+        if 'scope' in vscf.required_filters:
+            meta_dict['scope'] = scope
         if 'user-id' in vscf.required_filters:
             meta_dict['user-id'] = user.id
         if 'user-document-id' in vscf.required_filters:

@@ -1,7 +1,7 @@
+import uuid
 from sqlalchemy import String, UUID, Integer, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import List
-import uuid
 
 from database.schemas.base import Base
 
@@ -23,7 +23,6 @@ class VectorStoreCollectionT(Base):
 
     vector_store_id: Mapped[uuid.UUID] = mapped_column(
         UUID,
-        unique=True,
         nullable=False
     )
 
