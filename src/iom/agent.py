@@ -1,8 +1,14 @@
-from pydantic import BaseModel, model_validator
 import uuid
+from pydantic import BaseModel, model_validator
 
 from .base_params import ModelParamaters
 from .base_prov import ProviderSettings
+
+
+class Tools(BaseModel):
+    user_vs_files: bool = False
+    user_vs_memories: bool = False
+    mcp_tools: list[uuid.UUID] | None = None
 
 
 class PayloadAgent(BaseModel):
@@ -13,7 +19,7 @@ class PayloadAgent(BaseModel):
     parameters: ModelParamaters | None = None
 
     prompt: str
-    mcp_tools: list[uuid.UUID] | None = None
+    tools: Tools
 
     @model_validator(mode='after')
     def validate_without_agent_id(self):

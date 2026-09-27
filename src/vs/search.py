@@ -21,7 +21,7 @@ def search_docs_similarity(
     vector_store: QdrantVectorStore,
     query: str,
     filter: dict
-) -> list[Document]:
+) -> list[tuple[Document, float]]:
 
     match vector_store:
         case QdrantVectorStore():

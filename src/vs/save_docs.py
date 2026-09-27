@@ -124,19 +124,18 @@ def save_docs(
     _metadatas = _sanitize_metadata(metadatas=metadatas)
 
     match scope:
-        case VectorStoreScope.USER_FILES:
-            log.debug("Saving documents of doctype 'DOCUMENTS_USER_FILES' ...")
+        case VectorStoreScope.USER_FILES | VectorStoreScope.USER_MEMORIES:
+            log.debug(f"Saving documents with scope '{scope}' ...")
             docs = _prep_docs_personal_data(
                 texts=_texts,
                 metadatas=_metadatas
             )
 
         # TODO: Implement case for when DocType is AGENT.
-        # TODO: We'll likely want to add more scopes. Like 'documents_user_memory'.
 
         case _:
-            log.error(f"Unsupported doctype detected: {scope} ...")
-            raise ValueError(f"Unsupported Vector Store type: {scope}")
+            log.error(f"Unsupported Vector Store scope detected: {scope} ...")
+            raise ValueError(f"Unsupported Vector Store scope: {scope}")
 
 
     match vector_store:

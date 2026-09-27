@@ -46,6 +46,7 @@ class VectorStoreCollectionT(Base):
         nullable=False
     )
 
+    # TODO: Probably not required filters, but rather required metadata.
     required_filters: Mapped[List[str]] = mapped_column(
         ARRAY(String),
         nullable=False,

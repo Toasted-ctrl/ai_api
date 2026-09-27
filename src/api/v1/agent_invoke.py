@@ -12,10 +12,11 @@ from core.config import config
 from core.logging import get_logger
 from core.model_types import model_config
 from database.message_threads import verify_or_get_thread_id
-from database.providers import ProviderConfiguration, get_provider_config
+from database.providers import UserProviderRegistry, get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
 from iom.agent import PayloadAgent, ResponseAgentRun
 from mcp_s.tools import get_mcp_tools
+from tools.search_vs import get_vs_search_tool
 from providers.agent import build_agent_model, stream_agent, run_agent
 
 
@@ -64,11 +65,18 @@ async def agent_response(
                 detail="Model not supported by Provider"
             )
         
-        prov: ProviderConfiguration = get_provider_config(
+        pr: UserProviderRegistry = get_all_provider_configurations(
             session=session,
-            provider_name=payload.provider_settings.name,
             user_id=user.id
         )
+
+        if payload.provider_settings.name in pr.not_configured:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Provider {payload.provider_settings.name} not configured"
+            )
+
+        prov: ProviderConfiguration = pr.__getattr__(payload.provider_settings.name)
 
         thread_id: uuid.UUID = verify_or_get_thread_id(
             session=session,
@@ -76,13 +84,29 @@ async def agent_response(
             thread_id=payload.thread_id
         )
 
-        if payload.mcp_tools:
+        if payload.tools.mcp_tools:
             tools = await get_mcp_tools(
                 session=session,
-                mcp_ids=payload.mcp_tools
+                mcp_ids=payload.tools.mcp_tools
             )
         else:
             tools = []
+
+        if payload.tools.user_vs_files:
+            tools.append(get_vs_search_tool(
+                session=session,
+                user_id=user.id,
+                scope='user_vs_files',
+                pr=pr
+            ))
+
+        if payload.tools.user_vs_memories:
+            tools.append(get_vs_search_tool(
+                session=session,
+                user_id=user.id,
+                scope='user_vs_memories',
+                pr=pr
+            ))
 
         async with AsyncPostgresSaver.from_conn_string(
             conn_string=config.PG_CHECKPOINTER_URL
@@ -148,11 +172,18 @@ async def agent_response_stream(
                 detail="Model not supported by Provider"
             )
 
-        prov: ProviderConfiguration = get_provider_config(
+        pr: UserProviderRegistry = get_all_provider_configurations(
             session=session,
-            provider_name=payload.provider_settings.name,
             user_id=user.id
-        )
+            )
+        
+        if payload.provider_settings.name in pr.not_configured:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Provider {payload.provider_settings.name} not configured"
+            )
+        
+        prov: ProviderConfiguration = pr.__getattr__(payload.provider_settings.name)
 
         thread_id: uuid.UUID = verify_or_get_thread_id(
             session=session,
@@ -160,13 +191,29 @@ async def agent_response_stream(
             thread_id=payload.thread_id
         )
 
-        if payload.mcp_tools:
+        if payload.tools.mcp_tools:
             tools = await get_mcp_tools(
                 session=session,
-                mcp_ids=payload.mcp_tools
+                mcp_ids=payload.tools.mcp_tools
             )
         else:
             tools = []
+
+        if payload.tools.user_vs_files:
+            tools.append(get_vs_search_tool(
+                session=session,
+                user_id=user.id,
+                scope='user_vs_files',
+                pr=pr
+            ))
+
+        if payload.tools.user_vs_memories:
+            tools.append(get_vs_search_tool(
+                session=session,
+                user_id=user.id,
+                scope='user_vs_memories',
+                pr=pr
+            ))
 
         async def event_stream(thread_id: uuid.UUID):
             async with AsyncPostgresSaver.from_conn_string(
