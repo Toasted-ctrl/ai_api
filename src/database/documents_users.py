@@ -29,3 +29,23 @@ def store_user_document(
     session.add(nf)
     session.flush()
     return nf.id
+
+
+def get_user_documents_by_scope(
+    session: Session,
+    user_id: uuid.UUID,
+    scope: str
+):
+
+    docs = (
+        session.query(DocumentsUsersT)
+        .filter(
+            DocumentsUsersT.user_id == user_id,
+            DocumentsUsersT.scope == scope
+        )
+        .all()
+    )
+
+    return [
+        doc.name for doc in docs
+    ]

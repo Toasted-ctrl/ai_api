@@ -17,7 +17,8 @@ from api.v1 import (
     vector_embedding,
     vector_store,
     user_keys,
-    tools_mcps
+    tools_mcps,
+    documents
 )
 from api.v1.auth import google_login, me
 from core.config import config
@@ -96,6 +97,11 @@ app.include_router(
 
 app.include_router(
     router=user_keys.router,
+    prefix=v1_prefix
+)
+
+app.include_router(
+    router=documents.router,
     prefix=v1_prefix
 )
 
