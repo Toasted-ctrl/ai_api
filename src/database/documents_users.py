@@ -1,7 +1,14 @@
 import uuid
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.logging import get_logger
+from database.vector_store import VectorStoreConfig, get_vector_store_settings
+from vs.delete_document import delete_document_from_qdrant_by_user_document_id
 from .schemas.documents_user import DocumentsUsersT
+
+
+log = get_logger()
 
 
 def store_user_document(
@@ -47,5 +54,51 @@ def get_user_documents_by_scope(
     )
 
     return [
-        doc.name for doc in docs
+        {
+            "name": doc.name,
+            "id": doc.id
+        }
+        for doc in docs
     ]
+
+
+async def delete_user_document_by_document_id(
+    session: Session,
+    user_id: uuid.UUID,
+    document_id: uuid.UUID
+) -> uuid.UUID | None:
+    doc = (
+        session.scalar(select(DocumentsUsersT).where(
+            DocumentsUsersT.user_id == user_id,
+            DocumentsUsersT.id == document_id
+        ))
+    )
+    if doc is None:
+        return None
+
+    docid = doc.id
+    scope = doc.scope
+
+    session.delete(doc)
+    session.flush()
+
+    log.debug(f"Removed User document with document ID '{document_id}' from database.")
+
+    #TODO: Currently this only supports Qdrant, but we should implement more Vector Stores.
+
+    if scope in ["user_vs_files", "user_vs_memories"]:
+        vscf: VectorStoreConfig = get_vector_store_settings(
+            scope=scope,
+            session=session
+        )
+
+        await delete_document_from_qdrant_by_user_document_id(
+            user_id=user_id,
+            user_document_id=docid,
+            collection_name=vscf.vs_collection_name,
+            url=vscf.vs_base_url,
+            port=vscf.vs_port,
+            encrypted_api_key=vscf.vs_encrypted_api_key
+        )
+
+    return docid

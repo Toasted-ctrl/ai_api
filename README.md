@@ -28,6 +28,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Integration with Qdrant.
 - Server side session management for frontend apps.
 - MCP support.
+- User document upload and deletion.
 
 ## Tech Stack
 - FastAPI
@@ -57,24 +58,27 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 > All Endpoints are prefixed with '/api/v1'.
 
 ### GET
-- GET /auth/google/login
-- GET /auth/google/callback
-- GET /auth/me
-- GET /documents/user/{scope}
-- GET /providers/configuration
-- GET /providers/models
-- GET /root
-- GET /status
-- GET /translation/translategemma
+- /auth/google/login
+- /auth/google/callback
+- /auth/me
+- /documents/user/{scope}
+- /providers/configuration
+- /providers/models
+- /root
+- /status
+- /translation/translategemma
 
 ### POST
-- POST /agent
-- POST /agent/stream
-- POST /chat_completion
-- POST /translation/translategemma
-- POST /vector_store/{scope}/add
-- POST /vector_store/{scope}/search
-- POST /vector_embedding/test
+- /agent
+- /agent/stream
+- /chat_completion
+- /translation/translategemma
+- /vector_store/{scope}/add
+- /vector_store/{scope}/search
+- /vector_embedding/test
+
+### DELETE
+- /documents/user/{document_id}
 
 ## Roadmap
 
