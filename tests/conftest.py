@@ -1,33 +1,23 @@
-from sqlalchemy import create_engine
+import os
 import pytest
-
-from database.schemas.base import Base
-from database.schemas.clients import ClientsT
-from database.schemas.persons_users import PersonsT, UsersT
-from database.schemas.providers import ProvidersT
-from database.schemas.user_keys import UserKeysT
-from fastapi.testclient import TestClient
-
-@pytest.fixture
-def app():
-    from main import app
-    yield app
-    app.dependency_overrides.clear()
+from unittest.mock import MagicMock, AsyncMock, patch
 
 
 @pytest.fixture
-def client(app):
-    with TestClient(app) as c:
-        yield c
+def mock_config():
+    """Mock config with VECTOR_EMBEDDING_MODELS."""
+    with patch('providers.vector_embedding.config') as mock:
+        mock.VECTOR_EMBEDDING_MODELS = [
+            'nomic-embed-text',
+            'text-embedding-3-small',
+            'text-embedding-3-large'
+        ]
+        yield mock
 
 
 @pytest.fixture
-def test_db_engine():
-    """Create a temporary SQLite database with tables."""
-    db_url = "sqlite:///:memory:"
-    engine = create_engine(db_url)
-    Base.metadata.create_all(engine)
-    yield engine
-    engine.dispose()
-
-
+def mock_decrypt():
+    """Mock decrypt function."""
+    with patch('providers.vector_embedding.decrypt') as mock:
+        mock.return_value = 'test-api-key'
+        yield mock
