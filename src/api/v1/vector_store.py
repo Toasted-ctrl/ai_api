@@ -73,7 +73,7 @@ def store_document(
         vs_encrypted_api_key=vscf.vs_encrypted_api_key,
         e_model=vscf.e_model,
         e_base_url=prov.base_url,
-        e_encrypted_api_key=prov.encrypted_api_key,
+        e_encrypted_api_key=vscf.e_api_key,
         e_langchain_con=prov.langchain_con,
         e_dimensions=vscf.e_dimensions
     )

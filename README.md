@@ -50,6 +50,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Melious
 - OpenAI
 - Z.ai
+- Mistral
 
 ## Setup
 - Please check the 'SETUP.md' file to get started.
@@ -86,6 +87,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Add HMAC hashing and verification for each path.
 - Build a function to locate which server is currently supporting translategemma: Check internal
 servers first, follow by external ones. Return internal as this one is free of charge.
+- Rebuild tests, test suite outdated.
 
 ### Long Term
 - Add support for more Login providers.

@@ -25,7 +25,16 @@
         "mistral-medium-3.5-128b",
         "mistral-small-3.2-24b-instruct",
         "mistral-small-4-119b-instruct",
+        "mistral-medium-3-5",
+        "mistral-medium-3",
+        "mistral-medium-latest",
+        "mistral-small-2603",
+        "mistral-small-latest",
+        "mistral-large-2512",
+        "mistral-large-latest",
         "pixtral-12b-2409",
+        "codestral-2508",
+        "codestral-latest",
         "voxtral-small-24b-2507",
         "kimi-k2.5",
         "kimi-k2.6",
@@ -108,7 +117,11 @@
         "multilingual-e5-large-instruct",
         "paraphrase-multilingual-mpnet",
         "qwen3-embedding-8b",
-        "nomic-embed-text:latest"
+        "nomic-embed-text:latest",
+        "mistral-embed-2312",
+        "mistral-embed",
+        "codestral-embed-2505",
+        "codestral-embed"
     ],
     "image_generation": [
         "flux-1-dev",
@@ -126,6 +139,7 @@
     ],
     "safeguard": [
         "qweng3guard-gen-0.6b",
-        "qweng3guard-gen-8b"
+        "qweng3guard-gen-8b",
+        "mistral-moderation-2603"
     ]
 }

@@ -1,13 +1,10 @@
-from fastapi import (
-    APIRouter,
-    Request,
-    Response
-)
+from fastapi import APIRouter, Request, Response
 from fastapi_cache.decorator import cache
 
 from iom.root import ResponseRoot
 from core.cache import cache_key_builder
 from core.config import config
+
 
 router = APIRouter()
 

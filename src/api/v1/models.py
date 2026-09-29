@@ -1,11 +1,4 @@
-from fastapi import (
-    APIRouter,
-    Request,
-    Response,
-    Depends,
-    HTTPException,
-    status
-)
+from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
@@ -29,7 +22,7 @@ router = APIRouter()
     response_model=ResponseProviderModels,
     description="Returns a list of available models, divided by Provider and model expertise."
 )
-@cache(expire=3600, key_builder=cache_key_builder)
+@cache(expire=300, key_builder=cache_key_builder)
 async def get_models(
     request: Request,
     response: Response,

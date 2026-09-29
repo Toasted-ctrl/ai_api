@@ -5,6 +5,7 @@ from core.logging import get_logger
 from database.schemas.vector_store import VectorStoreSettingsT
 from database.schemas.vector_store_collections import VectorStoreCollectionT
 
+
 log = get_logger()
 
 
@@ -18,6 +19,7 @@ class VectorStoreConfig:
     e_dimensions: int
     e_provider: str
     e_model: str
+    e_api_key: str
     scope: str
     required_filters: list
 
@@ -56,6 +58,7 @@ def get_vector_store_settings(
         e_dimensions=col.e_dimensions,
         e_provider=col.e_provider,
         e_model=col.e_model,
+        e_api_key=col.e_api_key,
         vs_encrypted_api_key=vs.encrypted_api_key,
         scope=col.scope,
         vs_vendor=vs.vendor,

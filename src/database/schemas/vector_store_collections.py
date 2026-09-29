@@ -41,6 +41,11 @@ class VectorStoreCollectionT(Base):
         nullable=False
     )
 
+    e_api_key: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
     scope: Mapped[str] = mapped_column(
         String(30),
         nullable=False
