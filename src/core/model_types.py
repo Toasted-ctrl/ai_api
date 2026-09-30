@@ -11,13 +11,19 @@ class ModelConfig:
 
 
     async def _get_models(self, expertise: str) -> list[str]:
-        if expertise not in self._cache:
-            async with get_db_session_ctx() as session:
-                self._cache[expertise] = await get_models_by_expertise(
-                    session=session,
-                    expertise=expertise
-                )
-        return self._cache[expertise]
+        if expertise in self._cache:
+            return self._cache[expertise]
+
+        async with get_db_session_ctx() as session:
+            models = await get_models_by_expertise(
+                session=session,
+                expertise=expertise
+            )
+
+        # Not cached when empty, so newly seeded models are picked up immediately.
+        if models:
+            self._cache[expertise] = models
+        return models
 
 
     async def chat_completion_models(self) -> list[str]:

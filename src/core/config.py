@@ -171,33 +171,5 @@ class Config(BaseSettings):
             f"{self.PG_HOSTNAME}/{self.PG_DATABASE}"
         )
     
-    @cached_property
-    @deprecated("Replaced with model_config")
-    def MODEL_TYPES(self) -> dict:
-        """Returns a dictionary of model types, categorized by their expertise
-        (e.g., llms, translations, vector-embeddings)"""
-        return _model_types()
-    
-
-    @cached_property
-    @deprecated("Replaced with model_config")
-    def TRANSLATION_MODELS(self) -> list:
-        """Returns a list of models suitable for translation tasks."""
-        return _model_types().get("translation", [])
-    
-
-    @cached_property
-    @deprecated("Replaced with model_config")
-    def VECTOR_EMBEDDING_MODELS(self) -> list:
-        """Returns a list of models suitable for vector embeddings."""
-        return _model_types().get("vector_embedding", [])
-    
-
-    @cached_property
-    @deprecated("Replaced with model_config")
-    def CHAT_COMPLETION_MODELS(self) -> list:
-        """Returns a list of chat completion models"""
-        return _model_types().get("chat_completion", [])
-    
 
 config = Config()
