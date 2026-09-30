@@ -8,7 +8,7 @@ from fastapi import (
 )
 from fastapi_cache.decorator import cache
 from httpx import ConnectError, ConnectTimeout
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.cache import cache_key_builder
@@ -36,7 +36,7 @@ tags = ["Translation"]
 async def post_translation_translategemma(
     payload: PayloadTranslation,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseTranslation:
 
     try:
@@ -59,7 +59,7 @@ async def post_translation_translategemma(
         # Langchain con instead? Cache the result?
         # TODO: Find a way to pinpoint the correct provider.
 
-        providers = get_all_provider_configurations(
+        providers = await get_all_provider_configurations(
             session=session,
             user_id=user.id
         )

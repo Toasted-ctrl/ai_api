@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from .schemas.mcp import MCPsT
@@ -15,12 +16,9 @@ class MCP:
     name: str
 
 
-def get_mcps(session: Session) -> list[MCP]:
+async def get_mcps(session: AsyncSession) -> list[MCP]:
     """Returns a list of available MCPs."""
-    mcps = (
-        session.query(MCPsT)
-        .all()
-    )
+    mcps = (await session.scalars(select(MCPsT))).all()
     log.debug(f"Found {len(mcps)} MCP configurations.")
     return [
         MCP(
@@ -39,16 +37,14 @@ class MCPConfig:
     transport: str
 
 
-def get_mcp_by_id(session: Session, mcp_id: uuid.UUID) -> MCPConfig:
+async def get_mcp_by_id(session: AsyncSession, mcp_id: uuid.UUID) -> MCPConfig:
     """Returns MCP configuration based on MCP id."""
-    mcp = (
-        session.query(MCPsT)
-        .filter(MCPsT.id == mcp_id)
-        .one_or_none()
-    )
+    mcp = (await session.execute(
+        select(MCPsT).where(MCPsT.id == mcp_id)
+    )).scalar_one_or_none()
     if mcp is None:
         raise ValueError(f"MCP with ID {mcp_id} does not exist.")
-    log.info(f"Fetched configuration details for MCP '{mcp_id}'.")
+    log.debug(f"Fetched configuration details for MCP '{mcp_id}'.")
     return MCPConfig(
         id=mcp.id,
         name=mcp.name,

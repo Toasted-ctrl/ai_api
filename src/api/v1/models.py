@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Response, Depends, HTTPException, status
 from fastapi_cache.decorator import cache
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.cache import cache_key_builder
@@ -27,7 +27,7 @@ async def get_models(
     request: Request,
     response: Response,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseProviderModels:
 
     pm = await get_all_models(

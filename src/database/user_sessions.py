@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.logging import get_logger
@@ -10,8 +10,8 @@ from .schemas.user_sessions import SessionsT
 log = get_logger()
 
 
-def post_session(
-    session: Session,
+async def post_session(
+    session: AsyncSession,
     user_id: uuid.UUID,
 ) -> str:
     """Creates a new user session in the database and returns a session_id for the cookie."""

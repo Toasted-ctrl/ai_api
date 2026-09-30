@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 from httpx import ConnectTimeout, ConnectError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from core.model_types import model_config
@@ -26,18 +26,18 @@ log = get_logger()
 async def post_chat_completion(
     payload: PayloadChatCompletion,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> StreamingResponse:
 
     try:
 
-        if payload.model not in model_config.CHAT_COMPLETION_MODELS:
+        if payload.model not in await model_config.chat_completion_models():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
 
-        prov: ProviderConfiguration = get_provider_config(
+        prov: ProviderConfiguration = await get_provider_config(
             session=session,
             provider_name=payload.provider,
             user_id=user.id

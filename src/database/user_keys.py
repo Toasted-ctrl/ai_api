@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.logging import get_logger
@@ -20,8 +21,8 @@ class ProviderAPIKey:
     expiration_date: datetime
 
 
-def get_user_active_keys(
-    session: Session,
+async def get_user_active_keys(
+    session: AsyncSession,
     user_id: uuid.UUID
 ) -> list[ProviderAPIKey]:
 
@@ -29,14 +30,13 @@ def get_user_active_keys(
     and returns them as a list containing ProviderAPIKey objects. If no keys are active,
     an empty list will be returned."""
 
-    keys = (
-        session.query(UserKeysT)
-        .filter(
+    keys = (await session.scalars(
+        select(UserKeysT)
+        .where(
             UserKeysT.user_id == user_id,
             UserKeysT.expiration_date > datetime.now()
         )
-        .all()
-    )
+    )).all()
 
     if not keys:
         log.debug(f"No active keys configured for User '{user_id}'. Returning empty list...")
@@ -55,8 +55,8 @@ def get_user_active_keys(
     ]
 
 
-def get_or_store_key(
-    session: Session,
+async def get_or_store_key(
+    session: AsyncSession,
     api_key: str,
     user_id: uuid.UUID,
     provider_id: uuid.UUID
@@ -68,14 +68,14 @@ def get_or_store_key(
     be added, will not be added. Will raise ValueError if
     the key is now allowed to be added (unknown or unsupported provider_id)."""
 
-    existing = (
-        session.query(UserKeysT)
-        .filter(
+    existing = await session.scalar(
+        select(UserKeysT)
+        .where(
             UserKeysT.user_id == user_id,
             UserKeysT.expiration_date > datetime.now(),
             UserKeysT.provider_id == provider_id
         )
-        .first()
+        .limit(1)
     )
 
     if existing:
@@ -88,13 +88,13 @@ def get_or_store_key(
             expiration_date=existing.expiration_date
         )
 
-    if (
-        session.query(ProvidersT).
-        filter(
+    if await session.scalar(
+        select(func.count())
+        .select_from(ProvidersT)
+        .where(
             ProvidersT.id == provider_id,
             ProvidersT.requires_api_key == True
         )
-        .count()
     ) != 1:
         raise ValueError(f"Provider '{provider_id}' does not require an API Key, or Provider with id '{provider_id}' does not exist...")
 
@@ -106,7 +106,7 @@ def get_or_store_key(
     )
 
     session.add(new_key)
-    session.flush()
+    await session.flush()
 
     log.debug(f"New key added for User '{new_key.user_id}' for Provider '{new_key.provider_id}'...")
 

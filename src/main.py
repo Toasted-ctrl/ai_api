@@ -6,29 +6,15 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi.middleware.cors import CORSMiddleware
 from redis import asyncio as aioredis
 
-from api.v1 import (
-    agent_invoke,
-    chat_completion,
-    root,
-    models,
-    status,
-    translation,
-    providers,
-    vector_embedding,
-    vector_store,
-    user_keys,
-    tools_mcps,
-    documents
-)
-from api.v1.auth import google_login, me
+from api import include_routers
 from core.config import config
 from core.logging import get_logger
+from database.session import async_engine
 from exch import register_exception_handlers
 
 
 log = get_logger()
 
-v1_prefix = "/api/v1"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,6 +25,7 @@ async def lifespan(app: FastAPI):
     log.info("Redis cache initialized")
     yield
     await redis.close()
+    await async_engine.dispose()
 
 app = FastAPI(
     title=config.APP_NAME,
@@ -48,77 +35,7 @@ app = FastAPI(
 
 register_exception_handlers(app=app)
 
-if config.ENABLE_GOOGLE_LOGIN:
-    log.info("Starting with Google Login enabled.")
-    app.include_router(
-        router=google_login.router,
-        prefix=v1_prefix
-    )
-
-app.include_router(
-    router=root.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=me.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=providers.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=models.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=status.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=translation.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=chat_completion.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=agent_invoke.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=user_keys.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=documents.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=tools_mcps.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=vector_embedding.router,
-    prefix=v1_prefix
-)
-
-app.include_router(
-    router=vector_store.router,
-    prefix=v1_prefix
-)
+include_routers(app=app)
 
 app.add_middleware(
     CORSMiddleware,

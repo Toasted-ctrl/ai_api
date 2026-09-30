@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.logging import get_logger
@@ -15,18 +16,16 @@ class ApplicationClient:
     encrypted_redirect_uri: str
 
 
-def get_client_from_client_id(
-    session: Session,
+async def get_client_from_client_id(
+    session: AsyncSession,
     client_id: uuid.UUID
 ) -> ApplicationClient | None:
     """Returns an ApplicationClient object based on a provided client_id.
     Will return None if no Client is found."""
 
-    client = (
-        session.query(ClientsT)
-        .filter(ClientsT.id == client_id)
-        .one_or_none()
-    )
+    client = (await session.execute(
+        select(ClientsT).where(ClientsT.id == client_id)
+    )).scalar_one_or_none()
 
     if not client:
         log.warning(f"Invalid Client ID: {client_id}")

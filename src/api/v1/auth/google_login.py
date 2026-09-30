@@ -1,15 +1,10 @@
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    status
-)
-from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
-from urllib.parse import urlencode
 import base64
 import json
 import uuid
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from urllib.parse import urlencode
 
 from auth.dep_verify_client import VerifiedClient, verify_client_from_application_id
 from core.config import config
@@ -18,21 +13,18 @@ from database.client import ApplicationClient, get_client_from_client_id
 from database.session import get_db_session
 from database.user_sessions import post_session
 from security.encryption import decrypt
-from security.google import (
-    verify_google_token,
-    VerifiedGoogleUser,
-    exchange_google_code,
-    ExchangedGoogleCode
-)
+from security.google import verify_google_token, VerifiedGoogleUser, exchange_google_code, ExchangedGoogleCode
 from security.hmac import hash_hmac, is_valid_hmac
 from setup.application_user import VerifiedApplicationUser, get_or_create_application_user
 
 
 log = get_logger()
 
+
 router = APIRouter()
 
-tags = ["Auth"]
+
+ENABLED = config.ENABLE_GOOGLE_LOGIN
 
 
 @router.get(
@@ -43,17 +35,17 @@ tags = ["Auth"]
         "\nRedirect the user to Google's OAuth2 consent screen."
     ),
     response_class=RedirectResponse,
-    tags=tags
+    tags=["Auth"]
 )
 async def google_login(
     application_id: str,
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> RedirectResponse:
 
     # TODO: For frontend apps the api key is actually the application ID.
     # We'll want to change that and make it more clear in the schema.
 
-    client: VerifiedClient = verify_client_from_application_id(
+    client: VerifiedClient = await verify_client_from_application_id(
         application_id=application_id,
         session=session
     )
@@ -90,12 +82,12 @@ async def google_login(
         "\nNOTE: This method will store a cookie on the user's browser."
     ),
     response_class=RedirectResponse,
-    tags=tags
+    tags=["Auth"]
 )
 async def google_callback(
     code: str,
     state: str,
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> RedirectResponse:
 
     log.debug("Receiving Callback from Google's OAuth service...")
@@ -130,7 +122,7 @@ async def google_callback(
         )
 
     try:
-        client: ApplicationClient = get_client_from_client_id(
+        client: ApplicationClient = await get_client_from_client_id(
             session=session,
             client_id=uuid.UUID(raw_client_id)
         )
@@ -142,7 +134,7 @@ async def google_callback(
 
     g_jwt: ExchangedGoogleCode = await exchange_google_code(code=code)
     g_user: VerifiedGoogleUser = verify_google_token(token=g_jwt.id_token)
-    s_user: VerifiedApplicationUser = get_or_create_application_user(
+    s_user: VerifiedApplicationUser = await get_or_create_application_user(
         first_name=g_user.first_name,
         last_name=g_user.last_name,
         email=g_user.email,
@@ -157,12 +149,14 @@ async def google_callback(
         status_code=status.HTTP_302_FOUND
     )
 
+    session_id = await post_session(
+        session=session,
+        user_id=s_user.user_id
+    )
+
     response.set_cookie(
         key="session_id",
-        value=post_session(
-            session=session,
-            user_id=s_user.user_id
-        ),
+        value=session_id,
         httponly=True,
         secure=config.COOKIE_SECURE,
         samesite="none" if config.COOKIE_SECURE else "lax",

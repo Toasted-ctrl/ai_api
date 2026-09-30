@@ -1,7 +1,7 @@
 import uuid
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.providers import UserProviderRegistry
@@ -18,8 +18,8 @@ class VSSearchToolInput(BaseModel):
     limit: int = Field(default=5, ge=1, le=20, description="Maximum number of relevant documents to return.")
 
 
-def get_vs_search_tool(
-    session: Session,
+async def get_vs_search_tool(
+    session: AsyncSession,
     user_id: uuid.UUID,
     scope: str,
     pr: UserProviderRegistry
@@ -29,12 +29,13 @@ def get_vs_search_tool(
 
     log.debug(f"Creating vector store search tool for User '{user_id}' with scope '{scope}'.")
 
-    def search_vector_store(query: str, limit: int = 5) -> str:
-        vscf: VectorStoreConfig = get_vector_store_settings(
-            scope=scope,
-            session=session
-        )
+    # Loaded up front so the tool never touches the request's AsyncSession, which can't be shared across concurrent tool calls.
+    vscf: VectorStoreConfig = await get_vector_store_settings(
+        scope=scope,
+        session=session
+    )
 
+    def search_vector_store(query: str, limit: int = 5) -> str:
         em = pr.__getattr__(vscf.e_provider)
 
         vs = get_vector_store(

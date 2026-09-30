@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.logging import get_logger
@@ -8,8 +9,8 @@ from database.schemas.message_threads import MessageThreadsT
 log = get_logger()
 
 
-def store_thread_id(
-    session: Session,
+async def store_thread_id(
+    session: AsyncSession,
     thread_id: uuid.UUID,
     user_id: uuid.UUID
 ) -> uuid.UUID:
@@ -23,15 +24,15 @@ def store_thread_id(
     )
 
     session.add(ntid)
-    session.flush()
+    await session.flush()
 
     log.debug(f"Thread_id '{ntid.id}' stored, returning ...")
 
     return ntid.id
 
 
-def verify_or_get_thread_id(
-    session: Session,
+async def verify_or_get_thread_id(
+    session: AsyncSession,
     user_id: uuid.UUID,
     thread_id: uuid.UUID | None = None
 ) -> uuid.UUID:
@@ -40,13 +41,12 @@ def verify_or_get_thread_id(
     Creates and stores a new threa_id if the passed threa_id is None."""
 
     if thread_id:
-        id = (
-            session.query(MessageThreadsT.id)
-            .filter(
+        id = await session.scalar(
+            select(MessageThreadsT.id)
+            .where(
                 MessageThreadsT.user_id == user_id,
                 MessageThreadsT.id == thread_id
             )
-            .scalar()
         )
 
         if id:
@@ -59,7 +59,7 @@ def verify_or_get_thread_id(
 
     else:
         ntid = uuid.uuid4()
-        return store_thread_id(
+        return await store_thread_id(
             session=session,
             thread_id=ntid,
             user_id=user_id

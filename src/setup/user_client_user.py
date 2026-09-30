@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.logging import get_logger
@@ -19,8 +19,8 @@ class UserClient:
     user_id: uuid.UUID
 
 
-def create_user_client_user(
-    session: Session,
+async def create_user_client_user(
+    session: AsyncSession,
     client_name: str,
     key_type: str,
     owner_email: str,
@@ -37,7 +37,7 @@ def create_user_client_user(
 
     log.info("Starting Creation of new Backend Client User...")
 
-    client = store_client(
+    client = await store_client(
         session=session,
         client_name=client_name,
         key_type=key_type,
@@ -48,14 +48,14 @@ def create_user_client_user(
         hmac_secret=hmac_secret
     )
 
-    person = get_or_store_person(
+    person = await get_or_store_person(
         session=session,
         first_name=first_name,
         last_name=last_name,
         email=owner_email
     )
 
-    user = get_or_store_user(
+    user = await get_or_store_user(
         session=session,
         person_id=person.id,
         api_key_id=client.id,

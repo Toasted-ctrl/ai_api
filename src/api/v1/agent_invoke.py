@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from httpx import ConnectTimeout, ConnectError
 from langchain_core.messages import BaseMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from core.config import config
@@ -49,7 +49,7 @@ def _serialize_event(event):
 async def agent_response(
     payload: PayloadAgent,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseAgentRun:
     try:
         # TODO: Implement custom agent calling by utilizing agent_id.
@@ -59,13 +59,13 @@ async def agent_response(
                 detail="Calling agents by agent_id is not implemented yet"
             )
         
-        if payload.provider_settings.model not in model_config.CHAT_COMPLETION_MODELS:
+        if payload.provider_settings.model not in await model_config.chat_completion_models():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
         
-        pr: UserProviderRegistry = get_all_provider_configurations(
+        pr: UserProviderRegistry = await get_all_provider_configurations(
             session=session,
             user_id=user.id
         )
@@ -78,7 +78,7 @@ async def agent_response(
 
         prov: ProviderConfiguration = pr.__getattr__(payload.provider_settings.name)
 
-        thread_id: uuid.UUID = verify_or_get_thread_id(
+        thread_id: uuid.UUID = await verify_or_get_thread_id(
             session=session,
             user_id=user.id,
             thread_id=payload.thread_id
@@ -93,7 +93,7 @@ async def agent_response(
             tools = []
 
         if payload.tools.user_vs_files:
-            tools.append(get_vs_search_tool(
+            tools.append(await get_vs_search_tool(
                 session=session,
                 user_id=user.id,
                 scope='user_vs_files',
@@ -101,7 +101,7 @@ async def agent_response(
             ))
 
         if payload.tools.user_vs_memories:
-            tools.append(get_vs_search_tool(
+            tools.append(await get_vs_search_tool(
                 session=session,
                 user_id=user.id,
                 scope='user_vs_memories',
@@ -156,7 +156,7 @@ async def agent_response(
 async def agent_response_stream(
     payload: PayloadAgent,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> StreamingResponse:
     try:
         # TODO: Implement custom agent calling by utilizing agent_id.
@@ -166,13 +166,13 @@ async def agent_response_stream(
                 detail="Calling agents by agent_id is not implemented yet"
             )
 
-        if payload.provider_settings.model not in model_config.CHAT_COMPLETION_MODELS:
+        if payload.provider_settings.model not in await model_config.chat_completion_models():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Model not supported by Provider"
             )
 
-        pr: UserProviderRegistry = get_all_provider_configurations(
+        pr: UserProviderRegistry = await get_all_provider_configurations(
             session=session,
             user_id=user.id
             )
@@ -185,7 +185,7 @@ async def agent_response_stream(
         
         prov: ProviderConfiguration = pr.__getattr__(payload.provider_settings.name)
 
-        thread_id: uuid.UUID = verify_or_get_thread_id(
+        thread_id: uuid.UUID = await verify_or_get_thread_id(
             session=session,
             user_id=user.id,
             thread_id=payload.thread_id
@@ -200,7 +200,7 @@ async def agent_response_stream(
             tools = []
 
         if payload.tools.user_vs_files:
-            tools.append(get_vs_search_tool(
+            tools.append(await get_vs_search_tool(
                 session=session,
                 user_id=user.id,
                 scope='user_vs_files',
@@ -208,7 +208,7 @@ async def agent_response_stream(
             ))
 
         if payload.tools.user_vs_memories:
-            tools.append(get_vs_search_tool(
+            tools.append(await get_vs_search_tool(
                 session=session,
                 user_id=user.id,
                 scope='user_vs_memories',

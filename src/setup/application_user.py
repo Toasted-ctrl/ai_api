@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.logging import get_logger
@@ -16,28 +16,28 @@ class VerifiedApplicationUser:
     person_id: uuid.UUID
 
 
-def get_or_create_application_user(
+async def get_or_create_application_user(
     first_name: str,
     last_name: str,
     client_id: uuid.UUID,
     login_provider: str,
     email: str,
     external_id: str,
-    session: Session
+    session: AsyncSession
 ) -> VerifiedApplicationUser:
 
     """Stores or fetches a new frontend Application User."""
 
     log.debug("Creating or fetching Application User...")
 
-    person: Person = get_or_store_person(
+    person: Person = await get_or_store_person(
         session=session,
         first_name=first_name,
         last_name=last_name,
         email=email
     )
 
-    user: User = get_or_store_user(
+    user: User = await get_or_store_user(
         session=session,
         person_id=person.id,
         api_key_id=client_id,

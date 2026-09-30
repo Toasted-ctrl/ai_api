@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from database.session import get_db_session
@@ -17,19 +17,19 @@ router = APIRouter()
     description="Stores and returns a User provided Provider API Key.",
     response_model=ResponseUserKey
 )
-def store_user_key(
+async def store_user_key(
     payload: PayloadUserKeys,
-    session: Session = Depends(get_db_session),
+    session: AsyncSession = Depends(get_db_session),
     user: VerifiedUser = Depends(depends_verify_user)
 ) -> ResponseUserKey:
 
-    p: UserProviderRegistry = get_all_provider_configurations(
+    p: UserProviderRegistry = await get_all_provider_configurations(
         session=session,
         user_id=user.id
     )
 
     if payload.provider in p.not_configured:
-        sk = get_or_store_key(
+        sk = await get_or_store_key(
             session=session,
             api_key=payload.api_key,
             user_id=user.id,

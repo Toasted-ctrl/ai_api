@@ -1,7 +1,8 @@
 import uuid
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import config
 from core.logging import get_logger
@@ -21,17 +22,15 @@ class PersonDetails:
     email: str
 
 
-def get_person_by_person_id(
-    session: Session,
+async def get_person_by_person_id(
+    session: AsyncSession,
     person_id: uuid.UUID
 ) -> PersonDetails | None:
     """Retrieves a Person's data by searching for their ID."""
 
-    person = (
-        session.query(PersonsT)
-        .filter(PersonsT.id == person_id)
-        .one_or_none()
-    )
+    person = (await session.execute(
+        select(PersonsT).where(PersonsT.id == person_id)
+    )).scalar_one_or_none()
 
     if not person:
         return None
@@ -49,8 +48,8 @@ class Person:
     id: uuid.UUID
 
 
-def get_or_store_person(
-    session: Session,
+async def get_or_store_person(
+    session: AsyncSession,
     first_name: str,
     last_name: str,
     email: str
@@ -60,10 +59,10 @@ def get_or_store_person(
 
     blind_index_email_value = hash_hmac(content=email, key=config.BLIND_INDEX_HMAC_KEY)
 
-    existing = (
-        session.query(PersonsT)
-        .filter(PersonsT.blind_index_email == blind_index_email_value)
-        .first()
+    existing = await session.scalar(
+        select(PersonsT)
+        .where(PersonsT.blind_index_email == blind_index_email_value)
+        .limit(1)
     )
 
     if existing:
@@ -79,18 +78,18 @@ def get_or_store_person(
 
     try:
         # Creating savepoint to avoid race condition, but to not roll back ALL changes
-        nested = session.begin_nested()
+        nested = await session.begin_nested()
         session.add(person)
-        session.flush()
+        await session.flush()
 
     except IntegrityError:
-        nested.rollback()
+        await nested.rollback()
         log.info("Concurrent insert detected, fetching existing Person record...")
 
-        existing = (
-            session.query(PersonsT)
-            .filter(PersonsT.blind_index_email == blind_index_email_value)
-            .first()
+        existing = await session.scalar(
+            select(PersonsT)
+            .where(PersonsT.blind_index_email == blind_index_email_value)
+            .limit(1)
         )
 
         if existing is None:

@@ -1,14 +1,16 @@
+import uuid
 from dataclasses import dataclass
 from fastapi import Security, HTTPException, status, Depends
 from fastapi.security import APIKeyHeader
 from sqlalchemy.exc import MultipleResultsFound
-from sqlalchemy.orm import Session
-import uuid
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.schemas.clients import ClientsT
 from database.session import get_db_session
 from security.hash import get_hash_sha256
+
 
 log = get_logger()
 
@@ -21,9 +23,9 @@ class VerifiedClient:
     key_type: str
 
 
-def depends_get_client(
+async def depends_get_client(
     api_key: str = Security(api_key_header),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> VerifiedClient:
 
     """Verifies that the client belonging to the API key exists in the database.
@@ -36,7 +38,9 @@ def depends_get_client(
         )
 
     try:
-        client = session.query(ClientsT).filter(ClientsT.api_key_hash == get_hash_sha256(api_key)).one_or_none()
+        client = (await session.execute(
+            select(ClientsT).where(ClientsT.api_key_hash == get_hash_sha256(api_key))
+        )).scalar_one_or_none()
     except MultipleResultsFound:
         log.critical(f"Multiple Clients matched with single API key hash: {get_hash_sha256(api_key)}")
         raise HTTPException(
@@ -74,19 +78,18 @@ def depends_get_application_client(
     return client
 
 
-def verify_client_from_application_id(
+async def verify_client_from_application_id(
     application_id: str,
-    session: Session
+    session: AsyncSession
 ) -> VerifiedClient:
     """Checks and verifies the application id (api key for frontiend clients) in the db."""
-    query = (
-        session.query(ClientsT)
-        .filter(
+    query = (await session.execute(
+        select(ClientsT)
+        .where(
             ClientsT.api_key_hash == get_hash_sha256(application_id),
             ClientsT.key_type == "Application"
         )
-        .one_or_none()
-    )
+    )).scalar_one_or_none()
     if not query:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

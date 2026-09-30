@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import VerifiedUser, depends_verify_user
 from core.config import config
@@ -27,7 +27,7 @@ log = get_logger()
 async def post_test_vector_embedding(
     payload: PayloadSingleVectorEmbedding,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseSingleVectorEmbedding:
 
     try:
@@ -38,7 +38,7 @@ async def post_test_vector_embedding(
                 detail=f"'{payload.model}' is not a valid embedding model"
             )
 
-        p_reg = get_all_provider_configurations(
+        p_reg = await get_all_provider_configurations(
             session=session,
             user_id=user.id
         )

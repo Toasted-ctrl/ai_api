@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.schemas.vector_store import VectorStoreSettingsT
@@ -24,29 +25,25 @@ class VectorStoreConfig:
     required_filters: list
 
 
-def get_vector_store_settings(
+async def get_vector_store_settings(
     scope: str,
-    session: Session
+    session: AsyncSession
 ) -> VectorStoreConfig:
     """Fetches and returns the Vector Store collection and configuration details, 
     to enable building a Vector Store client."""
 
     log.debug(f"Retrieving Vector Store settings for scope '{scope}' ...")
-    col: VectorStoreCollectionT = (
-        session.query(VectorStoreCollectionT)
-        .filter(VectorStoreCollectionT.scope == scope)
-        .one_or_none()
-    )
+    col: VectorStoreCollectionT | None = (await session.execute(
+        select(VectorStoreCollectionT).where(VectorStoreCollectionT.scope == scope)
+    )).scalar_one_or_none()
 
     if not col:
         log.info(f"No Vector Store found with scope '{scope}'.")
         raise ValueError(f"Vector Store with name '{scope}' does not exist ...")
 
-    vs: VectorStoreSettingsT = (
-        session.query(VectorStoreSettingsT)
-        .filter(VectorStoreSettingsT.id == col.vector_store_id)
-        .one_or_none()
-    )
+    vs: VectorStoreSettingsT | None = (await session.execute(
+        select(VectorStoreSettingsT).where(VectorStoreSettingsT.id == col.vector_store_id)
+    )).scalar_one_or_none()
 
     if not vs:
         log.error(f"No Vector Store instance found with id '{col.vector_store_id}'.")

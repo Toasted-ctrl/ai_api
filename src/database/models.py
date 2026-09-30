@@ -1,17 +1,16 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.schemas.models import ModelsT
 
 
-def get_models_by_expertise(
-    session: Session,
+async def get_models_by_expertise(
+    session: AsyncSession,
     expertise: str
 ) -> list[str]:
 
-    models = (
-        session.query(ModelsT)
-        .filter(ModelsT.expertise == expertise)
-        .all()
-    )
+    models = (await session.scalars(
+        select(ModelsT).where(ModelsT.expertise == expertise)
+    )).all()
 
     return [m.name for m in models]

@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.store_client import store_client, StoredClient
@@ -8,8 +8,8 @@ log = get_logger()
 # TODO: Build tests.
 
 
-def create_application_client(
-    session: Session,
+async def create_application_client(
+    session: AsyncSession,
     client_name: str,
     key_type: str,
     owner_email: str,
@@ -25,7 +25,7 @@ def create_application_client(
     log.debug("Creating new frontend client...")
 
     try:  
-        client = store_client(
+        client = await store_client(
             session=session,
             client_name=client_name,
             key_type=key_type,

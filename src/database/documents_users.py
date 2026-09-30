@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.vector_store import VectorStoreConfig, get_vector_store_settings
@@ -11,21 +11,20 @@ from .schemas.documents_user import DocumentsUsersT
 log = get_logger()
 
 
-def store_user_document(
-    session: Session,
+async def store_user_document(
+    session: AsyncSession,
     user_id: uuid.UUID,
     name: str,
     scope: str
 ) -> uuid.UUID:
-    exists = (
-        session.query(DocumentsUsersT.id)
-        .filter(
+    exists = (await session.scalars(
+        select(DocumentsUsersT.id)
+        .where(
             DocumentsUsersT.name == name,
             DocumentsUsersT.scope == scope,
             DocumentsUsersT.user_id == user_id
         )
-        .all()
-    )
+    )).all()
     if exists:
         raise ValueError(f"File '{name}' with scope '{scope}' scope already exists.")
     nf = DocumentsUsersT(
@@ -34,24 +33,23 @@ def store_user_document(
         scope=scope
     )
     session.add(nf)
-    session.flush()
+    await session.flush()
     return nf.id
 
 
-def get_user_documents_by_scope(
-    session: Session,
+async def get_user_documents_by_scope(
+    session: AsyncSession,
     user_id: uuid.UUID,
     scope: str
 ):
 
-    docs = (
-        session.query(DocumentsUsersT)
-        .filter(
+    docs = (await session.scalars(
+        select(DocumentsUsersT)
+        .where(
             DocumentsUsersT.user_id == user_id,
             DocumentsUsersT.scope == scope
         )
-        .all()
-    )
+    )).all()
 
     return [
         {
@@ -63,31 +61,29 @@ def get_user_documents_by_scope(
 
 
 async def delete_user_document_by_document_id(
-    session: Session,
+    session: AsyncSession,
     user_id: uuid.UUID,
     document_id: uuid.UUID
 ) -> uuid.UUID | None:
-    doc = (
-        session.scalar(select(DocumentsUsersT).where(
-            DocumentsUsersT.user_id == user_id,
-            DocumentsUsersT.id == document_id
-        ))
-    )
+    doc = await session.scalar(select(DocumentsUsersT).where(
+        DocumentsUsersT.user_id == user_id,
+        DocumentsUsersT.id == document_id
+    ))
     if doc is None:
         return None
 
     docid = doc.id
     scope = doc.scope
 
-    session.delete(doc)
-    session.flush()
+    await session.delete(doc)
+    await session.flush()
 
     log.debug(f"Removed User document with document ID '{document_id}' from database.")
 
     #TODO: Currently this only supports Qdrant, but we should implement more Vector Stores.
 
     if scope in ["user_vs_files", "user_vs_memories"]:
-        vscf: VectorStoreConfig = get_vector_store_settings(
+        vscf: VectorStoreConfig = await get_vector_store_settings(
             scope=scope,
             session=session
         )

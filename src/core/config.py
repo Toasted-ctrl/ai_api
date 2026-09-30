@@ -153,6 +153,16 @@ class Config(BaseSettings):
 
 
     @cached_property
+    def ASYNC_PG_DB_URL(self) -> str:
+        """Returns the database URL for the PG connection pool."""
+        return (
+            f"{self.PG_DIALECT}+asyncpg://"
+            f"{self.PG_USERNAME}:{self.PG_PASSWORD}@"
+            f"{self.PG_HOSTNAME}:{self.PG_PORT}/{self.PG_DATABASE}"
+        )
+
+
+    @cached_property
     def PG_CHECKPOINTER_URL(self) -> str:
         """Returns checkpointer database URL."""
         return (

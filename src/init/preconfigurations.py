@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+from sqlalchemy import select
 
 from core.logging import get_logger
 from database.providers import get_or_create_provider
@@ -20,7 +21,7 @@ from security.hash import get_hash_sha256
 log = get_logger()
 
 
-def create_preconfigured_providers() -> None:
+async def create_preconfigured_providers() -> None:
 
     """Loads the configure_init_providers.json file and adds all preconfigured providers to the database.
     Will force a shutdown if the file appears misconfigured."""
@@ -44,8 +45,8 @@ def create_preconfigured_providers() -> None:
         return None
 
     for provider in providers:
-        with get_db_session_ctx() as session:
-            get_or_create_provider(
+        async with get_db_session_ctx() as session:
+            await get_or_create_provider(
                 session=session,
                 name=provider.get("name"),
                 langchain_con=provider.get("langchain_con"),
@@ -59,7 +60,7 @@ def create_preconfigured_providers() -> None:
     return None
 
 
-def create_preconfigured_vector_store() -> None:
+async def create_preconfigured_vector_store() -> None:
     """Loads the configure_init_vs.json file and adds all preconfigured vector stores to the database.
     Will force a shutdown if the file is missing."""
         
@@ -78,19 +79,18 @@ def create_preconfigured_vector_store() -> None:
         raise SystemExit(1)
 
     for vs in data:
-        with get_db_session_ctx() as session:
-            exists = (
-                session.query(VectorStoreSettingsT)
-                .filter(VectorStoreSettingsT.id == uuid.UUID(vs.get("id")))
-                .all()
-            )
+        async with get_db_session_ctx() as session:
+            exists = (await session.scalars(
+                select(VectorStoreSettingsT)
+                .where(VectorStoreSettingsT.id == uuid.UUID(vs.get("id")))
+            )).all()
 
             if len(exists) > 0:
                 log.info(f"Vector Store '{vs.get("vendor")}' with URL '{vs.get("base_url")}' already exists, skipping ...")
                 continue
 
             log.info(f"Adding new Vector Store, vendor '{vs.get("vendor")}', URL '{vs.get("base_url")}' ...")
-            with get_db_session_ctx() as session:
+            async with get_db_session_ctx() as session:
                 nvs = VectorStoreSettingsT(
                     id=uuid.UUID(vs.get("id")),
                     encrypted_api_key=encrypt(vs.get("api_key")),
@@ -106,7 +106,7 @@ def create_preconfigured_vector_store() -> None:
     return
 
 
-def create_preconfigured_vector_store_collections() -> None:
+async def create_preconfigured_vector_store_collections() -> None:
     """Loads the configure_init_vs_colections.json file and adds all preconfigured collections to the database.
     Will force a shutdown if the file is missing."""
             
@@ -130,13 +130,12 @@ def create_preconfigured_vector_store_collections() -> None:
         )
         raise SystemExit(1)
 
-    with get_db_session_ctx() as session:
+    async with get_db_session_ctx() as session:
         for col in data:
-            exists = (
-                session.query(VectorStoreCollectionT)
-                .filter(VectorStoreCollectionT.id == uuid.UUID(col.get("id")))
-                .all()
-            )
+            exists = (await session.scalars(
+                select(VectorStoreCollectionT)
+                .where(VectorStoreCollectionT.id == uuid.UUID(col.get("id")))
+            )).all()
                 
             if len(exists) > 0:
                 log.info(f"Vector Store collection '{col.get("name")}' already exists, skipping ...")
@@ -162,7 +161,7 @@ def create_preconfigured_vector_store_collections() -> None:
     return
 
 
-def create_preconfigured_application_clients() -> None:
+async def create_preconfigured_application_clients() -> None:
     """Loads the configure_init_clients.json file and adds all preconfigured application clients to the database.
     Will force a shutdown if the file is missing."""
                 
@@ -189,12 +188,11 @@ def create_preconfigured_application_clients() -> None:
         raise SystemExit(1)
 
     for client in clients:
-        with get_db_session_ctx() as session:
-            exists = (
-                session.query(ClientsT)
-                .filter(ClientsT.id == client.get("id"))
-                .all()
-            )
+        async with get_db_session_ctx() as session:
+            exists = (await session.scalars(
+                select(ClientsT)
+                .where(ClientsT.id == client.get("id"))
+            )).all()
 
             if len(exists) > 0:
                 log.info(f"Client '{client.get("client_name")}' already exists, skipping ...")
@@ -222,7 +220,7 @@ def create_preconfigured_application_clients() -> None:
     return
 
 
-def create_preconfigured_user_clients() -> None:
+async def create_preconfigured_user_clients() -> None:
     """Loads the configure_init_clients.json file and adds all preconfigured user clients to the database.
     Will force a shutdown if the file is missing."""
                     
@@ -250,13 +248,12 @@ def create_preconfigured_user_clients() -> None:
 
     for client in clients:
 
-        with get_db_session_ctx() as session:
+        async with get_db_session_ctx() as session:
 
-            c_exists = (
-                session.query(ClientsT)
-                .filter(ClientsT.id == uuid.UUID(client.get("client_id")))
-                .all()
-            )
+            c_exists = (await session.scalars(
+                select(ClientsT)
+                .where(ClientsT.id == uuid.UUID(client.get("client_id")))
+            )).all()
             
             if len(c_exists) > 0:
                 log.info(f"Client '{client.get("client_name")}' already exists, skipping client creation.")
@@ -280,11 +277,10 @@ def create_preconfigured_user_clients() -> None:
                 session.add(nc)
                 log.info(f"Added Client '{client.get("client_name")}' to the database ...")
 
-            p_exists = (
-                session.query(PersonsT)
-                .filter(PersonsT.id == uuid.UUID(client.get("person_id")))
-                .all()
-            )
+            p_exists = (await session.scalars(
+                select(PersonsT)
+                .where(PersonsT.id == uuid.UUID(client.get("person_id")))
+            )).all()
 
             if len(p_exists) > 0:
                 log.info(f"User with Client ID '{client.get("client_id")}' already exists, skipping person and user generation ...")
@@ -311,12 +307,11 @@ def create_preconfigured_user_clients() -> None:
                 session.add(nu)
                 log.info(f"Created new user for Client '{client.get("client_id")}' ...")
 
-            session.flush()
+            await session.flush()
 
-            user_id = (
-                session.query(UsersT.id)
-                .filter(UsersT.api_key_id == uuid.UUID(client.get("client_id")))
-                .scalar()
+            user_id = await session.scalar(
+                select(UsersT.id)
+                .where(UsersT.api_key_id == uuid.UUID(client.get("client_id")))
             )
 
             log.info(f"User ID is '{user_id}' for Client '{client.get("client_id")}' ...")
@@ -327,17 +322,15 @@ def create_preconfigured_user_clients() -> None:
 
             else:
                 for key, value in api_keys.items():
-                    provider_id = (
-                        session.query(ProvidersT.id)
-                        .filter(ProvidersT.name == key)
-                        .scalar()
+                    provider_id = await session.scalar(
+                        select(ProvidersT.id)
+                        .where(ProvidersT.name == key)
                     )
 
-                    k_exists = (
-                        session.query(UserKeysT)
-                        .filter(UserKeysT.provider_id == provider_id, UserKeysT.user_id == user_id)
-                        .all()
-                    )
+                    k_exists = (await session.scalars(
+                        select(UserKeysT)
+                        .where(UserKeysT.provider_id == provider_id, UserKeysT.user_id == user_id)
+                    )).all()
 
                     if len(k_exists) > 0:
                         log.info(f"Key '{key}' already exists for user '{user_id}', skipping key creation ...")
@@ -358,7 +351,7 @@ def create_preconfigured_user_clients() -> None:
     return
 
 
-def create_preconfigured_models() -> None:
+async def create_preconfigured_models() -> None:
     """Adds all preconfigured models to the ModelsT table based on their respective expertise."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'configure_model_types.json')
@@ -372,14 +365,13 @@ def create_preconfigured_models() -> None:
     with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
-    with get_db_session_ctx() as session:
+    async with get_db_session_ctx() as session:
         chat_completion_models = data.get("chat_completion")
         for model in chat_completion_models:
-            exists = (
-                session.query(ModelsT)
-                .filter(ModelsT.name == model)
-                .all()
-            )
+            exists = (await session.scalars(
+                select(ModelsT)
+                .where(ModelsT.name == model)
+            )).all()
             if not exists:
                 log.info(f"Model '{model}' does not exist in ModelsT with expertise 'chat_completion', adding ...")
                 nm = ModelsT(
@@ -390,11 +382,10 @@ def create_preconfigured_models() -> None:
 
         translation_models = data.get("translation")
         for model in translation_models:
-            exists = (
-                session.query(ModelsT)
-                .filter(ModelsT.name == model)
-                .all()
-            )
+            exists = (await session.scalars(
+                select(ModelsT)
+                .where(ModelsT.name == model)
+            )).all()
             if not exists:
                 log.info(f"Model '{model}' does not exist in ModelsT with expertise 'translation', adding ...")
                 nm = ModelsT(
@@ -405,11 +396,10 @@ def create_preconfigured_models() -> None:
 
         vector_embedding_models = data.get("vector_embedding")
         for model in vector_embedding_models:
-            exists = (
-                session.query(ModelsT)
-                .filter(ModelsT.name == model)
-                .all()
-            )
+            exists = (await session.scalars(
+                select(ModelsT)
+                .where(ModelsT.name == model)
+            )).all()
             if not exists:
                 log.info(f"Model '{model}' does not exist in ModelsT with expertise 'vector_embedding', adding ...")
                 nm = ModelsT(
@@ -419,7 +409,7 @@ def create_preconfigured_models() -> None:
                 session.add(nm)
 
 
-def create_preconfigured_mcps() -> None:
+async def create_preconfigured_mcps() -> None:
     """Adds all preconfigured mcps to the MCPsT table."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'configure_init_mcps.json')
@@ -433,19 +423,18 @@ def create_preconfigured_mcps() -> None:
     with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
-    with get_db_session_ctx() as session:
+    async with get_db_session_ctx() as session:
 
         for mcp in data:
 
-            exists = (
-                session.query(MCPsT)
-                .filter(
+            exists = (await session.scalars(
+                select(MCPsT)
+                .where(
                     MCPsT.name == mcp.get("name"),
                     MCPsT.transport == mcp.get("transport"),
                     MCPsT.url == mcp.get("url")
                 )
-                .all()
-            )
+            )).all()
 
             if exists:
                 continue

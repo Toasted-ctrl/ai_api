@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from warnings import deprecated
 import uuid
 
@@ -83,8 +84,8 @@ class UserProviderRegistry:
         return f"ProviderRegistry({list(self._providers.keys())})"
 
 
-def get_or_create_provider(
-    session: Session,
+async def get_or_create_provider(
+    session: AsyncSession,
     name: str,
     langchain_con: str,
     base_url: str,
@@ -96,12 +97,12 @@ def get_or_create_provider(
 
     """Creates a new or fetches existing Provider."""
 
-    existing = (
-        session.query(ProvidersT)
-        .filter(
+    existing = await session.scalar(
+        select(ProvidersT)
+        .where(
             ProvidersT.base_url == base_url
         )
-        .first()
+        .limit(1)
     )
 
     if existing:
@@ -128,7 +129,7 @@ def get_or_create_provider(
     )
 
     session.add(new_provider)
-    session.flush()
+    await session.flush()
 
     log.info(f"New Provider created with url '{new_provider.base_url}', returning new Provider...")
 
@@ -144,18 +145,16 @@ def get_or_create_provider(
 
 
 @deprecated("This function is deprecated")
-def get_provider(
-    session: Session,
+async def get_provider(
+    session: AsyncSession,
     provider_name: str
 ) -> Provider | None:
 
     """Fetches the details for ONE Provider."""
 
-    provider = (
-        session.query(ProvidersT)
-        .filter(ProvidersT.name == provider_name)
-        .one_or_none()
-    )
+    provider = (await session.execute(
+        select(ProvidersT).where(ProvidersT.name == provider_name)
+    )).scalar_one_or_none()
 
     if not provider:
         log.debug(f"Provider '{provider_name}' could not be located...")
@@ -172,8 +171,8 @@ def get_provider(
     )
 
 
-def get_all_provider_configurations(
-    session: Session,
+async def get_all_provider_configurations(
+    session: AsyncSession,
     user_id: uuid.UUID
 ) -> UserProviderRegistry:
 
@@ -181,18 +180,17 @@ def get_all_provider_configurations(
     The registry will include for every Provider the API Key (encrypted) if available, as well as
     whether the Provider is internal or external, what connection it should use, etc."""
 
-    providers = (
-        session.query(
+    providers = (await session.execute(
+        select(
             ProvidersT.id,
             ProvidersT.base_url,
             ProvidersT.name,
             ProvidersT.langchain_con,
             ProvidersT.internal
         )
-        .all()
-    )
+    )).all()
 
-    keys = get_user_active_keys(
+    keys = await get_user_active_keys(
         session=session,
         user_id=user_id
     )
@@ -217,15 +215,15 @@ def get_all_provider_configurations(
     )
 
 
-def get_providers_by_location(
-    session: Session,
+async def get_providers_by_location(
+    session: AsyncSession,
     is_internal: bool
 ) -> list[Provider]:
 
     """Returns a list of providers based on location (internal or external)."""
 
-    providers = (
-        session.query(
+    providers = (await session.execute(
+        select(
             ProvidersT.id,
             ProvidersT.base_url,
             ProvidersT.name,
@@ -233,9 +231,8 @@ def get_providers_by_location(
             ProvidersT.requires_api_key,
             ProvidersT.langchain_con
         )
-        .filter(ProvidersT.internal == is_internal)
-        .all()
-    )
+        .where(ProvidersT.internal == is_internal)
+    )).all()
 
     if not providers:
         return []
@@ -254,20 +251,19 @@ def get_providers_by_location(
 
 
 # TODO: Build test
-def get_providers_by_id(
-    session: Session,
+async def get_providers_by_id(
+    session: AsyncSession,
     ids: list[uuid.UUID]
 ) -> list[Provider]:
 
     """Returns a list of Provider objects based on the provided Provider IDs."""
 
-    providers = (
-        session.query(ProvidersT)
-        .filter(
+    providers = (await session.scalars(
+        select(ProvidersT)
+        .where(
             ProvidersT.id.in_(ids)
         )
-        .all()
-    )
+    )).all()
 
     if not providers:
         return []
@@ -285,15 +281,15 @@ def get_providers_by_id(
     ]
 
 
-def get_provider_config(
-    session: Session,
+async def get_provider_config(
+    session: AsyncSession,
     provider_name: str,
     user_id: uuid.UUID
 ) -> ProviderConfiguration:
     """"Retrieves the Provider configuration for the indicated Provider if configured.
     If the providers is not configured, or is not supported, will raise a HTTPException."""
 
-    p_reg = get_all_provider_configurations(
+    p_reg = await get_all_provider_configurations(
         session=session,
         user_id=user_id
     )

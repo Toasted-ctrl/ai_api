@@ -1,13 +1,26 @@
 import pytest
 import uuid
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from database.vector_store import get_vector_store_settings, VectorStoreConfig
 
 
+def _mock_session(*rows):
+    """AsyncSession whose successive execute() calls return the given rows via scalar_one_or_none()."""
+    results = []
+    for row in rows:
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = row
+        results.append(result)
+    session = MagicMock()
+    session.execute = AsyncMock(side_effect=results)
+    return session
+
+
+@pytest.mark.asyncio
 class TestGetVectorStoreSettings:
     """Tests for get_vector_store_settings function."""
 
-    def test_get_vector_store_settings_success(self):
+    async def test_get_vector_store_settings_success(self):
         """Test successful retrieval of vector store settings."""
         vs_id = uuid.uuid4()
 
@@ -27,13 +40,9 @@ class TestGetVectorStoreSettings:
         mock_vs.base_url = "http://localhost"
         mock_vs.port = 6333
 
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.one_or_none.side_effect = [mock_collection, mock_vs]
+        mock_session = _mock_session(mock_collection, mock_vs)
 
-        result = get_vector_store_settings("test_scope", mock_session)
+        result = await get_vector_store_settings("test_scope", mock_session)
 
         assert isinstance(result, VectorStoreConfig)
         assert result.vs_collection_name == "test_collection"
@@ -47,34 +56,26 @@ class TestGetVectorStoreSettings:
         assert result.scope == "test_scope"
         assert result.required_filters == ["filter1", "filter2"]
 
-    def test_get_vector_store_settings_collection_not_found(self):
+    async def test_get_vector_store_settings_collection_not_found(self):
         """Test that ValueError is raised when collection is not found."""
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.one_or_none.return_value = None
+        mock_session = _mock_session(None)
 
         with pytest.raises(ValueError, match="Vector Store with name 'nonexistent' does not exist"):
-            get_vector_store_settings("nonexistent", mock_session)
+            await get_vector_store_settings("nonexistent", mock_session)
 
-    def test_get_vector_store_settings_instance_not_found(self):
+    async def test_get_vector_store_settings_instance_not_found(self):
         """Test that ValueError is raised when vector store instance is not found."""
         vs_id = uuid.uuid4()
 
         mock_collection = MagicMock()
         mock_collection.vector_store_id = vs_id
 
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.one_or_none.side_effect = [mock_collection, None]
+        mock_session = _mock_session(mock_collection, None)
 
         with pytest.raises(ValueError, match=f"Vector Store instance with id '{vs_id}' does not exist"):
-            get_vector_store_settings("test_scope", mock_session)
+            await get_vector_store_settings("test_scope", mock_session)
 
-    def test_get_vector_store_settings_empty_filters(self):
+    async def test_get_vector_store_settings_empty_filters(self):
         """Test retrieval with empty required_filters list."""
         vs_id = uuid.uuid4()
 
@@ -93,17 +94,13 @@ class TestGetVectorStoreSettings:
         mock_vs.base_url = "http://localhost"
         mock_vs.port = 6333
 
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.one_or_none.side_effect = [mock_collection, mock_vs]
+        mock_session = _mock_session(mock_collection, mock_vs)
 
-        result = get_vector_store_settings("test_scope", mock_session)
+        result = await get_vector_store_settings("test_scope", mock_session)
 
         assert result.required_filters == []
 
-    def test_get_vector_store_settings_with_null_port(self):
+    async def test_get_vector_store_settings_with_null_port(self):
         """Test retrieval when port is None."""
         vs_id = uuid.uuid4()
 
@@ -122,17 +119,13 @@ class TestGetVectorStoreSettings:
         mock_vs.base_url = "http://localhost"
         mock_vs.port = None
 
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.one_or_none.side_effect = [mock_collection, mock_vs]
+        mock_session = _mock_session(mock_collection, mock_vs)
 
-        result = get_vector_store_settings("test_scope", mock_session)
+        result = await get_vector_store_settings("test_scope", mock_session)
 
         assert result.vs_port is None
 
-    def test_get_vector_store_settings_queries_correct_models(self):
+    async def test_get_vector_store_settings_queries_correct_models(self):
         """Test that the function queries the correct database models."""
         vs_id = uuid.uuid4()
 
@@ -151,19 +144,15 @@ class TestGetVectorStoreSettings:
         mock_vs.base_url = "http://localhost"
         mock_vs.port = 6333
 
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.one_or_none.side_effect = [mock_collection, mock_vs]
+        mock_session = _mock_session(mock_collection, mock_vs)
 
         from database.schemas.vector_store_collections import VectorStoreCollectionT
         from database.schemas.vector_store import VectorStoreSettingsT
 
-        get_vector_store_settings("test_scope", mock_session)
+        await get_vector_store_settings("test_scope", mock_session)
 
         # Verify query was called with the correct models
-        assert mock_session.query.call_count == 2
-        calls = mock_session.query.call_args_list
-        assert calls[0][0][0] == VectorStoreCollectionT
-        assert calls[1][0][0] == VectorStoreSettingsT
+        assert mock_session.execute.await_count == 2
+        calls = mock_session.execute.await_args_list
+        assert calls[0].args[0].column_descriptions[0]["entity"] is VectorStoreCollectionT
+        assert calls[1].args[0].column_descriptions[0]["entity"] is VectorStoreSettingsT

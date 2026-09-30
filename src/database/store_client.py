@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from core.config import config
@@ -25,8 +26,8 @@ class StoredClient:
     owner_email: str
 
 
-def store_client(
-    session: Session,
+async def store_client(
+    session: AsyncSession,
     client_name: str,
     key_type: str,
     owner_email: str,
@@ -60,12 +61,12 @@ def store_client(
         key=config.BLIND_INDEX_HMAC_KEY
     )
 
-    if (
-        session.query(ClientsT)
-        .filter(
+    if await session.scalar(
+        select(func.count())
+        .select_from(ClientsT)
+        .where(
             ClientsT.blind_index_client_name == blind_index_client_name_value,
             ClientsT.blind_index_owner_email == blind_index_owner_email_value)
-        .count()
     ) > 0:
         raise ValueError(f"Client '{client_name}' with owner '{owner_email}' already exists, skipping...")
 
@@ -98,7 +99,7 @@ def store_client(
     )
 
     session.add(key)
-    session.flush()
+    await session.flush()
 
     log.debug(f"Client stored with id '{key.id}' and secrets generated...")
 

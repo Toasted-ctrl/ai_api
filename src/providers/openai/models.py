@@ -24,9 +24,12 @@ async def get_models(
     ) as client:
 
         models = await client.models.list()
+        cc_models = await model_config.chat_completion_models()
+        tm_models = await model_config.translation_models()
+        ve_models = await model_config.vector_embedding_models()
         
         return {
-            "chat_completion": [model.id for model in models.data if model.id in model_config.CHAT_COMPLETION_MODELS],
-            "translation": [model.id for model in models.data if model.id in model_config.TRANSLATION_MODELS],
-            "vector_embedding": [model.id for model in models.data if model.id in model_config.VECTOR_EMBEDDING_MODELS]
+            "chat_completion": [model.id for model in models.data if model.id in cc_models],
+            "translation": [model.id for model in models.data if model.id in tm_models],
+            "vector_embedding": [model.id for model in models.data if model.id in ve_models]
         }

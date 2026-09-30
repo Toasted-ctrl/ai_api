@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.schemas.persons_users import UsersT
@@ -15,17 +16,15 @@ class UserDetails:
     person_id: uuid.UUID
 
 
-def get_user_by_user_id(
-    session: Session,
+async def get_user_by_user_id(
+    session: AsyncSession,
     user_id: uuid.UUID
 ) -> UserDetails | None:
     """Retrieves a user by ID."""
 
-    user = (
-        session.query(UsersT)
-        .filter(UsersT.id == user_id)
-        .one_or_none()
-    )
+    user = (await session.execute(
+        select(UsersT).where(UsersT.id == user_id)
+    )).scalar_one_or_none()
 
     if not user:
         return None
@@ -41,8 +40,8 @@ class User:
     id: uuid.UUID
 
 
-def get_or_store_user(
-    session: Session,
+async def get_or_store_user(
+    session: AsyncSession,
     person_id: uuid.UUID,
     api_key_id: uuid.UUID,
     key_type: str,
@@ -53,15 +52,15 @@ def get_or_store_user(
     if key_type == 'Application' and external_id == None:
         raise ValueError("Unable to fetch or add User, if key_type = 'Application', external_id must not be None")
 
-    stored_user = (
-        session.query(UsersT)
-        .filter(
+    stored_user = await session.scalar(
+        select(UsersT)
+        .where(
             UsersT.person_id == person_id,
             UsersT.api_key_id == api_key_id,
             UsersT.external_id == external_id,
             UsersT.login_provider == login_provider
         )
-        .first()
+        .limit(1)
     )
     if stored_user:
         log.info(f"User already exists, returning existing record: '{stored_user.id}'...")
@@ -77,7 +76,7 @@ def get_or_store_user(
     )
 
     session.add(new_user)
-    session.flush()
+    await session.flush()
 
     log.info(f"Added User with id: {new_user.id}")
 

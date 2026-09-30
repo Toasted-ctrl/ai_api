@@ -1,51 +1,44 @@
-from collections.abc import Generator
-from contextlib import contextmanager
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from core.config import config
 from core.logging import get_logger
 
+
 log = get_logger()
 
-engine = create_engine(
-    url=config.PG_DB_URL,
-    echo=False,
-    pool_pre_ping=True
+
+async_engine = create_async_engine(
+    config.ASYNC_PG_DB_URL,
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True,
+    echo=False
 )
 
-SessionLocal = sessionmaker(
-    bind=engine,
-    autocommit=False,
-    autoflush=False
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    autoflush=False,
+    expire_on_commit=False
 )
 
-def get_db_session() -> Generator[Session]:
-    """FastAPI dependency that yields a database session."""
-    log.info("Opening database session")
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-        log.info("Closed database session")
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency that yields an async database session."""
+    log.debug("Opening database session")
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            yield session
+    log.debug("Closed database session")
 
 
-@contextmanager
-def get_db_session_ctx() -> Generator[Session]:
+@asynccontextmanager
+async def get_db_session_ctx() -> AsyncGenerator[AsyncSession, None]:
     """For use outside of FastAPI (scripts, workers, etc.)."""
     log.debug("Opening database session")
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-        log.debug("Closed database session")
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            yield session
+    log.debug("Closed database session")

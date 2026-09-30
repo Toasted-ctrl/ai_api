@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from database.person import PersonDetails, get_person_by_person_id
@@ -17,12 +17,12 @@ router = APIRouter()
     response_model=ResponseAuthenticatedUser,
     description=f"Returns the user_id, first name, last name and email address of the authenticated User."
 )
-def auth_me(
+async def auth_me(
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseAuthenticatedUser:
     
-    u: UserDetails = get_user_by_user_id(
+    u: UserDetails = await get_user_by_user_id(
         session=session,
         user_id=user.id
     )
@@ -32,7 +32,7 @@ def auth_me(
             detail="User not found"
         )
     
-    p: PersonDetails = get_person_by_person_id(
+    p: PersonDetails = await get_person_by_person_id(
         session=session,
         person_id=u.person_id
     )

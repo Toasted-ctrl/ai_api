@@ -1,6 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from database.documents_users import get_user_documents_by_scope, delete_user_document_by_document_id
@@ -18,14 +18,14 @@ router = APIRouter()
     description="Retrieve a list of User stored documents by scope.",
     response_model=ResponseDocuments
 )
-def get_user_documents(
+async def get_user_documents(
     scope: str,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseDocuments:
     return ResponseDocuments(
         documents_scope=scope,
-        documents=get_user_documents_by_scope(
+        documents=await get_user_documents_by_scope(
             session=session,
             user_id=user.id,
             scope=scope
@@ -42,7 +42,7 @@ def get_user_documents(
 async def delete_user_document(
     document_id: str,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session)
 ) -> ResponseDeleteDocument:
 
     # TODO: Work on error handling. What if no document for the specified user and document id exists?

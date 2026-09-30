@@ -1,5 +1,5 @@
 from httpx import ConnectError, ConnectTimeout
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from warnings import deprecated
 import uuid
 
@@ -13,7 +13,7 @@ log = get_logger()
 
 
 async def get_all_models(
-    session: Session,
+    session: AsyncSession,
     user_id: uuid.UUID
 ) -> dict:
     """Returns a dictionary of all LLM providers, separated by provider.
@@ -22,7 +22,7 @@ async def get_all_models(
 
     # TODO: Write tests
 
-    p_reg = get_all_provider_configurations(
+    p_reg = await get_all_provider_configurations(
         session=session,
         user_id=user_id
     )

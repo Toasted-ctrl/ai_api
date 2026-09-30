@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi.concurrency import run_in_threadpool
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import VerifiedUser, depends_verify_user
 from core.logging import get_logger
@@ -28,11 +29,11 @@ log = get_logger()
     description="Store (a) document(s) in the specified Vector Store based on scope.",
     response_model=ResponseSavedDocuments
 )
-def store_document(
+async def store_document(
     payload: PayloadSaveDocuments,
     scope: str,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session),
+    session: AsyncSession = Depends(get_db_session),
 ) -> ResponseSavedDocuments:
 
     if not scope in ["user_vs_files", "user_vs_memories"]:
@@ -43,19 +44,19 @@ def store_document(
 
     udids = []
     for metadata in payload.metadatas:
-        udids.append(store_user_document(
+        udids.append(await store_user_document(
             session=session,
             user_id=user.id,
             name=metadata.document_name,
             scope=scope
         ))
 
-    vscf: VectorStoreConfig = get_vector_store_settings(
+    vscf: VectorStoreConfig = await get_vector_store_settings(
         session=session,
         scope=scope
     )
 
-    p_reg: UserProviderRegistry = get_all_provider_configurations(
+    p_reg: UserProviderRegistry = await get_all_provider_configurations(
         session=session,
         user_id=user.id
     )
@@ -65,7 +66,8 @@ def store_document(
         vscf.e_provider
     )
 
-    vs = get_vector_store(
+    vs = await run_in_threadpool(
+        get_vector_store,
         vs_collection_name=vscf.vs_collection_name,
         vs_vendor=vscf.vs_vendor,
         vs_port=vscf.vs_port,
@@ -92,7 +94,8 @@ def store_document(
         meta_dict = {key.replace('_', '-'): value for key, value in meta_dict.items()}
         metadatas.append(meta_dict)
 
-    doc_ids = save_docs(
+    doc_ids = await run_in_threadpool(
+        save_docs,
         vector_store=vs,
         scope=scope,
         texts=payload.texts,
@@ -110,19 +113,19 @@ def store_document(
     tags=tags,
     description="Search (a) document(s) in the specified Vector Store scope."
 )
-def search_document(
+async def search_document(
     scope: str,
     payload: PayloadSearchDocuments,
     user: VerifiedUser = Depends(depends_verify_user),
-    session: Session = Depends(get_db_session),
+    session: AsyncSession = Depends(get_db_session),
 ):
 
-    vscf: VectorStoreConfig = get_vector_store_settings(
+    vscf: VectorStoreConfig = await get_vector_store_settings(
         scope=scope,
         session=session
     )
 
-    p_reg: UserProviderRegistry = get_all_provider_configurations(
+    p_reg: UserProviderRegistry = await get_all_provider_configurations(
         session=session,
         user_id=user.id
     )
@@ -132,7 +135,8 @@ def search_document(
         vscf.e_provider
     )
     
-    vs = get_vector_store(
+    vs = await run_in_threadpool(
+        get_vector_store,
         vs_collection_name=vscf.vs_collection_name,
         vs_vendor=vscf.vs_vendor,
         vs_port=vscf.vs_port,
@@ -145,7 +149,8 @@ def search_document(
         e_dimensions=vscf.e_dimensions
     )
 
-    results = search_docs_similarity(
+    results = await run_in_threadpool(
+        search_docs_similarity,
         vector_store=vs,
         query=payload.query,
         filter={"user-id": user.id}
