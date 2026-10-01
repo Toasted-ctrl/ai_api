@@ -8,6 +8,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
 ![Qdrant](https://img.shields.io/badge/Qdrant-D6405B?logo=qdrant&logoColor=white)
+![Firecrawl](https://img.shields.io/badge/Firecrawl-FF6B35?style=flat&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-v1.36-blue?logo=kubernetes&logoColor=white)
 ![Keel](https://img.shields.io/badge/Keel-1b1f23?logo=keel.sh&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -15,7 +16,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-09-27.
+> This document was last reviewed on 2026-10-01.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -29,6 +30,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Server side session management for frontend apps.
 - MCP support.
 - User document upload and deletion.
+- Web Search through FireCrawl.
 
 ## Tech Stack
 - FastAPI

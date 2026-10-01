@@ -15,7 +15,7 @@ from database.message_threads import verify_or_get_thread_id
 from database.providers import UserProviderRegistry, get_all_provider_configurations, ProviderConfiguration
 from database.session import get_db_session
 from iom.agent import PayloadAgent, ResponseAgentRun
-from mcp_s.tools import get_mcp_tools
+from tools.mcp_tools import get_mcp_tools
 from tools.search_vs import get_vs_search_tool
 from providers.agent import build_agent_model, stream_agent, run_agent
 
@@ -84,10 +84,11 @@ async def agent_response(
             thread_id=payload.thread_id
         )
 
-        if payload.tools.mcp_tools:
+        if payload.tools.mcp_tools or payload.tools.web_search:
             tools = await get_mcp_tools(
                 session=session,
-                mcp_ids=payload.tools.mcp_tools
+                mcp_ids=payload.tools.mcp_tools or [],
+                web_search=payload.tools.web_search
             )
         else:
             tools = []
@@ -191,10 +192,11 @@ async def agent_response_stream(
             thread_id=payload.thread_id
         )
 
-        if payload.tools.mcp_tools:
+        if payload.tools.mcp_tools or payload.tools.web_search:
             tools = await get_mcp_tools(
                 session=session,
-                mcp_ids=payload.tools.mcp_tools
+                mcp_ids=payload.tools.mcp_tools or [],
+                web_search=payload.tools.web_search
             )
         else:
             tools = []

@@ -1,24 +1,12 @@
 import json
-import os
-from functools import lru_cache, cached_property
+from functools import cached_property
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import ClassVar, Set
-from warnings import deprecated
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 _env_file = BASE_DIR / ".env"
-
-
-@lru_cache(maxsize=1)
-@deprecated("Replaced with model_config")
-def _model_types() -> dict:
-    """Loads and caches the model_types json data."""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, 'model_types.json')
-    with open(file_path, 'r', encoding='utf-8') as file:
-        return json.load(file)
     
 
 class Config(BaseSettings):
@@ -78,6 +66,9 @@ class Config(BaseSettings):
     GOOGLE_HMAC: str = ""
     GOOGLE_TOKEN_URL: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
+
+    WEB_SEARCH_URL: str = ""
+    WEB_SEARCH_TRANSPORT: str = ""
 
     _SKIP_GOOGLE_ENV_VARS: ClassVar[set[str]] = {
         "GOOGLE_CLIENT_ID",
