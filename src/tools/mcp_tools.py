@@ -39,6 +39,23 @@ async def get_mcp_tools(
             "transport": config.WEB_SEARCH_TRANSPORT
         }
 
-    client = MultiServerMCPClient(connections=conn)
-    log.debug(f"Created MultiServerMCPClient with {len(conn)} connections")
-    return await client.get_tools()
+    regular_conn = {k: v for k, v in conn.items() if k != 'Web Search'}
+    regular_tools = []
+    if regular_conn:
+        client = MultiServerMCPClient(connections=regular_conn)
+        log.debug(f"Created MultiServerMCPClient with {len(regular_conn)} connections")
+        regular_tools = await client.get_tools()
+
+    # Self hosted firecrawl API does not align with self hosted MCP.
+    # We will need to filter out anything that is not firecrawl_map, firecrawl_scrape or firecrawl_crawl.
+    web_search_tools = []
+    if web_search:
+        search_conn = {'Web Search': conn['Web Search']}
+        client = MultiServerMCPClient(connections=search_conn)
+        log.debug(f"Created MultiServerMCPClient for Web Search")
+        all_search_tools = await client.get_tools()
+
+        allowed_firecrawl_tools = {'firecrawl_map', 'firecrawl_scrape', 'firecrawl_crawl'}
+        web_search_tools = [tool for tool in all_search_tools if tool.name in allowed_firecrawl_tools]
+
+    return regular_tools + web_search_tools
