@@ -87,11 +87,10 @@ async def agent_response(
 
         tools = []
 
-        if payload.tools.mcp_tools or payload.tools.web_search:
+        if payload.tools.mcp_tools:
             tools.append(await get_mcp_tools(
                 session=session,
-                mcp_ids=payload.tools.mcp_tools or [],
-                web_search=payload.tools.web_search
+                mcp_ids=payload.tools.mcp_tools or []
             ))
 
         if payload.tools.web_search:
@@ -198,11 +197,10 @@ async def agent_response_stream(
 
         tools = []
         
-        if payload.tools.mcp_tools or payload.tools.web_search:
+        if payload.tools.mcp_tools:
             tools.append(await get_mcp_tools(
                 session=session,
-                mcp_ids=payload.tools.mcp_tools or [],
-                web_search=payload.tools.web_search
+                mcp_ids=payload.tools.mcp_tools or []
             ))
         
         if payload.tools.web_search:
