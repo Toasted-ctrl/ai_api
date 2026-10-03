@@ -17,6 +17,7 @@ from database.session import get_db_session
 from iom.agent import PayloadAgent, ResponseAgentRun
 from tools.mcp_tools import get_mcp_tools
 from tools.search_vs import get_vs_search_tool
+from tools.web_search import get_web_search_tool
 from providers.agent import build_agent_model, stream_agent, run_agent
 
 
@@ -84,14 +85,17 @@ async def agent_response(
             thread_id=payload.thread_id
         )
 
+        tools = []
+
         if payload.tools.mcp_tools or payload.tools.web_search:
-            tools = await get_mcp_tools(
+            tools.append(await get_mcp_tools(
                 session=session,
                 mcp_ids=payload.tools.mcp_tools or [],
                 web_search=payload.tools.web_search
-            )
-        else:
-            tools = []
+            ))
+
+        if payload.tools.web_search:
+            tools.append(await get_web_search_tool())
 
         if payload.tools.user_vs_files:
             tools.append(await get_vs_search_tool(
@@ -192,15 +196,18 @@ async def agent_response_stream(
             thread_id=payload.thread_id
         )
 
+        tools = []
+        
         if payload.tools.mcp_tools or payload.tools.web_search:
-            tools = await get_mcp_tools(
+            tools.append(await get_mcp_tools(
                 session=session,
                 mcp_ids=payload.tools.mcp_tools or [],
                 web_search=payload.tools.web_search
-            )
-        else:
-            tools = []
-
+            ))
+        
+        if payload.tools.web_search:
+            tools.append(await get_web_search_tool())
+        
         if payload.tools.user_vs_files:
             tools.append(await get_vs_search_tool(
                 session=session,
@@ -208,7 +215,7 @@ async def agent_response_stream(
                 scope='user_vs_files',
                 pr=pr
             ))
-
+        
         if payload.tools.user_vs_memories:
             tools.append(await get_vs_search_tool(
                 session=session,
