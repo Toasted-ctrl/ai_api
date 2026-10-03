@@ -88,13 +88,13 @@ async def agent_response(
         tools = []
 
         if payload.tools.mcp_tools:
-            tools.append(await get_mcp_tools(
+            tools += await get_mcp_tools(
                 session=session,
                 mcp_ids=payload.tools.mcp_tools or []
-            ))
+            )
 
         if payload.tools.web_search:
-            tools.append(await get_web_search_tool())
+            tools += await get_web_search_tool()
 
         if payload.tools.user_vs_files:
             tools.append(await get_vs_search_tool(
@@ -196,16 +196,16 @@ async def agent_response_stream(
         )
 
         tools = []
-        
+
         if payload.tools.mcp_tools:
-            tools.append(await get_mcp_tools(
+            tools += await get_mcp_tools(
                 session=session,
                 mcp_ids=payload.tools.mcp_tools or []
-            ))
-        
+            )
+
         if payload.tools.web_search:
-            tools.append(await get_web_search_tool())
-        
+            tools += await get_web_search_tool()
+
         if payload.tools.user_vs_files:
             tools.append(await get_vs_search_tool(
                 session=session,
@@ -213,7 +213,7 @@ async def agent_response_stream(
                 scope='user_vs_files',
                 pr=pr
             ))
-        
+
         if payload.tools.user_vs_memories:
             tools.append(await get_vs_search_tool(
                 session=session,
