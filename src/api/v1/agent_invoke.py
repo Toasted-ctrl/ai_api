@@ -19,6 +19,7 @@ from tools.mcp_tools import get_mcp_tools
 from tools.search_vs import get_vs_search_tool
 from tools.web_search import get_web_search_tool
 from providers.agent import build_agent_model, stream_agent, run_agent
+from tools.get_tools import get_agent_tools
 
 
 router = APIRouter()
@@ -85,32 +86,15 @@ async def agent_response(
             thread_id=payload.thread_id
         )
 
-        tools = []
-
-        if payload.tools.mcp_tools:
-            tools += await get_mcp_tools(
-                session=session,
-                mcp_ids=payload.tools.mcp_tools or []
-            )
-
-        if payload.tools.web_search:
-            tools += await get_web_search_tool()
-
-        if payload.tools.user_vs_files:
-            tools.append(await get_vs_search_tool(
-                session=session,
-                user_id=user.id,
-                scope='user_vs_files',
-                pr=pr
-            ))
-
-        if payload.tools.user_vs_memories:
-            tools.append(await get_vs_search_tool(
-                session=session,
-                user_id=user.id,
-                scope='user_vs_memories',
-                pr=pr
-            ))
+        tools = await get_agent_tools(
+            mcp_ids=payload.tools.mcp_tools,
+            session=session,
+            web_search=payload.tools.web_search,
+            user_vs_files=payload.tools.user_vs_files,
+            user_vs_memories=payload.tools.user_vs_memories,
+            user_id=user.id,
+            pr=pr
+        )
 
         async with AsyncPostgresSaver.from_conn_string(
             conn_string=config.PG_CHECKPOINTER_URL
@@ -195,32 +179,15 @@ async def agent_response_stream(
             thread_id=payload.thread_id
         )
 
-        tools = []
-
-        if payload.tools.mcp_tools:
-            tools += await get_mcp_tools(
-                session=session,
-                mcp_ids=payload.tools.mcp_tools or []
-            )
-
-        if payload.tools.web_search:
-            tools += await get_web_search_tool()
-
-        if payload.tools.user_vs_files:
-            tools.append(await get_vs_search_tool(
-                session=session,
-                user_id=user.id,
-                scope='user_vs_files',
-                pr=pr
-            ))
-
-        if payload.tools.user_vs_memories:
-            tools.append(await get_vs_search_tool(
-                session=session,
-                user_id=user.id,
-                scope='user_vs_memories',
-                pr=pr
-            ))
+        tools = await get_agent_tools(
+            mcp_ids=payload.tools.mcp_tools,
+            session=session,
+            web_search=payload.tools.web_search,
+            user_vs_files=payload.tools.user_vs_files,
+            user_vs_memories=payload.tools.user_vs_memories,
+            user_id=user.id,
+            pr=pr
+        )
 
         async def event_stream(thread_id: uuid.UUID):
             async with AsyncPostgresSaver.from_conn_string(
