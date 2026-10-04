@@ -20,6 +20,6 @@ configure_init_vs.json
 configure_init_vs_collections.json
 configure_init_mcps.json
 
-# k82 manifests
+# k8s manifests
 secrets.yaml
 deployment.yaml
