@@ -18,6 +18,9 @@ RUN uv sync --frozen --no-cache
 # Copy the application code
 COPY ./src /code/app
 
+# Ensure all Python files are world-readable (fixes permission issues in k8s)
+RUN find /code/app -type f -name "*.py" -exec chmod 644 {} \;
+
 # Setting src as pythonpath
 ENV PYTHONPATH=/code/app
 
