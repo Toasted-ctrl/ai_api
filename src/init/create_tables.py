@@ -12,6 +12,7 @@ from database.schemas.persons_users import PersonsT, UsersT
 from database.schemas.providers import ProvidersT
 from database.schemas.user_keys import UserKeysT
 from database.schemas.user_sessions import SessionsT
+from database.schemas.user_skills import UserSkillsT
 from database.schemas.vector_store import VectorStoreSettingsT
 from database.schemas.vector_store_collections import VectorStoreCollectionT
 

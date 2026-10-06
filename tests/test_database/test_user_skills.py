@@ -1,0 +1,199 @@
+import uuid
+import pytest
+from unittest.mock import MagicMock, AsyncMock, patch, call
+
+from database.user_skills import post_user_skill
+from database.schemas.user_skills import UserSkillsT
+from db_helpers import make_session, row
+
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestPostUserSkill:
+    """Tests for post_user_skill function."""
+
+    async def test_successful_skill_creation(self):
+        """Test successful creation of a user skill with all components."""
+        user_id = uuid.uuid4()
+        skill_name = "test_skill"
+        skill_description = "This is a test skill"
+        skill_text = "def test_skill(): pass"
+        parameters_schema = {"type": "object", "properties": {"param1": {"type": "string"}}}
+
+        # Mock store_user_document to return a document_id
+        document_id = uuid.uuid4()
+        
+        with patch('database.user_skills.store_user_document', new_callable=AsyncMock) as mock_store_doc, \
+             patch('database.user_skills.get_vector_store_settings', new_callable=AsyncMock) as mock_get_vs_settings, \
+             patch('database.user_skills.get_all_provider_configurations', new_callable=AsyncMock) as mock_get_providers, \
+             patch('database.user_skills.get_vector_store', new_callable=MagicMock) as mock_get_vs, \
+             patch('database.user_skills.save_docs', new_callable=MagicMock) as mock_save_docs, \
+             patch('fastapi.concurrency.run_in_threadpool', side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)):
+            
+            # Setup mocks
+            mock_store_doc.return_value = document_id
+            
+            # Mock vector store config
+            mock_vs_config = MagicMock()
+            mock_vs_config.vs_collection_name = "test_collection"
+            mock_vs_config.vs_vendor = "qdrant"
+            mock_vs_config.vs_port = 6333
+            mock_vs_config.vs_base_url = "http://localhost"
+            mock_vs_config.vs_encrypted_api_key = "encrypted_key"
+            mock_vs_config.e_model = "test-model"
+            mock_vs_config.e_provider = "openai"
+            mock_vs_config.e_api_key = "api_key"
+            mock_vs_config.e_dimensions = 1536
+            mock_vs_config.scope = "user_vs_skills"
+            mock_vs_config.required_filters = ["user-id", "scope"]
+            mock_get_vs_settings.return_value = mock_vs_config
+            
+            # Mock provider configuration
+            mock_provider_config = MagicMock()
+            mock_provider_config.base_url = "http://provider.com"
+            mock_provider_config.langchain_con = "openai"
+            mock_provider_config.encrypted_api_key = "encrypted_api_key"
+            mock_provider_config.api_key_short = "short_key"
+            mock_provider_config.internal = False
+            mock_provider_config.api_key_configured = True
+            
+            mock_registry = MagicMock()
+            mock_registry.openai = mock_provider_config
+            mock_get_providers.return_value = mock_registry
+            
+            # Mock vector store
+            mock_vs = MagicMock()
+            mock_get_vs.return_value = mock_vs
+            
+            # Mock save_docs
+            mock_save_docs.return_value = ["doc_id_1"]
+            
+            # Create session
+            session = make_session()
+            
+            # Call function
+            result = await post_user_skill(
+                session=session,
+                user_id=user_id,
+                name=skill_name,
+                description=skill_description,
+                skill_text=skill_text,
+                parameters_schema=parameters_schema
+            )
+            
+            # Assertions
+            assert isinstance(result, uuid.UUID)
+            
+            # Check that store_user_document was called correctly
+            mock_store_doc.assert_awaited_once_with(
+                session=session,
+                user_id=user_id,
+                name=skill_name,
+                scope="user_vs_skills"
+            )
+            
+            # Check that UserSkillsT record was created
+            assert len(session.added) == 1
+            added_skill = session.added[0]
+            assert isinstance(added_skill, UserSkillsT)
+            assert added_skill.user_id == user_id
+            assert added_skill.name == skill_name
+            assert added_skill.description == skill_description
+            assert added_skill.skill_text == skill_text
+            assert added_skill.parameters_schema == parameters_schema
+            
+            # Check that vector store operations were called
+            mock_get_vs_settings.assert_awaited_once_with(session=session, scope="user_vs_skills")
+            mock_get_providers.assert_awaited_once_with(session=session, user_id=user_id)
+            mock_get_vs.assert_called_once()
+            mock_save_docs.assert_called_once()
+            
+            # No explicit commit since session is context managed
+            session.commit.assert_not_awaited()
+
+    async def test_skill_creation_without_parameters_schema(self):
+        """Test skill creation without parameters_schema defaults to empty dict."""
+        user_id = uuid.uuid4()
+        
+        with patch('database.user_skills.store_user_document', new_callable=AsyncMock) as mock_store_doc, \
+             patch('database.user_skills.get_vector_store_settings', new_callable=AsyncMock) as mock_get_vs_settings, \
+             patch('database.user_skills.get_all_provider_configurations', new_callable=AsyncMock) as mock_get_providers, \
+             patch('database.user_skills.get_vector_store', new_callable=AsyncMock) as mock_get_vs, \
+             patch('database.user_skills.save_docs', new_callable=AsyncMock) as mock_save_docs:
+            
+            mock_store_doc.return_value = uuid.uuid4()
+            
+            mock_vs_config = MagicMock()
+            mock_vs_config.required_filters = []
+            mock_get_vs_settings.return_value = mock_vs_config
+            
+            mock_registry = MagicMock()
+            mock_registry.openai = MagicMock()
+            mock_get_providers.return_value = mock_registry
+            
+            mock_get_vs.return_value = MagicMock()
+            mock_save_docs.return_value = []
+            
+            session = make_session()
+            
+            result = await post_user_skill(
+                session=session,
+                user_id=user_id,
+                name="test_skill",
+                description="test description",
+                skill_text="test code"
+                # No parameters_schema provided
+            )
+            
+            # Check that parameters_schema defaults to empty dict
+            added_skill = session.added[0]
+            assert added_skill.parameters_schema == {}
+
+    async def test_vector_store_failure_does_not_roll_back_database(self):
+        """Test that database records are still created even if vector store operations fail."""
+        user_id = uuid.uuid4()
+        
+        with patch('database.user_skills.store_user_document', new_callable=AsyncMock) as mock_store_doc, \
+             patch('database.user_skills.get_vector_store_settings', new_callable=AsyncMock) as mock_get_vs_settings:
+            
+            # Setup successful document storage
+            mock_store_doc.return_value = uuid.uuid4()
+            
+            # Make vector store settings fail
+            mock_get_vs_settings.side_effect = Exception("Vector Store error")
+            
+            session = make_session()
+            
+            # This should not raise an exception and should still commit
+            result = await post_user_skill(
+                session=session,
+                user_id=user_id,
+                name="test_skill",
+                description="test description",
+                skill_text="test code"
+            )
+            
+            # Database records should still be created (no commit call since session is context managed)
+            assert isinstance(result, uuid.UUID)
+            assert len(session.added) == 1
+            assert isinstance(session.added[0], UserSkillsT)
+            session.commit.assert_not_awaited()
+
+    @patch('database.user_skills.store_user_document', new_callable=AsyncMock)
+    async def test_duplicate_document_raises_error(self, mock_store_doc):
+        """Test that duplicate document names raise an error."""
+        user_id = uuid.uuid4()
+        
+        mock_store_doc.side_effect = ValueError("File 'test_skill' with scope 'user_vs_skills' scope already exists.")
+        
+        session = make_session()
+        
+        with pytest.raises(ValueError, match="File 'test_skill' with scope 'user_vs_skills' scope already exists"):
+            await post_user_skill(
+                session=session,
+                user_id=user_id,
+                name="test_skill",
+                description="test description",
+                skill_text="test code"
+            )

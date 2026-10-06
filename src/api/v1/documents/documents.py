@@ -1,19 +1,18 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from database.documents_users import get_user_documents_by_scope, delete_user_document_by_document_id
 from database.session import get_db_session
-from database.vector_store import get_vector_store_settings, VectorStoreConfig
 from iom.documents import ResponseDocuments, ResponseDeleteDocument
 
 
-router = APIRouter()
+router = APIRouter(prefix="/documents")
 
 
 @router.get(
-    "/documents/user/{scope}",
+    "/user/{scope}",
     tags=["Documents"],
     description="Retrieve a list of User stored documents by scope.",
     response_model=ResponseDocuments
@@ -34,7 +33,7 @@ async def get_user_documents(
 
 
 @router.delete(
-    "/documents/user/{document_id}",
+    "/user/{document_id}",
     tags=["Documents"],
     description="Delete a User provided document by document_id",
     response_model=ResponseDeleteDocument

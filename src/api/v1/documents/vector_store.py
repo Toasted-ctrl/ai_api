@@ -14,7 +14,7 @@ from vs.save_docs import save_docs
 from vs.search import search_docs_similarity
 
 
-router = APIRouter()
+router = APIRouter(prefix="/documents")
 
 
 tags = ["Vector Store"]
@@ -24,7 +24,7 @@ log = get_logger()
 
 
 @router.post(
-    path="/vector_store/{scope}/add",
+    path="/{scope}/add",
     tags=tags,
     description="Store (a) document(s) in the specified Vector Store based on scope.",
     response_model=ResponseSavedDocuments
@@ -109,7 +109,7 @@ async def store_document(
 
 
 @router.post(
-    path="/vector_store/{scope}/search",
+    path="/{scope}/search",
     tags=tags,
     description="Search (a) document(s) in the specified Vector Store scope."
 )

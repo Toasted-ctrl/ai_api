@@ -95,6 +95,7 @@ def _sanitize_metadata(metadatas: list[dict]) -> list[dict]:
 class VectorStoreScope(str, Enum):
     USER_FILES = 'user_vs_files'
     USER_MEMORIES = 'user_vs_memories'
+    USER_SKILLS = 'user_vs_skills'
     AGENT = 'agent'
 
 
@@ -124,7 +125,7 @@ def save_docs(
     _metadatas = _sanitize_metadata(metadatas=metadatas)
 
     match scope:
-        case VectorStoreScope.USER_FILES | VectorStoreScope.USER_MEMORIES:
+        case VectorStoreScope.USER_FILES | VectorStoreScope.USER_MEMORIES | VectorStoreScope.USER_SKILLS:
             log.debug(f"Saving documents with scope '{scope}' ...")
             docs = _prep_docs_personal_data(
                 texts=_texts,

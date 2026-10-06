@@ -41,6 +41,7 @@ def make_session(execute=(), scalar=(), scalars=()):
     session.flush = AsyncMock(side_effect=_flush)
     session.delete = AsyncMock()
     session.begin_nested = AsyncMock()
+    session.commit = AsyncMock()
     return session
 
 
