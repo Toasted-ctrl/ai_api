@@ -24,8 +24,7 @@ class TestChunker:
 
     def test_long_text_returns_multiple_chunks(self):
         """Test that long text (> 500 tokens) returns multiple chunks."""
-        # Create text that will definitely be > 500 tokens
-        long_text = "word " * 1000  # This should be well over 500 tokens
+        long_text = "word " * 1000
         result = _chunker(long_text)
         assert len(result) > 1
         assert all(chunk != long_text for chunk in result)

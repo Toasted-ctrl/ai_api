@@ -14,7 +14,7 @@ from vs.save_docs import save_docs
 from vs.search import search_docs_similarity
 
 
-router = APIRouter(prefix="/documents")
+router = APIRouter(prefix="/vector_store")
 
 
 tags = ["Vector Store"]

@@ -8,7 +8,7 @@ from database.user_skills import post_user_skill
 from iom.skills import PayloadCreateSkill, ResponseCreateSkill
 
 
-router = APIRouter(prefix="/documents")
+router = APIRouter()
 
 
 tags = ["Skills"]

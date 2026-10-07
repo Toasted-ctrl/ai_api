@@ -9,7 +9,7 @@ from database.session import get_db_session
 from iom.vector_embedding import PayloadSingleVectorEmbedding, ResponseSingleVectorEmbedding
 from providers.vector_embedding import get_embedding
 
-router = APIRouter(prefix="/documents")
+router = APIRouter()
 
 tags = ["Vector Embedding"]
 
@@ -17,7 +17,7 @@ log = get_logger()
 
 
 @router.post(
-    path="/test",
+    path="/vector_embedding/test",
     tags=tags,
     description=(
         "Test endpoint to verify what vector embeddings will look like for the indicated Provider and model."
