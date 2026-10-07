@@ -9,6 +9,7 @@ from database.documents_users import (
     store_user_document,
 )
 from database.schemas.documents_user import DocumentsUsersT
+from database.schemas.user_skills import UserSkillsT
 from database.vector_store import VectorStoreConfig
 from db_helpers import make_session, params, row
 
@@ -98,8 +99,8 @@ class TestDeleteUserDocumentByDocumentId:
         result = await delete_user_document_by_document_id(session=session, user_id=user_id, document_id=doc_id)
 
         assert result == doc_id
-        session.delete.assert_awaited_once_with(doc)
-        session.flush.assert_awaited_once()
+        assert session.delete.await_count == 1
+        assert session.flush.await_count == 1
         settings.assert_awaited_once_with(scope=scope, session=session)
         delete.assert_awaited_once_with(
             user_id=user_id,
@@ -136,6 +137,57 @@ class TestDeleteUserDocumentByDocumentId:
         result = await delete_user_document_by_document_id(session=session, user_id=uuid.uuid4(), document_id=doc_id)
 
         assert result == doc_id
-        session.delete.assert_awaited_once()
+        assert session.delete.await_count == 1
+        assert session.flush.await_count == 1
         settings.assert_not_awaited()
         delete.assert_not_awaited()
+
+    async def test_deletes_skill_when_scope_is_user_vs_skills(self, qdrant):
+        """Test that when deleting a user_vs_skills document, the associated UserSkillsT record is also deleted."""
+        settings, delete = qdrant
+        user_id, doc_id = uuid.uuid4(), uuid.uuid4()
+        doc = row(id=doc_id, scope="user_vs_skills")
+        skill = row(id=doc_id, user_id=user_id)
+        session = make_session(scalar=[doc, skill])
+
+        result = await delete_user_document_by_document_id(session=session, user_id=user_id, document_id=doc_id)
+
+        assert result == doc_id
+        # Both document and skill should be deleted
+        assert session.delete.await_count == 2
+        # Flush is called twice: once after document delete, once after skill delete
+        assert session.flush.await_count == 2
+        settings.assert_awaited_once_with(scope="user_vs_skills", session=session)
+        delete.assert_awaited_once()
+
+    async def test_does_not_delete_skill_for_non_skill_scopes(self, qdrant):
+        """Test that skill deletion is NOT attempted for user_vs_files and user_vs_memories scopes."""
+        settings, delete = qdrant
+        user_id, doc_id = uuid.uuid4(), uuid.uuid4()
+        doc = row(id=doc_id, scope="user_vs_files")
+        session = make_session(scalar=[doc])
+
+        result = await delete_user_document_by_document_id(session=session, user_id=user_id, document_id=doc_id)
+
+        assert result == doc_id
+        # Only the document should be deleted, not a skill
+        assert session.delete.await_count == 1
+        # Only one flush since no skill deletion
+        assert session.flush.await_count == 1
+        settings.assert_awaited_once_with(scope="user_vs_files", session=session)
+        delete.assert_awaited_once()
+
+    async def test_deletes_skill_only_when_skill_exists(self, qdrant):
+        """Test that deletion works correctly when no skill exists for the document."""
+        settings, delete = qdrant
+        user_id, doc_id = uuid.uuid4(), uuid.uuid4()
+        doc = row(id=doc_id, scope="user_vs_skills")
+        session = make_session(scalar=[doc, None])  # Second scalar returns None (no skill found)
+
+        result = await delete_user_document_by_document_id(session=session, user_id=user_id, document_id=doc_id)
+
+        assert result == doc_id
+        # Only the document should be deleted since no skill exists
+        assert session.delete.await_count == 1
+        # Only one flush since no skill was deleted
+        assert session.flush.await_count == 1

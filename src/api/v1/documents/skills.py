@@ -18,12 +18,13 @@ log = get_logger()
 
 
 @router.post(
-    path="/skills",
+    path="/skills/{scope}",
     tags=tags,
     description="Create a new user skill with the provided content and store it in the Vector Store.",
     response_model=ResponseCreateSkill
 )
 async def create_user_skill(
+    scope: str,
     payload: PayloadCreateSkill,
     user: VerifiedUser = Depends(depends_verify_user),
     session: AsyncSession = Depends(get_db_session)
@@ -33,6 +34,12 @@ async def create_user_skill(
     This endpoint creates a user skill record in the database and stores the skill description
     in the Vector Store for semantic search capabilities.
     """
+    # TODO: In prep for upcoming skills (for Agents, etc.)
+    if not scope in ["user_vs_skills"]:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unsupported scope: {scope}"
+        )
     try:
         skill_id = await post_user_skill(
             session=session,
@@ -40,6 +47,7 @@ async def create_user_skill(
             name=payload.name,
             description=payload.description,
             skill_text=payload.skill_text,
+            scope=scope,
             parameters_schema=payload.parameters_schema
         )
         

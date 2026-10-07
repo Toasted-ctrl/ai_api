@@ -79,6 +79,7 @@ class TestPostUserSkill:
                 name=skill_name,
                 description=skill_description,
                 skill_text=skill_text,
+                scope="user_vs_skills",
                 parameters_schema=parameters_schema
             )
             
@@ -126,10 +127,14 @@ class TestPostUserSkill:
             
             mock_vs_config = MagicMock()
             mock_vs_config.required_filters = []
+            mock_vs_config.e_provider = "openai"
             mock_get_vs_settings.return_value = mock_vs_config
             
             mock_registry = MagicMock()
-            mock_registry.openai = MagicMock()
+            mock_provider_config = MagicMock()
+            mock_provider_config.base_url = "http://provider.com"
+            mock_provider_config.langchain_con = "openai"
+            mock_registry.openai = mock_provider_config
             mock_get_providers.return_value = mock_registry
             
             mock_get_vs.return_value = MagicMock()
@@ -142,7 +147,8 @@ class TestPostUserSkill:
                 user_id=user_id,
                 name="test_skill",
                 description="test description",
-                skill_text="test code"
+                skill_text="test code",
+                scope="user_vs_skills"
                 # No parameters_schema provided
             )
             
@@ -165,17 +171,19 @@ class TestPostUserSkill:
             
             session = make_session()
             
-            # This should not raise an exception and should still commit
-            result = await post_user_skill(
-                session=session,
-                user_id=user_id,
-                name="test_skill",
-                description="test description",
-                skill_text="test code"
-            )
+            # The function now re-raises vector store exceptions
+            # but database records are still created before the exception
+            with pytest.raises(Exception, match="Vector Store error"):
+                await post_user_skill(
+                    session=session,
+                    user_id=user_id,
+                    name="test_skill",
+                    description="test description",
+                    skill_text="test code",
+                    scope="user_vs_skills"
+                )
             
             # Database records should still be created (no commit call since session is context managed)
-            assert isinstance(result, uuid.UUID)
             assert len(session.added) == 1
             assert isinstance(session.added[0], UserSkillsT)
             session.commit.assert_not_awaited()
@@ -195,5 +203,6 @@ class TestPostUserSkill:
                 user_id=user_id,
                 name="test_skill",
                 description="test description",
-                skill_text="test code"
+                skill_text="test code",
+                scope="user_vs_skills"
             )

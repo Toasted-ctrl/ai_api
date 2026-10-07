@@ -11,8 +11,7 @@ class UserSkillsT(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID,
-        primary_key=True,
-        default=lambda: uuid.uuid4()
+        primary_key=True
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(

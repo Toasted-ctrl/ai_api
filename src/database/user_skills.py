@@ -20,6 +20,7 @@ async def post_user_skill(
     name: str,
     description: str,
     skill_text: str,
+    scope: str,
     parameters_schema: dict | None = None
 ) -> uuid.UUID:
     """Creates a user skill record, stores it in the UserSkillsT table, and saves the description to the Vector Store.
@@ -48,6 +49,7 @@ async def post_user_skill(
     
     # Step 2: Create UserSkillsT entry
     user_skill = UserSkillsT(
+        id=document_id,
         user_id=user_id,
         name=name,
         description=description,
@@ -65,7 +67,7 @@ async def post_user_skill(
     try:
         vscf: VectorStoreConfig = await get_vector_store_settings(
             session=session,
-            scope="user_vs_skills"
+            scope=scope
         )
 
         p_reg: UserProviderRegistry = await get_all_provider_configurations(
@@ -92,43 +94,26 @@ async def post_user_skill(
             e_dimensions=vscf.e_dimensions
         )
 
-        # Prepare metadata for vector store
         metadata = {
-            "document_name": name,
+            "document-name": name,
             "user-id": str(user_id),
             "user-document-id": str(document_id),
-            "skill-id": str(skill_id)
+            "scope": scope
         }
 
-        # Convert metadata keys to use dashes for Qdrant
-        metadata = {key.replace('_', '-'): value for key, value in metadata.items()}
-
-        # Add required filters if specified
-        required_filters = vscf.required_filters or []
-        for filter_key in required_filters:
-            if filter_key not in metadata:
-                if filter_key == "scope":
-                    metadata[filter_key] = "user_vs_skills"
-                elif filter_key == "user-id":
-                    metadata[filter_key] = str(user_id)
-                elif filter_key == "user-document-id":
-                    metadata[filter_key] = str(document_id)
-
-        # Store in vector store
         doc_ids = await run_in_threadpool(
             save_docs,
             vector_store=vs,
             scope=VectorStoreScope.USER_SKILLS,
             texts=[description],
             metadatas=[metadata],
-            required_metadata=required_filters
+            required_metadata=vscf.required_filters
         )
 
         log.debug(f"Stored skill description in Vector Store with document IDs: {doc_ids}")
 
     except Exception as e:
         log.error(f"Failed to store skill in Vector Store: {e}")
-        # Continue even if vector store storage fails, as the database records were created
-        pass
+        raise
 
     return skill_id

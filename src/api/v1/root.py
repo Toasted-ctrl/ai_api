@@ -15,7 +15,7 @@ router = APIRouter()
     description=(
         "Retrieves API name, version and contact/maintainer information."
     ),
-    tags=["Default"]
+    tags=["Root"]
 )
 @cache(
     expire=300,

@@ -6,6 +6,7 @@ from core.logging import get_logger
 from database.vector_store import VectorStoreConfig, get_vector_store_settings
 from vs.delete_document import delete_document_from_qdrant_by_user_document_id
 from .schemas.documents_user import DocumentsUsersT
+from .schemas.user_skills import UserSkillsT
 
 
 log = get_logger()
@@ -82,7 +83,7 @@ async def delete_user_document_by_document_id(
 
     #TODO: Currently this only supports Qdrant, but we should implement more Vector Stores.
 
-    if scope in ["user_vs_files", "user_vs_memories"]:
+    if scope in ["user_vs_files", "user_vs_memories", "user_vs_skills"]:
         vscf: VectorStoreConfig = await get_vector_store_settings(
             scope=scope,
             session=session
@@ -96,5 +97,18 @@ async def delete_user_document_by_document_id(
             port=vscf.vs_port,
             encrypted_api_key=vscf.vs_encrypted_api_key
         )
+
+        # Only delete skill if this is a user_vs_skills document
+        if scope == "user_vs_skills":
+            skill = await session.scalar(
+                select(UserSkillsT).where(
+                    UserSkillsT.id == docid,
+                    UserSkillsT.user_id == user_id
+                )
+            )
+
+            if skill:
+                await session.delete(skill)
+                await session.flush()
 
     return docid

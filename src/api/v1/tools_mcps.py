@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get(
     "/tools/mcp",
-    tags=["MCP"],
+    tags=["Tools"],
     description="Retrieves a list of currently configured MCP servers.",
     response_model=ResponseMCP
 )
