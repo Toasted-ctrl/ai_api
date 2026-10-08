@@ -2,7 +2,7 @@ import uuid
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch, call
 
-from database.user_skills import post_user_skill
+from database.user_skills import post_user_skill, get_user_skill, SkillDescription
 from database.schemas.user_skills import UserSkillsT
 from db_helpers import make_session, row
 
@@ -113,6 +113,149 @@ class TestPostUserSkill:
             # No explicit commit since session is context managed
             session.commit.assert_not_awaited()
 
+
+class TestGetUserSkill:
+    """Tests for get_user_skill function."""
+
+    async def test_get_existing_skill(self):
+        """Test retrieving an existing user skill."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        # Create mock skill data
+        mock_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name="test_skill",
+            description="Test description",
+            skill_text="def test(): pass",
+            parameters_schema={"type": "object"},
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        # Create session with the skill in the database
+        session = make_session(execute=[mock_skill])
+        
+        # Call the function
+        result = await get_user_skill(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id
+        )
+        
+        # Assertions
+        assert isinstance(result, SkillDescription)
+        assert result.name == "test_skill"
+        assert result.description == "Test description"
+        assert result.instructions == "def test(): pass"
+        assert result.parameter_schema == {"type": "object"}
+        
+        # Verify the query was executed
+        session.execute.assert_awaited_once()
+
+    async def test_get_nonexistent_skill(self):
+        """Test that retrieving a non-existent skill raises ValueError."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        # Create session with no matching skill
+        session = make_session(execute=[None])
+        
+        # Call should raise ValueError
+        with pytest.raises(ValueError, match=f"Could not locate skill with id '{skill_id}'"):
+            await get_user_skill(
+                session=session,
+                user_id=user_id,
+                skill_id=skill_id
+            )
+
+    async def test_get_skill_from_different_user(self):
+        """Test that accessing another user's skill raises ValueError."""
+        user_id = uuid.uuid4()
+        other_user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        # Create mock skill belonging to a different user
+        mock_skill = row(
+            id=skill_id,
+            user_id=other_user_id,  # Different user
+            name="other_user_skill",
+            description="Other user's skill",
+            skill_text="def other(): pass",
+            parameters_schema={},
+            created_date=None,
+            created_by="other_user"
+        )
+        
+        # Create session - will return None because user_id doesn't match
+        session = make_session(execute=[None])
+        
+        # Call should raise ValueError because the user_id doesn't match
+        with pytest.raises(ValueError, match=f"Could not locate skill with id '{skill_id}'"):
+            await get_user_skill(
+                session=session,
+                user_id=user_id,
+                skill_id=skill_id
+            )
+
+    async def test_get_skill_with_empty_description(self):
+        """Test retrieving a skill with empty/null description."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        mock_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name="no_desc_skill",
+            description=None,
+            skill_text="def test(): pass",
+            parameters_schema=None,
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        session = make_session(execute=[mock_skill])
+        
+        result = await get_user_skill(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id
+        )
+        
+        assert isinstance(result, SkillDescription)
+        assert result.name == "no_desc_skill"
+        assert result.description is None
+        assert result.instructions == "def test(): pass"
+        assert result.parameter_schema is None
+
+    async def test_get_skill_with_empty_parameters_schema(self):
+        """Test retrieving a skill with empty parameters_schema defaults correctly."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        mock_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name="simple_skill",
+            description="A simple skill",
+            skill_text="def simple(): pass",
+            parameters_schema={},
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        session = make_session(execute=[mock_skill])
+        
+        result = await get_user_skill(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id
+        )
+        
+        assert isinstance(result, SkillDescription)
+        assert result.parameter_schema == {}
+
     async def test_skill_creation_without_parameters_schema(self):
         """Test skill creation without parameters_schema defaults to empty dict."""
         user_id = uuid.uuid4()
@@ -120,8 +263,9 @@ class TestPostUserSkill:
         with patch('database.user_skills.store_user_document', new_callable=AsyncMock) as mock_store_doc, \
              patch('database.user_skills.get_vector_store_settings', new_callable=AsyncMock) as mock_get_vs_settings, \
              patch('database.user_skills.get_all_provider_configurations', new_callable=AsyncMock) as mock_get_providers, \
-             patch('database.user_skills.get_vector_store', new_callable=AsyncMock) as mock_get_vs, \
-             patch('database.user_skills.save_docs', new_callable=AsyncMock) as mock_save_docs:
+             patch('database.user_skills.get_vector_store', new_callable=MagicMock) as mock_get_vs, \
+             patch('database.user_skills.save_docs', new_callable=MagicMock) as mock_save_docs, \
+             patch('fastapi.concurrency.run_in_threadpool', side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)):
             
             mock_store_doc.return_value = uuid.uuid4()
             

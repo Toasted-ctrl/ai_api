@@ -1,14 +1,18 @@
 import uuid
+from dataclasses import dataclass
 from fastapi.concurrency import run_in_threadpool
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.logging import get_logger
 from database.documents_users import store_user_document
 from database.providers import get_all_provider_configurations, UserProviderRegistry, ProviderConfiguration
-from database.schemas.user_skills import UserSkillsT
 from database.vector_store import get_vector_store_settings, VectorStoreConfig
 from vs.get_vs import get_vector_store
 from vs.save_docs import save_docs, VectorStoreScope
+
+from .schemas.documents_user import DocumentsUsersT
+from .schemas.user_skills import UserSkillsT
 
 
 log = get_logger()
@@ -117,3 +121,37 @@ async def post_user_skill(
         raise
 
     return skill_id
+
+
+@dataclass(frozen=True)
+class SkillDescription:
+    name: str
+    description: str
+    instructions: str
+    parameter_schema: dict
+
+
+async def get_user_skill(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    skill_id: uuid.UUID
+) -> SkillDescription:
+    """Fetches a user skill record, and returns it as a SkillDescription object."""
+    skill = (await session.execute(
+        select(UserSkillsT)
+        .where(
+            UserSkillsT.id == skill_id,
+            UserSkillsT.user_id == user_id
+        )
+    )).scalar_one_or_none()
+
+    if not skill:
+        log.debug(f"Could not locate skill with id '{skill_id}' for user '{user_id}'")
+        raise ValueError(f"Could not locate skill with id '{skill_id}'")
+
+    return SkillDescription(
+        name=skill.name,
+        description=skill.description,
+        instructions=skill.skill_text,
+        parameter_schema=skill.parameters_schema
+    )
