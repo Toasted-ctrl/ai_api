@@ -2,7 +2,7 @@ import uuid
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch, call
 
-from database.user_skills import post_user_skill, get_user_skill, SkillDescription
+from database.user_skills import post_user_skill, get_user_skill_by_skill_id, SkillDescription
 from database.schemas.user_skills import UserSkillsT
 from db_helpers import make_session, row
 
@@ -114,8 +114,8 @@ class TestPostUserSkill:
             session.commit.assert_not_awaited()
 
 
-class TestGetUserSkill:
-    """Tests for get_user_skill function."""
+class TestGetUserSkillBySkillId:
+    """Tests for get_user_skill_by_skill_id function."""
 
     async def test_get_existing_skill(self):
         """Test retrieving an existing user skill."""
@@ -138,7 +138,7 @@ class TestGetUserSkill:
         session = make_session(execute=[mock_skill])
         
         # Call the function
-        result = await get_user_skill(
+        result = await get_user_skill_by_skill_id(
             session=session,
             user_id=user_id,
             skill_id=skill_id
@@ -164,7 +164,7 @@ class TestGetUserSkill:
         
         # Call should raise ValueError
         with pytest.raises(ValueError, match=f"Could not locate skill with id '{skill_id}'"):
-            await get_user_skill(
+            await get_user_skill_by_skill_id(
                 session=session,
                 user_id=user_id,
                 skill_id=skill_id
@@ -193,7 +193,7 @@ class TestGetUserSkill:
         
         # Call should raise ValueError because the user_id doesn't match
         with pytest.raises(ValueError, match=f"Could not locate skill with id '{skill_id}'"):
-            await get_user_skill(
+            await get_user_skill_by_skill_id(
                 session=session,
                 user_id=user_id,
                 skill_id=skill_id
@@ -217,7 +217,7 @@ class TestGetUserSkill:
         
         session = make_session(execute=[mock_skill])
         
-        result = await get_user_skill(
+        result = await get_user_skill_by_skill_id(
             session=session,
             user_id=user_id,
             skill_id=skill_id
@@ -247,7 +247,7 @@ class TestGetUserSkill:
         
         session = make_session(execute=[mock_skill])
         
-        result = await get_user_skill(
+        result = await get_user_skill_by_skill_id(
             session=session,
             user_id=user_id,
             skill_id=skill_id

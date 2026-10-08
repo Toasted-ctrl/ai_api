@@ -131,7 +131,7 @@ class SkillDescription:
     parameter_schema: dict
 
 
-async def get_user_skill(
+async def get_user_skill_by_skill_id(
     session: AsyncSession,
     user_id: uuid.UUID,
     skill_id: uuid.UUID
