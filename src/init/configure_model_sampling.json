@@ -8,5 +8,15 @@
                 "top_p": true
             }
         }
+    ],
+    "Z.ai": [
+        {
+            "name": "glm-5.3",
+            "capabilities": {
+                "temperature": true,
+                "top_k": true,
+                "top_p": true
+            }
+        }
     ]
 }
