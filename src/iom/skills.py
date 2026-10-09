@@ -14,3 +14,24 @@ class ResponseCreateSkill(BaseModel):
     skill_id: uuid.UUID
     name: str
     message: str
+
+
+class ResponseGetSkill(BaseModel):
+    skill_id: uuid.UUID
+    name: str
+    description: str
+    instructions: str
+    parameter_schema: Optional[dict] = None
+
+
+class PayloadPatchSkill(BaseModel):
+    skill_id: uuid.UUID
+    instructions: str
+
+
+class ResponsePatchSkill(BaseModel):
+    skill_id: uuid.UUID
+    name: str
+    description: str
+    instructions: str
+    parameter_schema: Optional[dict] = None

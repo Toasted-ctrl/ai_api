@@ -125,6 +125,7 @@ async def post_user_skill(
 
 @dataclass(frozen=True)
 class SkillDescription:
+    skill_id: uuid.UUID
     name: str
     description: str
     instructions: str
@@ -144,12 +145,39 @@ async def get_user_skill_by_skill_id(
             UserSkillsT.user_id == user_id
         )
     )).scalar_one_or_none()
-
     if not skill:
         log.debug(f"Could not locate skill with id '{skill_id}' for user '{user_id}'")
         raise ValueError(f"Could not locate skill with id '{skill_id}'")
-
     return SkillDescription(
+        skill_id=skill.id,
+        name=skill.name,
+        description=skill.description,
+        instructions=skill.skill_text,
+        parameter_schema=skill.parameters_schema
+    )
+
+
+async def update_user_skill_by_skill_id(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    skill_id: uuid.UUID,
+    instructions: str
+) -> SkillDescription:
+    """Updates a skill's instructions."""
+    skill = (await session.execute(
+        select(UserSkillsT)
+        .where(
+            UserSkillsT.id == skill_id,
+            UserSkillsT.user_id == user_id
+        )
+    )).scalar_one_or_none()
+    if not skill:
+        log.debug(f"Could not locate skill with id '{skill_id}' for user '{user_id}'")
+        raise ValueError(f"Could not locate skill with id '{skill_id}'")
+    skill.skill_text = instructions
+    await session.flush()
+    return SkillDescription(
+        skill_id=skill.id,
         name=skill.name,
         description=skill.description,
         instructions=skill.skill_text,

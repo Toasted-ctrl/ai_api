@@ -1,11 +1,13 @@
+import uuid
+from dataclasses import asdict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import VerifiedUser, depends_verify_user
 from core.logging import get_logger
 from database.session import get_db_session
-from database.user_skills import post_user_skill
-from iom.skills import PayloadCreateSkill, ResponseCreateSkill
+from database.user_skills import post_user_skill, get_user_skill_by_skill_id, SkillDescription, update_user_skill_by_skill_id
+from iom.skills import PayloadCreateSkill, ResponseCreateSkill, ResponseGetSkill, ResponsePatchSkill, PayloadPatchSkill
 
 
 router = APIRouter()
@@ -18,12 +20,12 @@ log = get_logger()
 
 
 @router.post(
-    path="/skills/{scope}",
+    path="/skill",
     tags=tags,
-    description="Create a new user skill with the provided content and store it in the Vector Store.",
+    description="Create a skill with the provided content and store it in the Vector Store.",
     response_model=ResponseCreateSkill
 )
-async def create_user_skill(
+async def create_skill(
     scope: str,
     payload: PayloadCreateSkill,
     user: VerifiedUser = Depends(depends_verify_user),
@@ -68,4 +70,76 @@ async def create_user_skill(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create skill: {str(e)}"
+        )
+
+
+@router.get(
+    "/skill",
+    tags=tags,
+    description="Retrieves a skill's name, description, instructions and parameter schema.",
+    response_model=ResponseGetSkill
+)
+async def get_skill(
+    skill_id: str,
+    scope: str,
+    user: VerifiedUser = Depends(depends_verify_user),
+    session: AsyncSession = Depends(get_db_session)
+) -> ResponseGetSkill:
+    try:
+        if scope == "user_vs_skills":
+            skill: SkillDescription = await get_user_skill_by_skill_id(
+                session=session,
+                user_id=user.id,
+                skill_id=uuid.UUID(skill_id)
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Unsupported scope: '{scope}'"
+            )
+        return ResponseGetSkill(
+            **asdict(skill)
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Failed to fetch skill: {str(e)}"
+        )
+
+
+@router.patch(
+    "/skill",
+    tags=tags,
+    description=(
+        "Updated a skill its instructions. For complete updates to the skill, including its description, "
+        "remove the current skill and add a new one."
+    ),
+    response_model=ResponsePatchSkill
+)
+async def patch_skill(
+    scope: str,
+    payload: PayloadPatchSkill,
+    user: VerifiedUser = Depends(depends_verify_user),
+    session: AsyncSession = Depends(get_db_session)
+) -> ResponsePatchSkill:
+    try:
+        if scope == "user_vs_skills":
+            skill: SkillDescription = await update_user_skill_by_skill_id(
+                session=session,
+                user_id=user.id,
+                skill_id=payload.skill_id,
+                instructions=payload.instructions
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Unsupported scope: '{scope}'"
+            )
+        return ResponsePatchSkill(
+            **asdict(skill)
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Failed to fetch skill: {str(e)}"
         )

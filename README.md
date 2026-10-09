@@ -16,7 +16,7 @@
 > A unified API gateway for multiple LLM providers.
 
 > [!NOTE]
-> This document was last reviewed on 2026-10-07.
+> This document was last reviewed on 2026-10-09.
 
 This project intends to build an "Artificial Intelligence API" (AIA), which will serve as an API gateway to multiple LLM providers. The goal is to make an easy to integrate unified API, which could easily be self-hosted on low-end hardware.
 
@@ -29,7 +29,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Integration with Qdrant.
 - Server side session management for frontend apps.
 - MCP support.
-- User document upload and deletion.
+- User document upload (Files, Skills, Memories).
 - Web Search through FireCrawl.
 
 ## Tech Stack
@@ -68,15 +68,19 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - /providers/configuration
 - /providers/models
 - /root
+- /skill
 - /status
 - /translation/translategemma
+
+### PATCH
+- /skill
 
 ### POST
 - /agent
 - /agent/stream
 - /chat_completion
 - /translation/translategemma
-- /skills/{scope}
+- /skill
 - /vector_store/{scope}/add
 - /vector_store/{scope}/search
 - /vector_embedding/test
@@ -90,7 +94,6 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - Add HMAC hashing and verification for each path.
 - Build a function to locate which server is currently supporting translategemma: Check internal
 servers first, follow by external ones. Return internal as this one is free of charge.
-- Rebuild tests, test suite outdated.
 
 ### Long Term
 - Add support for more Login providers.

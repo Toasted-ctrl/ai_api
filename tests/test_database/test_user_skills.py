@@ -2,7 +2,7 @@ import uuid
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch, call
 
-from database.user_skills import post_user_skill, get_user_skill_by_skill_id, SkillDescription
+from database.user_skills import post_user_skill, get_user_skill_by_skill_id, update_user_skill_by_skill_id, SkillDescription
 from database.schemas.user_skills import UserSkillsT
 from db_helpers import make_session, row
 
@@ -350,3 +350,200 @@ class TestGetUserSkillBySkillId:
                 skill_text="test code",
                 scope="user_vs_skills"
             )
+
+
+class TestUpdateUserSkillBySkillId:
+    """Tests for update_user_skill_by_skill_id function."""
+
+    async def test_successful_skill_update(self):
+        """Test successfully updating a skill's instructions."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        # Create existing skill data
+        existing_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name="test_skill",
+            description="Test description",
+            skill_text="old instructions",
+            parameters_schema={"type": "object", "properties": {"param1": {"type": "string"}}},
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        # Create session with the skill
+        session = make_session(execute=[existing_skill])
+        
+        # New instructions to update with
+        new_instructions = "new updated instructions"
+        
+        # Call the function
+        result = await update_user_skill_by_skill_id(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id,
+            instructions=new_instructions
+        )
+        
+        # Assertions
+        assert isinstance(result, SkillDescription)
+        assert result.skill_id == skill_id
+        assert result.name == "test_skill"
+        assert result.description == "Test description"
+        assert result.instructions == new_instructions
+        assert result.parameter_schema == {"type": "object", "properties": {"param1": {"type": "string"}}}
+        
+        # Verify the skill text was updated in the session
+        assert existing_skill.skill_text == new_instructions
+        
+        # Verify flush was called
+        session.flush.assert_awaited_once()
+
+    async def test_update_nonexistent_skill(self):
+        """Test that updating a non-existent skill raises ValueError."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        # Create session with no matching skill
+        session = make_session(execute=[None])
+        
+        # Call should raise ValueError
+        with pytest.raises(ValueError, match=f"Could not locate skill with id '{skill_id}'"):
+            await update_user_skill_by_skill_id(
+                session=session,
+                user_id=user_id,
+                skill_id=skill_id,
+                instructions="new instructions"
+            )
+
+    async def test_update_skill_from_different_user(self):
+        """Test that updating a skill from a different user raises ValueError."""
+        user_id = uuid.uuid4()
+        other_user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        # Create mock skill belonging to a different user
+        mock_skill = row(
+            id=skill_id,
+            user_id=other_user_id,  # Different user
+            name="other_user_skill",
+            description="Other user's skill",
+            skill_text="def other(): pass",
+            parameters_schema={},
+            created_date=None,
+            created_by="other_user"
+        )
+        
+        # Session will return None because the user_id in the where clause doesn't match
+        session = make_session(execute=[None])
+        
+        # Call should raise ValueError because no matching skill found for the given user_id
+        with pytest.raises(ValueError, match=f"Could not locate skill with id '{skill_id}'"):
+            await update_user_skill_by_skill_id(
+                session=session,
+                user_id=user_id,
+                skill_id=skill_id,
+                instructions="new instructions"
+            )
+
+    async def test_update_with_empty_instructions(self):
+        """Test updating a skill with empty instructions."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        existing_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name="empty_instructions_skill",
+            description="A skill",
+            skill_text="old instructions",
+            parameters_schema={},
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        session = make_session(execute=[existing_skill])
+        
+        result = await update_user_skill_by_skill_id(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id,
+            instructions=""  # Empty instructions
+        )
+        
+        assert isinstance(result, SkillDescription)
+        assert result.instructions == ""
+        assert existing_skill.skill_text == ""
+
+    async def test_update_with_special_characters(self):
+        """Test updating a skill with special characters in instructions."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        existing_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name="special_chars_skill",
+            description="A skill",
+            skill_text="old",
+            parameters_schema={},
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        session = make_session(execute=[existing_skill])
+        
+        special_instructions = "def skill():\n    # Special chars: !@#$%^&*()\n    return 'test'"
+        
+        result = await update_user_skill_by_skill_id(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id,
+            instructions=special_instructions
+        )
+        
+        assert result.instructions == special_instructions
+        assert existing_skill.skill_text == special_instructions
+
+    async def test_update_preserves_other_fields(self):
+        """Test that updating instructions doesn't affect other fields."""
+        user_id = uuid.uuid4()
+        skill_id = uuid.uuid4()
+        
+        original_name = "original_name"
+        original_description = "original description"
+        original_params = {"type": "object", "properties": {"x": {"type": "number"}}}
+        
+        existing_skill = row(
+            id=skill_id,
+            user_id=user_id,
+            name=original_name,
+            description=original_description,
+            skill_text="old instructions",
+            parameters_schema=original_params,
+            created_date=None,
+            created_by="test_user"
+        )
+        
+        session = make_session(execute=[existing_skill])
+        
+        result = await update_user_skill_by_skill_id(
+            session=session,
+            user_id=user_id,
+            skill_id=skill_id,
+            instructions="new instructions"
+        )
+        
+        # Other fields should be preserved
+        assert result.name == original_name
+        assert result.description == original_description
+        assert result.parameter_schema == original_params
+        assert result.skill_id == skill_id
+        
+        # Only skill_text should change
+        assert result.instructions == "new instructions"
+        assert existing_skill.skill_text == "new instructions"
+        assert existing_skill.name == original_name
+        assert existing_skill.description == original_description
+        assert existing_skill.parameters_schema == original_params
