@@ -7,6 +7,7 @@ from database.schemas.clients import ClientsT
 from database.schemas.documents_user import DocumentsUsersT
 from database.schemas.mcp import MCPsT
 from database.schemas.message_threads import MessageThreadsT
+from database.schemas.model_sampling import ModelSamplingT
 from database.schemas.models import ModelsT
 from database.schemas.persons_users import PersonsT, UsersT
 from database.schemas.providers import ProvidersT

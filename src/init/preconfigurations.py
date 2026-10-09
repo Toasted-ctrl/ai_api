@@ -7,6 +7,7 @@ from core.logging import get_logger
 from database.providers import get_or_create_provider
 from database.schemas.clients import ClientsT
 from database.schemas.mcp import MCPsT
+from database.schemas.model_sampling import ModelSamplingT
 from database.schemas.models import ModelsT
 from database.schemas.persons_users import UsersT, PersonsT
 from database.schemas.providers import ProvidersT
@@ -447,3 +448,50 @@ async def create_preconfigured_mcps() -> None:
             )
 
             session.add(nmcp)
+
+
+async def create_preconfigured_model_sampling() -> None:
+    """Adds all preconfigured model sampling parameters to the ModelSamplingT table.
+    Only new (model, provider, parameter) combinations are added, existing entries are left untouched."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, 'configure_model_sampling.json')
+    if not os.path.exists(file_path):
+        log.error(
+            "ENV: CREATE_PRECONFIGURED_MODEL_SAMPLING is enabled, but 'configure_model_sampling.json' is missing. "
+            "Shutting down ..."
+        )
+        raise SystemExit(1)
+
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    async with get_db_session_ctx() as session:
+
+        for provider, models in data.items():
+            for model in models:
+                for parameter, supported in model.get("capabilities", {}).items():
+
+                    exists = (await session.scalars(
+                        select(ModelSamplingT)
+                        .where(
+                            ModelSamplingT.name == model.get("name"),
+                            ModelSamplingT.provider == provider,
+                            ModelSamplingT.parameter == parameter
+                        )
+                    )).all()
+
+                    if exists:
+                        continue
+
+                    log.info(f"Adding sampling parameter '{parameter}' for model '{model.get("name")}' ({provider}) to ModelSamplingT.")
+                    nms = ModelSamplingT(
+                        name=model.get("name"),
+                        provider=provider,
+                        parameter=parameter,
+                        supported=supported
+                    )
+
+                    session.add(nms)
+
+    log.info("DONE: All model sampling parameters configured.")
+    return

@@ -11,7 +11,7 @@ from providers.vector_embedding import get_embedding
 
 router = APIRouter()
 
-tags = ["Vector Embedding"]
+tags = ["Vector Store / Embedding"]
 
 log = get_logger()
 

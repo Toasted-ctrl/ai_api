@@ -14,7 +14,8 @@ from init.preconfigurations import (
     create_preconfigured_vector_store,
     create_preconfigured_vector_store_collections,
     create_preconfigured_models,
-    create_preconfigured_mcps
+    create_preconfigured_mcps,
+    create_preconfigured_model_sampling
 )
 
 # -------------------------------------------------------------------
@@ -33,6 +34,7 @@ CREATE_PRECONFIGURED_VECTOR_STORES = True
 CREATE_PRECONFIGURED_VECTOR_STORE_COLLECTIONS = True
 CREATE_PRECONFIGURED_MODELS = True
 CREATE_PRECONFIGURED_MCPS = True
+CREATE_PRECONFIGURED_MODEL_SAMPLING = True
 
 log = get_logger()
 
@@ -75,6 +77,10 @@ async def main() -> None:
     if CREATE_PRECONFIGURED_MCPS:
         print("\n---- ADDING MCPS TO MCPST ----\n")
         await create_preconfigured_mcps()
+
+    if CREATE_PRECONFIGURED_MODEL_SAMPLING:
+        print("\n---- ADDING MODEL SAMPLING PARAMETERS TO MODELSAMPLINGT ----\n")
+        await create_preconfigured_model_sampling()
 
     await async_engine.dispose()
 

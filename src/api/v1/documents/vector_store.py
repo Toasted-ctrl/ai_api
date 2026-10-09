@@ -17,7 +17,7 @@ from vs.search import search_docs_similarity
 router = APIRouter(prefix="/vector_store")
 
 
-tags = ["Vector Store"]
+tags = ["Vector Store / Embedding"]
 
 
 log = get_logger()

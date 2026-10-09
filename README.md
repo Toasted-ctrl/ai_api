@@ -60,33 +60,45 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 ## API Endpoints
 > All Endpoints are prefixed with '/api/v1'.
 
-### GET
-- /auth/google/login
-- /auth/google/callback
-- /auth/me
-- /documents/user/{scope}
-- /providers/configuration
-- /providers/models
-- /root
-- /skill
-- /status
-- /translation/translategemma
+### Agent Invocation
+POST /agent
+POST /agent/stream
 
-### PATCH
-- /skill
+### Auth
+GET /auth/google/login
+GET /auth/google/callback
+GET /auth/me
 
-### POST
-- /agent
-- /agent/stream
-- /chat_completion
-- /translation/translategemma
-- /skill
-- /vector_store/{scope}/add
-- /vector_store/{scope}/search
-- /vector_embedding/test
+### Documents
+GET /documents/user/{scope}
+DELETE /documents/user/{document_id}
 
-### DELETE
-- /documents/user/{document_id}
+### Skills
+POST, GET, PATCH /skill
+
+### Vector Store / Embedding
+POST /vector_embedding/test
+POST /vector_store/{scope}/add
+POST /vector_store/{scope}/search
+
+### Providers
+GET /providers/models
+GET /providers/models/sampling
+GET /providers/configuration
+
+### Root & Status
+GET /root
+GET /status
+
+### Tools
+GET /tools/mcp
+
+### Translations
+POST /translation/translategemma
+GET /translation/translategemma
+
+### Settings
+POST /settings/user/keys
 
 ## Roadmap
 
