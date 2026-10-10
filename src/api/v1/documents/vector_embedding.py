@@ -9,18 +9,21 @@ from database.session import get_db_session
 from iom.vector_embedding import PayloadSingleVectorEmbedding, ResponseSingleVectorEmbedding
 from providers.vector_embedding import get_embedding
 
+
 router = APIRouter()
 
+
 tags = ["Vector Store / Embedding"]
+
 
 log = get_logger()
 
 
 @router.post(
-    path="/vector_embedding/test",
+    path="/vector_embedding",
     tags=tags,
     description=(
-        "Test endpoint to verify what vector embeddings will look like for the indicated Provider and model."
+        "Returns a vector embedding of the query for the indicated Provider and model."
     ),
     response_model=ResponseSingleVectorEmbedding
 )
@@ -60,13 +63,13 @@ async def post_test_vector_embedding(
             encrypted_api_key=prov.encrypted_api_key
         )
 
-        return {
-            "prompt": payload.prompt,
-            "provider": payload.provider,
-            "model": payload.model,
-            "dimensions": len(embedding),
-            "embedding": embedding
-        }
+        return ResponseSingleVectorEmbedding(
+            prompt=payload.prompt,
+            provider=payload.provider,
+            model=payload.model,
+            dimensions=len(embedding),
+            embedding=embedding
+        )
 
     except ConnectionError:
         raise HTTPException(

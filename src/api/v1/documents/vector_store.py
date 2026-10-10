@@ -14,7 +14,7 @@ from vs.save_docs import save_docs
 from vs.search import search_docs_similarity
 
 
-router = APIRouter(prefix="/vector_store")
+router = APIRouter()
 
 
 tags = ["Vector Store / Embedding"]
@@ -24,12 +24,12 @@ log = get_logger()
 
 
 @router.post(
-    path="/{scope}/add",
+    path="/vector_store/add",
     tags=tags,
     description="Store (a) document(s) in the specified Vector Store based on scope.",
     response_model=ResponseSavedDocuments
 )
-async def store_document(
+async def store_semantic_document(
     payload: PayloadSaveDocuments,
     scope: str,
     user: VerifiedUser = Depends(depends_verify_user),
@@ -109,7 +109,7 @@ async def store_document(
 
 
 @router.post(
-    path="/{scope}/search",
+    path="/vector_store/search",
     tags=tags,
     description="Search (a) document(s) in the specified Vector Store scope."
 )

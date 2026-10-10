@@ -76,9 +76,9 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - POST, GET, PATCH /skill
 
 ### Vector Store / Embedding
-- POST /vector_embedding/test
-- POST /vector_store/{scope}/add
-- POST /vector_store/{scope}/search
+- POST /vector_embedding
+- POST /vector_store/add
+- POST /vector_store/search
 
 ### Providers
 - GET /providers/models
