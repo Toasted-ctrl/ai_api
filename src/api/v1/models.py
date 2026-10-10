@@ -35,7 +35,7 @@ async def get_models(
         session=session,
         user_id=user.id
     )
-    if pm == {}:
+    if not pm:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="No models available"
@@ -57,7 +57,6 @@ async def get_model_sampling(
     response: Response,
     provider_name: str,
     model_name: str,
-    user: VerifiedUser = Depends(depends_verify_user),
     session: AsyncSession = Depends(get_db_session)
 ) -> ResponseModelSampling:
     sampling: ModelSampling = await get_model_sampling_settings(

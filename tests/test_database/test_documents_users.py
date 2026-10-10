@@ -115,17 +115,18 @@ class TestDeleteUserDocumentByDocumentId:
         user_id, doc_id = uuid.uuid4(), uuid.uuid4()
         session = make_session(scalar=[None])
 
-        await delete_user_document_by_document_id(session=session, user_id=user_id, document_id=doc_id)
+        with pytest.raises(ValueError, match="does not exist"):
+            await delete_user_document_by_document_id(session=session, user_id=user_id, document_id=doc_id)
 
         assert params(session.scalar.await_args) == [user_id, doc_id]
 
-    async def test_returns_none_when_not_found(self, qdrant):
+    async def test_raises_value_error_when_not_found(self, qdrant):
         _, delete = qdrant
         session = make_session(scalar=[None])
 
-        result = await delete_user_document_by_document_id(session=session, user_id=uuid.uuid4(), document_id=uuid.uuid4())
+        with pytest.raises(ValueError, match="does not exist"):
+            await delete_user_document_by_document_id(session=session, user_id=uuid.uuid4(), document_id=uuid.uuid4())
 
-        assert result is None
         session.delete.assert_not_awaited()
         delete.assert_not_awaited()
 

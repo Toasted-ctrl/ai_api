@@ -42,8 +42,7 @@ async def get_user_documents_by_scope(
     session: AsyncSession,
     user_id: uuid.UUID,
     scope: str
-):
-
+) -> list[dict]:
     docs = (await session.scalars(
         select(DocumentsUsersT)
         .where(
@@ -51,7 +50,6 @@ async def get_user_documents_by_scope(
             DocumentsUsersT.scope == scope
         )
     )).all()
-
     return [
         {
             "name": doc.name,
@@ -71,7 +69,8 @@ async def delete_user_document_by_document_id(
         DocumentsUsersT.id == document_id
     ))
     if doc is None:
-        return None
+        log.debug(f"Document '{document_id}' does not exist for User '{user_id}'")
+        raise ValueError(f"Document '{document_id}' does not exist")
 
     docid = doc.id
     scope = doc.scope

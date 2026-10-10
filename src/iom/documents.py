@@ -7,7 +7,7 @@ class Document(BaseModel):
     id: uuid.UUID
 
 
-class ResponseDocuments(BaseModel):
+class ResponseGetDocuments(BaseModel):
     documents_scope: str
     documents: list[Document]
 

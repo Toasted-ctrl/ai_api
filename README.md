@@ -70,8 +70,7 @@ This project intends to build an "Artificial Intelligence API" (AIA), which will
 - GET /auth/me
 
 ### Documents
-- GET /documents/user/{scope}
-- DELETE /documents/user/{document_id}
+- GET, DELETE /documents
 
 ### Skills
 - POST, GET, PATCH /skill

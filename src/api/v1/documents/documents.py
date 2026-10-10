@@ -1,59 +1,74 @@
 import uuid
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dep_verify_user import depends_verify_user, VerifiedUser
 from database.documents_users import get_user_documents_by_scope, delete_user_document_by_document_id
 from database.session import get_db_session
-from iom.documents import ResponseDocuments, ResponseDeleteDocument
+from iom.documents import ResponseGetDocuments, ResponseDeleteDocument
 
 
-router = APIRouter(prefix="/documents")
+router = APIRouter()
 
 
 @router.get(
-    "/user/{scope}",
+    "/documents",
     tags=["Documents"],
-    description="Retrieve a list of User stored documents by scope.",
-    response_model=ResponseDocuments
+    description="Retrieve a list of stored documents by scope.",
+    response_model=ResponseGetDocuments
 )
-async def get_user_documents(
+async def get_documents(
     scope: str,
     user: VerifiedUser = Depends(depends_verify_user),
     session: AsyncSession = Depends(get_db_session)
-) -> ResponseDocuments:
-    return ResponseDocuments(
-        documents_scope=scope,
-        documents=await get_user_documents_by_scope(
-            session=session,
-            user_id=user.id,
-            scope=scope
+) -> ResponseGetDocuments:
+    if scope in ['user_vs_files', 'user_vs_memories', 'user_vs_skills']:
+        return ResponseGetDocuments(
+            documents_scope=scope,
+            documents=await get_user_documents_by_scope(
+                session=session,
+                user_id=user.id,
+                scope=scope
+            )
         )
-    )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unsupported scope: '{scope}'"
+        )
 
 
 @router.delete(
-    "/user/{document_id}",
+    "/documents",
     tags=["Documents"],
-    description="Delete a User provided document by document_id",
+    description="Delete a document by document_id and scope.",
     response_model=ResponseDeleteDocument
 )
-async def delete_user_document(
+async def delete_document(
     document_id: str,
+    scope: str,
     user: VerifiedUser = Depends(depends_verify_user),
     session: AsyncSession = Depends(get_db_session)
 ) -> ResponseDeleteDocument:
-
-    # TODO: Work on error handling. What if no document for the specified user and document id exists?
-
-    user_document_id = uuid.UUID(document_id)
-    docid = await delete_user_document_by_document_id(
-        session=session,
-        user_id=user.id,
-        document_id=user_document_id
-    )
-
-    return ResponseDeleteDocument(
-        id=docid,
-        is_deleted=True
-    )
+    try:
+        if scope in ['user_vs_files', 'user_vs_memories', 'user_vs_skills']:
+            user_document_id = uuid.UUID(document_id)
+            docid = await delete_user_document_by_document_id(
+                session=session,
+                user_id=user.id,
+                document_id=user_document_id
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Unsupported scope: '{scope}'"
+            )
+        return ResponseDeleteDocument(
+            id=docid,
+            is_deleted=True
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Failed to delete document: {str(e)}"
+        )
