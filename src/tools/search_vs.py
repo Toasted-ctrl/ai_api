@@ -47,7 +47,7 @@ async def get_vs_search_tool(
             e_model=vscf.e_model,
             e_base_url=em.base_url,
             e_langchain_con=em.langchain_con,
-            e_encrypted_api_key=em.encrypted_api_key,
+            e_encrypted_api_key=vscf.e_api_key,
             e_dimensions=vscf.e_dimensions
         )
 
