@@ -8,6 +8,7 @@ from .base_prov import ProviderSettings
 class Tools(BaseModel):
     user_vs_files: bool = False
     user_vs_memories: bool = False
+    user_vs_skills: bool = False
     web_search: bool = False
     mcp_tools: list[uuid.UUID] | None = None
 

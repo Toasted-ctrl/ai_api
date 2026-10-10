@@ -92,6 +92,7 @@ async def agent_response(
             web_search=payload.tools.web_search,
             user_vs_files=payload.tools.user_vs_files,
             user_vs_memories=payload.tools.user_vs_memories,
+            user_vs_skills=payload.tools.user_vs_skills,
             user_id=user.id,
             pr=pr
         )
@@ -185,6 +186,7 @@ async def agent_response_stream(
             web_search=payload.tools.web_search,
             user_vs_files=payload.tools.user_vs_files,
             user_vs_memories=payload.tools.user_vs_memories,
+            user_vs_skills=payload.tools.user_vs_skills,
             user_id=user.id,
             pr=pr
         )

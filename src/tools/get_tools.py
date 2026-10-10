@@ -7,7 +7,11 @@ from database.providers import UserProviderRegistry
 
 from .mcp_tools import get_mcp_tools
 from .search_vs import get_vs_search_tool
+from .skill_discovery import get_user_skill_discovery_tool
 from .web_search import get_web_search_tool
+
+
+# TODO: This is primarily for USER tools currently. Possible rename all get 'x' tool functions?
 
 
 log = get_logger()
@@ -19,6 +23,7 @@ async def get_agent_tools(
     web_search: bool,
     user_vs_files: bool,
     user_vs_memories: bool,
+    user_vs_skills: bool,
     user_id: uuid.UUID,
     pr: UserProviderRegistry
 ) -> list[BaseTool]:
@@ -42,6 +47,13 @@ async def get_agent_tools(
             session=session,
             user_id=user_id,
             scope=scope,
+            pr=pr
+        ))
+    if user_vs_skills:
+        tools.append(await get_user_skill_discovery_tool(
+            session=session,
+            user_id=user_id,
+            scope='user_vs_skills',
             pr=pr
         ))
     log.debug("Agent tools collected, returning ...")
